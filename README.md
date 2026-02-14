@@ -120,7 +120,7 @@ In each case the TypeQL was written to correctly answer the English question. Se
 
 - [x] Merge synthetic-2 queries into all_queries.csv
 - [ ] Standardize use of `_` in TypeQL variable names across all queries
-- [ ] Regularize synthetic-1 TypeQL queries to use updated relation syntax: `reltype (role: $var)` instead of `$r (role: $var) isa reltype`
+- [x] Regularize TypeQL queries to use updated relation syntax: `reltype (role: $var)` instead of `(role: $var) isa reltype`
 
 ## Source
 
