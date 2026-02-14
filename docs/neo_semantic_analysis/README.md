@@ -171,6 +171,16 @@ These are not random LLM mistakes — they reveal systematic weaknesses in Cyphe
 
 Out of 13,774 query pairs, **597 (4.3%)** contain semantic errors in the Cypher that TypeDB's model prevented. This is a conservative estimate — additional errors may exist that our automated scanner cannot detect (e.g., subtle role confusion where both directions are schema-valid).
 
+### Caveat: Neo4j's Schema-Optional Model
+
+Neo4j is [schema-optional](https://neo4j.com/docs/getting-started/cypher/schema/): nodes and relationships can have any properties at any time, and [accessing a non-existent property returns null](https://neo4j.com/developer/kb/understanding-non-existent-properties-and-null-values/) rather than raising an error. The `neo4j_schema.json` files in this dataset are descriptive — they reflect what properties and relationships *exist in the data*, not what is *permitted*. Neo4j does support optional [constraints](https://neo4j.com/docs/cypher-manual/current/constraints/) (uniqueness, existence, type), but the datasets in text2cypher only use uniqueness constraints.
+
+This means the property-related error categories (property ownership, hallucinated properties, hallucinated labels — 191 queries, 32% of flagged errors) are somewhat ambiguous. The flagged properties don't exist in the data, so the Cypher queries would return null or empty results in practice — but Neo4j's model does not *prohibit* those properties from existing. Whether these constitute "errors" depends on whether you consider the schema descriptive (what the data has) or prescriptive (what queries should reference).
+
+The **relationship direction errors** (198 queries, 33%) are on much firmer ground. The `neo4j_schema.json` explicitly defines relationship directionality with `start` and `end` node labels (e.g., `{"start": "Organization", "type": "HAS_INVESTOR", "end": "Person"}`). Cypher queries that reverse this direction are almost certainly semantically wrong — they traverse the graph in the opposite direction from the data model, regardless of how permissive Neo4j's property access is.
+
+The **counting errors** (180 queries, 30%) are also genuine semantic mistakes: using `t.favorites` when the question asks about retweets measures the wrong thing regardless of schema model.
+
 ## Other Cypher Generation Issues
 
 **File**: `07_other_cypher_issues.csv` (high and medium confidence only)
