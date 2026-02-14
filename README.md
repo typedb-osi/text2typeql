@@ -116,12 +116,6 @@ In each case the TypeQL was written to correctly answer the English question. Se
 
 104 of 14,043 source queries (0.7%) cannot be expressed in TypeQL 3.0 (43 from synthetic-1, 61 from synthetic-2). They require features not yet supported: `split()`/`size()` for string/list operations, array indexing, epoch timestamp conversion, date component extraction (year/month/day-of-week), `collect()` aggregation, and substring matching. Each is documented with its original Cypher and the specific missing capability in the per-domain READMEs.
 
-## TODO
-
-- [x] Merge synthetic-2 queries into all_queries.csv
-- [ ] Standardize use of `_` in TypeQL variable names across all queries
-- [x] Regularize TypeQL queries to use updated relation syntax: `reltype (role: $var)` instead of `(role: $var) isa reltype`
-
 ## Source
 
 Derived from Neo4j Labs' [text2cypher](https://github.com/neo4j-labs/text2cypher) benchmark (`datasets/synthetic_opus_demodbs/` and `datasets/synthetic_gpt4o_demodbs/`). Full credit to Neo4j Labs for creating and open-sourcing the original dataset.

@@ -9,7 +9,7 @@ LIMIT 5","match
   $o_nbr_employees > 1000;
 sort $o_nbr_employees desc;
 limit 5;
-fetch { ""organization"": $o.name, ""numberOfEmployees"": $o.nbr_employees };"
+fetch { ""organization"": $o.name, ""number_of_employees"": $o.nbr_employees };"
 "synthetic-1","companies","28","medium","cypher_missing_return_props","Question asks for ""names and ids"" but neither appears in RETURN","List the names and IDs of the top 5 cities by the number of public organizations located in them.","MATCH (c:City)<-[:IN_CITY]-(o:Organization)
 WHERE o.isPublic = true
 WITH c, count(o) as orgCount
@@ -22,7 +22,7 @@ RETURN c.name as cityName, c.id as cityId","match
 reduce $count = count($o) groupby $c;
 sort $count desc;
 limit 5;
-fetch { ""cityName"": $c.city_name, ""cityId"": $c.city_id };"
+fetch { ""city_name"": $c.city_name, ""city_id"": $c.city_id };"
 "synthetic-1","companies","49","medium","cypher_missing_return_props","Question asks for ""names and titles"" but neither appears in RETURN","List the names and titles of articles mentioning organizations that have been dissolved.","MATCH (a:Article)-[:MENTIONS]->(o:Organization)
 WHERE o.isDissolved = true
 RETURN a.title AS articleTitle, a.summary AS articleSummary","match
@@ -30,14 +30,14 @@ RETURN a.title AS articleTitle, a.summary AS articleSummary","match
   $o isa organization;
   mentions (article: $a, mentioned: $o);
   $o has is_dissolved true;
-fetch { ""articleTitle"": $a.title, ""articleSummary"": $a.article_summary };"
+fetch { ""article_title"": $a.title, ""article_summary"": $a.article_summary };"
 "synthetic-1","companies","51","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","Find the organizations that are suppliers to 'New Energy Group' and their number of employees.","MATCH (o:Organization)<-[:HAS_SUPPLIER]-(supplier:Organization {name: 'New Energy Group'})
 WHERE supplier.nbrEmployees IS NOT NULL
 RETURN supplier.name AS supplier, supplier.nbrEmployees AS numberOfEmployees","match
   $neg isa organization, has name ""New Energy Group"";
   $o isa organization, has nbr_employees $employees;
   supplies (supplier: $o, customer: $neg);
-fetch { ""supplier"": $o.name, ""numberOfEmployees"": $employees };"
+fetch { ""supplier"": $o.name, ""number_of_employees"": $employees };"
 "synthetic-1","companies","53","medium","cypher_missing_condition","Question requires ""both...and"" but Cypher WHERE lacks AND","Identify organizations that are both suppliers and investors to other organizations.","MATCH (o:Organization)-[:HAS_SUPPLIER]->(s:Organization) 
 WHERE EXISTS {(s)-[:HAS_INVESTOR]->(o)}
 RETURN o.name AS organization, s.name AS supplier_investor","match
@@ -99,7 +99,7 @@ RETURN o1.name AS Organization, o2.name AS Supplier, c1.name AS OrgCountry, c2.n
   located_in (organization: $o2, city: $city2);
   location-contains (child: $city2, parent: $c2);
   not { $c1 is $c2; };
-fetch { ""Organization"": $o1.name, ""Supplier"": $o2.name, ""OrgCountry"": $c1.country_name, ""SupplierCountry"": $"
+fetch { ""Organization"": $o1.name, ""Supplier"": $o2.name, ""org_country"": $c1.country_name, ""supplier_country"": $"
 "synthetic-1","companies","97","high","cypher_missing_threshold","Question mentions threshold 100000000 but it does not appear in Cypher","List the top 3 cities where organizations with a revenue of more than 100 million are located.","MATCH (o:Organization)-[:IN_CITY]->(c:City)
 WHERE o.revenue > 1E8
 RETURN c.name AS city, count(*) AS orgCount
@@ -146,7 +146,7 @@ LIMIT 3","match
   $o has revenue $o_revenue;
   $o_revenue > 100000000;
 limit 3;
-fetch { ""boardMember"": $p.name, ""organization"": $o.name };"
+fetch { ""board_member"": $p.name, ""organization"": $o.name };"
 "synthetic-1","companies","154","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Identify the first 3 organizations that have the same investor and are competitors.","MATCH (o1:Organization)-[:HAS_INVESTOR]->(investor)<-[:HAS_INVESTOR]-(o2:Organization)
 WHERE (o1)-[:HAS_COMPETITOR]->(o2)
 RETURN o1.name AS Org1, o2.name AS Org2, investor.name AS CommonInvestor
@@ -208,7 +208,7 @@ LIMIT 3","match
   $o has nbr_employees $ne;
 sort $ne desc;
 limit 3;
-fetch { ""organization"": $on, ""numberOfEmployees"": $ne };"
+fetch { ""organization"": $on, ""number_of_employees"": $ne };"
 "synthetic-1","companies","189","high","cypher_missing_threshold","Question mentions threshold 500000000 but it does not appear in Cypher","Who are the first 3 investors in organizations that have a revenue greater than 500 million?","MATCH (o:Organization)-[:HAS_INVESTOR]->(i)
 WHERE o.revenue > 5e8
 RETURN i.name as investor
@@ -242,7 +242,7 @@ LIMIT 3","match
   $o has revenue $o_revenue;
   $o_revenue > 1000000000;
 limit 3;
-fetch { ""ceoName"": $ceo.name, ""orgName"": $o.name };"
+fetch { ""ceo_name"": $ceo.name, ""org_name"": $o.name };"
 "synthetic-1","companies","200","high","cypher_missing_threshold","Question mentions threshold 1000000000 but it does not appear in Cypher","Which organizations have a revenue above 1 billion and are in the 'Technology' industry?","MATCH (o:Organization)-[:HAS_CATEGORY]->(c:IndustryCategory {name: 'Technology'})
 WHERE o.revenue > 1e9
 RETURN o.name AS organization, o.revenue AS revenue","match
@@ -279,12 +279,12 @@ LIMIT 3","match
   $o isa organization;
   $ceo isa person, has name ""Julie Spellman Sweet"";
   ceo_of (organization: $o, ceo: $ceo);
-  $boardMember isa person;
-  board_member_of (organization: $o, member: $boardMember);
+  $board_member isa person;
+  board_member_of (organization: $o, member: $board_member);
   $o has revenue $o_revenue;
   $o_revenue > 500000000;
 limit 3;
-fetch { ""name"": $boardMember.name };"
+fetch { ""name"": $board_member.name };"
 "synthetic-1","companies","223","high","cypher_missing_threshold","Question mentions threshold 1000000000 but it does not appear in Cypher","Who are the first 3 CEOs of organizations that have a public status and a revenue above 1 billion?","MATCH (o:Organization)-[:HAS_CEO]->(p:Person)
 WHERE o.isPublic = true AND o.revenue > 1e9
 RETURN p.name AS ceoName, o.name AS orgName
@@ -296,7 +296,7 @@ LIMIT 3","match
   $o has revenue $o_revenue;
   $o_revenue > 1000000000;
 limit 3;
-fetch { ""ceoName"": $p.name, ""orgName"": $o.name };"
+fetch { ""ceo_name"": $p.name, ""org_name"": $o.name };"
 "synthetic-1","companies","226","high","cypher_missing_threshold","Question mentions threshold 1000000000 but it does not appear in Cypher","Find the first 3 organizations that have a CEO named 'Julie Spellman Sweet' and have a revenue above 1 billion.","MATCH (o:Organization)-[:HAS_CEO]->(p:Person {name: 'Julie Spellman Sweet'})
 WHERE o.revenue > 1e9
 RETURN o
@@ -355,7 +355,7 @@ LIMIT 1","match
   $o has nbr_employees $o_nbr_employees;
 sort $o_nbr_employees desc;
 limit 1;
-fetch { ""organization"": $o.name, ""numberOfEmployees"": $o.nbr_employees };"
+fetch { ""organization"": $o.name, ""number_of_employees"": $o.nbr_employees };"
 "synthetic-1","companies","256","high","cypher_missing_threshold","Question mentions threshold 50000000 but it does not appear in Cypher","Which countries host organizations that have a revenue over 50 million?","MATCH (o:Organization)-[:IN_CITY]->(:City)-[:IN_COUNTRY]->(c:Country)
 WHERE o.revenue > 5e7
 RETURN DISTINCT c.name AS country","match
@@ -526,7 +526,7 @@ RETURN o.name AS organization, mentionCount","match
 reduce $count = count($a) groupby $o;
 sort $count desc;
 limit 3;
-fetch { ""organization"": $o.name, ""mentionCount"": $count };"
+fetch { ""organization"": $o.name, ""mention_count"": $count };"
 "synthetic-1","companies","394","high","cypher_missing_threshold","Question mentions threshold 100000000 but it does not appear in Cypher","What are the names of organizations that have a revenue greater than 100 million?","MATCH (o:Organization)
 WHERE o.revenue > 1E8
 RETURN o.name","match
@@ -551,7 +551,7 @@ LIMIT 5","match
   $o isa organization, has nbr_employees $n;
 sort $n desc;
 limit 5;
-fetch { ""organization"": $o.name, ""numberOfEmployees"": $n };"
+fetch { ""organization"": $o.name, ""number_of_employees"": $n };"
 "synthetic-1","companies","413","medium","cypher_missing_condition","Question requires ""both...and"" but Cypher WHERE lacks AND","Which organizations are both suppliers and competitors to other organizations?","MATCH (o1:Organization)-[:HAS_SUPPLIER]->(o2:Organization) WHERE (o1)-[:HAS_COMPETITOR]->(o2) RETURN o1.name AS org1, o2.name AS org2","match $o1 isa organization; $o2 isa organization; supplies (customer: $o1, supplier: $o2); competes_with (competitor: $o1, competitor: $o2); fetch { ""org1"": $o1.name, ""org2"": $o2.name };"
 "synthetic-1","companies","415","high","cypher_missing_threshold","Question mentions threshold 10000000 but it does not appear in Cypher","Which articles mention organizations with a revenue less than 10 million?","MATCH (a:Article)-[:MENTIONS]->(o:Organization) WHERE o.revenue < 1E7 RETURN a, o","match
   $a isa article;
@@ -586,7 +586,7 @@ LIMIT 5","match
   $o has nbr_employees $o_nbr_employees;
 sort $o_nbr_employees desc;
 limit 5;
-fetch { ""ceoName"": $ceo.name, ""orgName"": $o.name, ""numEmployees"": $o.nbr_employees };"
+fetch { ""ceo_name"": $ceo.name, ""org_name"": $o.name, ""num_employees"": $o.nbr_employees };"
 "synthetic-1","companies","451","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","List the organizations that have both a high revenue and a high number of employees.","MATCH (o:Organization) WHERE o.revenue > 1E8 AND o.nbrEmployees > 1000 ... ORDER BY o.revenue DESC, o.nbrEmployees DESC","match $o isa organization; $o has revenue $o_revenue; $o has nbr_employees $o_nbr_employees; $o_revenue > 100000000; $o_nbr_employees > 1000; sort $o_revenue desc; fetch { ""organization"": $o.name, ""revenue"": $o.revenue, ""employees"": $o.nbr_employees };"
 "synthetic-1","companies","453","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Name the organizations with the most board members who are also CEOs of other organizations.","MATCH (o:Organization)<-[:HAS_BOARD_MEMBER]-(boardMember:Person)
 WHERE EXISTS {
@@ -605,7 +605,7 @@ LIMIT 10","match
 reduce $count = count($bm) groupby $o;
 sort $count desc;
 limit 10;
-fetch { ""organization"": $o.name, ""boardMemberCEOCount"": $count };"
+fetch { ""organization"": $o.name, ""board_member_ceo_count"": $count };"
 "synthetic-1","companies","478","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","Who are the CEOs of the top 3 public organizations by number of employees?","MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)
 WHERE o.isPublic = true AND o.nbrEmployees IS NOT NULL
 WITH o, ceo
@@ -620,7 +620,7 @@ RETURN o.name AS organization, ceo.name AS ceo","match
 sort $o_nbr_employees desc;
 limit 3;
 fetch { ""organization"": $o.name, ""ceo"": $ceo.name };"
-"synthetic-1","companies","491","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","List the top 5 organizations by number of employees that are located in a country with 'America' in its name.","MATCH (o:Organization)-[:IN_CITY]->(:City)-[:IN_COUNTRY]->(c:Country) WHERE c.name CONTAINS 'America' RETURN o.name AS organization, o.nbrEmployees AS numberOfEmployees ORDER BY o.nbrEmployees DESC LIMIT 5","match $o isa organization; $co isa country; $city isa city; located_in (organization: $o, city: $city); location-contains (child: $city, parent: $co); $co has country_name $c_country_name; $c_country_name contains ""America""; $o has nbr_employees $o_nbr_employees; sort $o_nbr_employees desc; limit 5; fetch { ""organization"": $o.name, ""numberOfEmployees"": $o.nbr_employees };"
+"synthetic-1","companies","491","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","List the top 5 organizations by number of employees that are located in a country with 'America' in its name.","MATCH (o:Organization)-[:IN_CITY]->(:City)-[:IN_COUNTRY]->(c:Country) WHERE c.name CONTAINS 'America' RETURN o.name AS organization, o.nbrEmployees AS numberOfEmployees ORDER BY o.nbrEmployees DESC LIMIT 5","match $o isa organization; $co isa country; $city isa city; located_in (organization: $o, city: $city); location-contains (child: $city, parent: $co); $co has country_name $c_country_name; $c_country_name contains ""America""; $o has nbr_employees $o_nbr_employees; sort $o_nbr_employees desc; limit 5; fetch { ""organization"": $o.name, ""number_of_employees"": $o.nbr_employees };"
 "synthetic-1","companies","492","high","cypher_missing_threshold","Question mentions threshold 1000000000 but it does not appear in Cypher","Which organizations have a revenue greater than 1 billion and are public?","MATCH (o:Organization) WHERE o.revenue > 1e9 AND o.isPublic = true RETURN o","match
   $o isa organization, has revenue $r, has is_public true;
   $r > 1000000000;
@@ -633,7 +633,7 @@ LIMIT 3","match
   $o isa organization, has nbr_employees $n;
 sort $n asc;
 limit 3;
-fetch { ""organization"": $o.name, ""numberOfEmployees"": $n };"
+fetch { ""organization"": $o.name, ""number_of_employees"": $n };"
 "synthetic-1","companies","503","high","cypher_missing_threshold","Question mentions threshold 1000000 but it does not appear in Cypher","Who are the first 3 board members of organizations that have a revenue of over 1 million?","MATCH (o:Organization)-[:HAS_BOARD_MEMBER]->(p:Person) WHERE o.revenue > 1e6 RETURN p.name AS boardMember, o.name AS organization LIMIT 3","match
   $o isa organization;
   $p isa person;
@@ -641,7 +641,7 @@ fetch { ""organization"": $o.name, ""numberOfEmployees"": $n };"
   $o has revenue $o_revenue;
   $o_revenue > 1000000;
 limit 3;
-fetch { ""boardMember"": $p.name, ""organization"": $o.name };"
+fetch { ""board_member"": $p.name, ""organization"": $o.name };"
 "synthetic-1","companies","507","medium","cypher_missing_condition","Question requires ""both...and"" but Cypher WHERE lacks AND","Identify the first 3 organizations that have both a subsidiary and a supplier.","MATCH (o:Organization)-[:HAS_SUBSIDIARY]->(:Organization)
 WHERE EXISTS {(o)-[:HAS_SUPPLIER]->(:Organization)}
 RETURN o.name
@@ -666,10 +666,10 @@ RETURN p.summary","match
   $o isa organization;
   $a isa article;
   mentions (article: $a, mentioned: $o);
-reduce $mentionCount = count($a) groupby $o;
-sort $mentionCount desc;
+reduce $mention_count = count($a) groupby $o;
+sort $mention_count desc;
 limit 3;
-fetch { ""organization"": $o.name, ""mentionCount"": $mentionCount };"
+fetch { ""organization"": $o.name, ""mention_count"": $mention_count };"
 "synthetic-1","companies","541","medium","cypher_missing_return_props","Question asks for ""names and ids"" but neither appears in RETURN","Provide the names and IDs of the first 3 persons who are CEOs of public companies.","MATCH (p:Person)-[:HAS_CEO]-(o:Organization)
 WHERE o.isPublic = true
 RETURN p.name AS name, p.id AS id
@@ -708,7 +708,7 @@ LIMIT 1","match
   $o has nbr_employees $ne;
 sort $ne desc;
 limit 1;
-fetch { ""organization"": $on, ""numberOfEmployees"": $ne };"
+fetch { ""organization"": $on, ""number_of_employees"": $ne };"
 "synthetic-1","companies","642","high","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","What are the relationships of 'Julie Spellman Sweet' within the context of the organization she is associated with?","MATCH (p:Person {name: 'Julie Spellman Sweet'})-[r]-(o:Organization)
 WHERE p.name IS NOT NULL AND o.name IS NOT NULL
 RETURN p, r, o","match
@@ -719,10 +719,10 @@ RETURN p, r, o","match
   $ic has industry_category_name $ic_industry_category_name;
   $ic_industry_category_name contains ""Environmental"";
   in_category (organization: $o, category: $ic);
-reduce $orgCount = count($o) groupby $c;
-sort $orgCount desc;
+reduce $org_count = count($o) groupby $c;
+sort $org_count desc;
 limit 3;
-fetch { ""city"": $c.city_name, ""orgCount"": $orgCount };"
+fetch { ""city"": $c.city_name, ""org_count"": $org_count };"
 "synthetic-1","companies","646","high","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","List the cities where organizations with a summary mentioning 'financial services' are based.","MATCH (o:Organization)-[:IN_CITY]->(c:City)
 WHERE o.summary CONTAINS 'financial services'
 RETURN DISTINCT c.name","match
@@ -733,10 +733,10 @@ RETURN DISTINCT c.name","match
   $ic has industry_category_name $ic_industry_category_name;
   $ic_industry_category_name contains ""Food"";
   in_category (organization: $o, category: $ic);
-reduce $orgCount = count($o) groupby $c;
-sort $orgCount desc;
+reduce $org_count = count($o) groupby $c;
+sort $org_count desc;
 limit 3;
-fetch { ""city"": $c.city_name, ""orgCount"": $orgCount };"
+fetch { ""city"": $c.city_name, ""org_count"": $org_count };"
 "synthetic-1","companies","690","high","cypher_missing_threshold","Question mentions threshold 100000000 but it does not appear in Cypher","Name 3 countries hosting organizations with revenue over 100 million.","MATCH (o:Organization)-[:IN_CITY]->(:City)-[:IN_COUNTRY]->(c:Country) WHERE o.revenue > 1E8 RETURN DISTINCT c.name LIMIT 3","match
   $o isa organization;
   $c isa country, has country_name $cn;
@@ -782,8 +782,8 @@ LIMIT 3","match
   $o isa organization, has is_public true, has nbr_employees $n;
 sort $n desc;
 limit 3;
-fetch { ""organization"": $o.name, ""numberOfEmployees"": $n };"
-"synthetic-1","companies","734","high","cypher_missing_threshold","Question mentions threshold 50000000 but it does not appear in Cypher","List the top 5 CEOs of organizations with revenue greater than 50 million.","MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person) WHERE o.revenue > 5e7 RETURN ceo.name AS ceoName, o.name AS orgName, o.revenue AS revenue ORDER BY o.revenue DESC LIMIT 5","match $o isa organization; $ceo isa person; ceo_of (organization: $o, ceo: $ceo); $o has revenue $o_revenue; $o_revenue > 50000000; sort $o_revenue desc; limit 5; fetch { ""ceoName"": $ceo.name, ""orgName"": $o.name, ""revenue"": $o.revenue };"
+fetch { ""organization"": $o.name, ""number_of_employees"": $n };"
+"synthetic-1","companies","734","high","cypher_missing_threshold","Question mentions threshold 50000000 but it does not appear in Cypher","List the top 5 CEOs of organizations with revenue greater than 50 million.","MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person) WHERE o.revenue > 5e7 RETURN ceo.name AS ceoName, o.name AS orgName, o.revenue AS revenue ORDER BY o.revenue DESC LIMIT 5","match $o isa organization; $ceo isa person; ceo_of (organization: $o, ceo: $ceo); $o has revenue $o_revenue; $o_revenue > 50000000; sort $o_revenue desc; limit 5; fetch { ""ceo_name"": $ceo.name, ""org_name"": $o.name, ""revenue"": $o.revenue };"
 "synthetic-1","companies","744","high","cypher_missing_order","Question asks for top-3 but Cypher has no ORDER BY","Who are the top 3 parents of 'Julie Spellman Sweet'?","MATCH (p:Person {name: 'Julie Spellman Sweet'})<-[:HAS_CHILD]-(parent:Person) RETURN parent.name LIMIT 3","match $p isa person, has name ""Julie Spellman Sweet""; $parent isa person; parent_of (parent: $p, child: $parent); limit 3; fetch { ""name"": $parent.name };"
 "synthetic-1","companies","749","high","cypher_missing_threshold","Question mentions threshold 10000000 but it does not appear in Cypher","List the top 5 organizations that are public and have a revenue less than 10 million.","MATCH (o:Organization) WHERE o.isPublic = true AND o.revenue < 1E7 RETURN o.name AS organization, o.revenue AS revenue ORDER BY o.revenue DESC LIMIT 5","match
 $o isa organization, has is_public true, has revenue $r;
@@ -831,7 +831,7 @@ match
   mentions (article: $a, mentioned: $o);
   $d == latest_article_date($o);
   $s > 0.8;
-fetch { ""organization"": $o.name, ""latestArticle"": $a.title, ""sentiment"": $s };"
+fetch { ""organization"": $o.name, ""latest_article"": $a.title, ""sentiment"": $s };"
 "synthetic-1","companies","795","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","What are the names of the top 5 organizations in terms of number of employees?","MATCH (o:Organization)
 WHERE o.nbrEmployees IS NOT NULL
 RETURN o.name AS organization, o.nbrEmployees AS numberOfEmployees
@@ -854,7 +854,7 @@ fetch { ""organization"": $o.name, ""nbr_employees"": $ne };"
   not { $cn == ""Mexico""; };
 fetch {
   ""title"": $a.title,
-  ""siteName"": $a.site_name,
+  ""site_name"": $a.site_name,
   ""date"": $a.date,
   ""organization"": $o.name,
   ""country"": $cn
@@ -885,7 +885,7 @@ RETURN o1.name AS BoardMemberOrg, p.name AS Person, o2.name AS CEOOrg","match
   ceo_of (organization: $o2, ceo: $p);
   not { $o1 is $o2; };
 fetch {
-  ""BoardMemberOrg"": $o1.name,
+  ""board_member_org"": $o1.name,
   ""Person"": $p.name,
   ""CEOOrg"": $o2.name
 };"
@@ -912,7 +912,7 @@ sort $employees asc;
 limit 3;
 fetch {
   ""organization"": $o.name,
-  ""numberOfEmployees"": $employees
+  ""number_of_employees"": $employees
 };
 "
 "synthetic-1","companies","881","high","cypher_missing_threshold","Question mentions threshold 50000000 but it does not appear in Cypher","List the first 5 organizations with a revenue greater than 50 million that have a competitor.","MATCH (o:Organization)
@@ -1148,7 +1148,7 @@ $c isa character, has centrality $cent, has book45_page_rank $b45pr,
 let $total = $cent + $b45pr + $b1bc + $b1pr + $pr;
 sort $total desc;
 limit 3;
-fetch { ""character"": $c.name, ""totalCentrality"": $total };"
+fetch { ""character"": $c.name, ""total_centrality"": $total };"
 "synthetic-1","gameofthrones","370","high","cypher_missing_order","Question asks for top-5 but Cypher has no ORDER BY","List the characters who have a centrality value of exactly 0.8. Limit to top 5.","MATCH (c:Character)
 WHERE c.centrality = 0.8
 RETURN c.name
@@ -1179,7 +1179,7 @@ LIMIT 5","match
 let $avg_centrality = ($b1pr + $b45pr + $pr) / 3;
 sort $avg_centrality desc;
 limit 5;
-fetch { ""character"": $n, ""avgCentrality"": $avg_centrality };
+fetch { ""character"": $n, ""avg_centrality"": $avg_centrality };
 "
 "synthetic-1","gameofthrones","377","medium","cypher_missing_sum","Question asks for total/sum but Cypher has no sum()","Which characters have the highest sum of pagerank values across all books? Limit to top 5.","MATCH (c:Character)
 RETURN c.name AS character,
@@ -1193,7 +1193,7 @@ LIMIT 5","match
 let $total = $pr + $b1pr + $b45pr;
 sort $total desc;
 limit 5;
-fetch { ""character"": $c.name, ""totalPageRank"": $total };
+fetch { ""character"": $c.name, ""total_page_rank"": $total };
 "
 "synthetic-1","gameofthrones","384","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","Identify the top 3 characters with the highest book1BetweennessCentrality and a community number of 759.","MATCH (c:Character)
 WHERE c.community = 759
@@ -1216,7 +1216,7 @@ $c isa character, has book1_page_rank $b1pr, has book45_page_rank $b45pr;
 let $total = $b1pr + $b45pr;
 sort $total desc;
 limit 3;
-fetch { ""name"": $c.name, ""totalPageRank"": $total };"
+fetch { ""name"": $c.name, ""total_page_rank"": $total };"
 "synthetic-1","movies","32","high","cypher_missing_order","Question asks for top-5 but Cypher has no ORDER BY","Find all movies that have been produced by persons born after 1960 limited to top 5.","MATCH (p:Person)-[:PRODUCED]->(m:Movie)
 WHERE p.born > 1960
 RETURN m
@@ -1285,7 +1285,7 @@ sort $count desc;
 limit 5;
 fetch {
   ""movie"": $t,
-  ""numRoles"": $count
+  ""num_roles"": $count
 };"
 "synthetic-1","movies","186","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","List the roles of actors in the 3 movies with the highest number of actors involved.","MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
 WITH m, collect(p) AS actors
@@ -1412,13 +1412,13 @@ RETURN p1.name AS person1, p2.name AS person2, ageDiff","match
   $p1 isa person, has name $n1, has born $b1;
   $p2 isa person, has name $n2, has born $b2;
   not { $p1 is $p2; };
-let $ageDiff = abs($b1 - $b2);
-sort $ageDiff asc;
+let $age_diff = abs($b1 - $b2);
+sort $age_diff asc;
 limit 3;
 fetch {
   ""person1"": $n1,
   ""person2"": $n2,
-  ""ageDiff"": $ageDiff
+  ""age_diff"": $age_diff
 };"
 "synthetic-1","movies","461","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","What are the common movies acted in by people who were born in the same decade?","MATCH (p1:Person)-[:ACTED_IN]->(m:Movie)<-[:ACTED_IN]-(p2:Person)
 WHERE p1 <> p2 AND p1.born >= 1920 AND p1.born < 2000 AND p2.born >= 1920 AND p2.born < 2000
@@ -1457,7 +1457,7 @@ sort $count desc;
 limit 3;
 fetch {
   ""movie"": $t,
-  ""numRoles"": $count
+  ""num_roles"": $count
 };"
 "synthetic-1","movies","478","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","List 3 movies with exactly 3 roles in the ACTED_IN relationship.","MATCH (m:Movie)<-[ai:ACTED_IN]-(p:Person)
 WHERE size(ai.roles) = 3
@@ -1522,7 +1522,7 @@ sort $count desc;
 limit 3;
 fetch {
   ""movie"": $t,
-  ""roleCount"": $count
+  ""role_count"": $count
 };"
 "synthetic-1","movies","587","high","cypher_missing_order","Question asks for top-5 but Cypher has no ORDER BY","List the top 5 movies that have not been reviewed.","MATCH (m:Movie)
 WHERE NOT EXISTS { (m)<-[:REVIEWED]-() }
@@ -1565,7 +1565,7 @@ sort $count desc;
 limit 3;
 fetch {
   ""movie"": $t,
-  ""roleCount"": $count
+  ""role_count"": $count
 };"
 "synthetic-1","movies","618","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","What are the top 3 shortest role lists in movies reviewed by persons born before 1960?","MATCH (p:Person)-[:REVIEWED]->(m:Movie)<-[ai:ACTED_IN]-(a:Person)
 WHERE p.born < 1960
@@ -1586,7 +1586,7 @@ sort $count asc;
 limit 3;
 fetch {
   ""movie"": $t,
-  ""roleCount"": $count
+  ""role_count"": $count
 };"
 "synthetic-1","movies","619","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Which movie has the most roles in the 'ACTED_IN' relationship and what are those roles?","MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
 WITH m, r
@@ -1604,7 +1604,7 @@ sort $count desc;
 limit 1;
 fetch {
   ""movie"": $t,
-  ""roleCount"": $count
+  ""role_count"": $count
 };"
 "synthetic-1","movies","676","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which movies have more than 3 actors listed?","MATCH (m:Movie)
 WHERE size([(p)-[:ACTED_IN]->(m) | p]) > 3
@@ -1649,7 +1649,7 @@ match $count > 3;
 sort $title;
 fetch {
   ""movie"": $title,
-  ""translatedLanguages"": $count
+  ""translated_languages"": $count
 };"
 "synthetic-1","neoflix","66","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Identify all movies that were produced in a country other than the United States.","MATCH (m:Movie)-[:PRODUCED_IN_COUNTRY]->(c:Country)
 WHERE c.name <> 'United States of America'
@@ -1924,7 +1924,7 @@ $num_videos > 0;
 let $total = $num_movies + $num_videos;
 sort $total desc;
 limit 3;
-fetch { ""actor"": $p.person_name, ""numMovies"": $num_movies, ""numVideos"": $num"
+fetch { ""actor"": $p.person_name, ""num_movies"": $num_movies, ""num_videos"": $num"
 "synthetic-1","neoflix","897","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","List the top 3 actors who have appeared in both movies and videos.","MATCH (p:Person)-[:CAST_FOR]->(m:Movie)
 WITH p, count(m) AS numMovies
 WHERE numMovies > 0
@@ -1950,7 +1950,7 @@ $num_videos > 0;
 let $total = $num_movies + $num_videos;
 sort $total desc;
 limit 3;
-fetch { ""actor"": $p.person_name, ""numMovies"": $num_movies, ""numVideos"": $num"
+fetch { ""actor"": $p.person_name, ""num_movies"": $num_movies, ""num_videos"": $num"
 "synthetic-1","neoflix","902","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","List the top 5 movies with the most diverse cast, measured by the number of different countries actors come from.","MATCH (m:Movie)<-[:CAST_FOR]-(p:Person)
 WITH m, size(collect(distinct p.country)) AS num_countries
 ORDER BY num_countries DESC
@@ -1995,7 +1995,7 @@ let $lang_count = language_count($m);
 reduce $max_langs = max($lang_count) groupby $g;
 sort $max_langs desc;
 limit 5;
-fetch { ""genre"": $g.name, ""maxLanguages"": $max_langs };"
+fetch { ""genre"": $g.name, ""max_languages"": $max_langs };"
 "synthetic-1","recommendations","28","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","List the first 5 movies that have been rated by users from more than 10 different countries.","MATCH (m:Movie)<-[r:RATED]-(u:User)
 WITH m, count(DISTINCT u.name) AS numCountries
 WHERE numCountries > 10
@@ -2027,7 +2027,7 @@ $m isa movie, has languages $lang;
 let $lang_count = language_count($m);
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","65","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","List the movies where the primary language is English and have a runtime of exactly 96 minutes.","MATCH (m:Movie)
 WHERE 'English' IN m.languages AND m.runtime = 96
 RETURN m.title","match
@@ -2062,7 +2062,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","102","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","Which 3 movies feature both English and Japanese languages?","MATCH (m:Movie)
 WHERE 'English' IN m.languages AND 'Japanese' IN m.languages
 RETURN m.title
@@ -2175,10 +2175,10 @@ RETURN u.name AS user, numHighRatings","match
 $u isa user, has name $n;
 $r isa rated (user: $u, film: $m), has rating $rating;
 $rating > 7.0;
-reduce $numHighRatings = count($r) groupby $n;
-sort $numHighRatings desc;
+reduce $num_high_ratings = count($r) groupby $n;
+sort $num_high_ratings desc;
 limit 10;
-fetch { ""user"": $n, ""numHighRatings"": $numHighRatings };"
+fetch { ""user"": $n, ""num_high_ratings"": $num_high_ratings };"
 "synthetic-1","recommendations","162","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","What are the 5 most recent movies directed by directors born in the USA?","MATCH (d:Director {bornIn: 'USA'})-[:DIRECTED]->(m:Movie)
 RETURN m.title, m.released
 ORDER BY m.released DESC
@@ -2217,7 +2217,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","188","medium","cypher_missing_condition","Question requires ""both...and"" but Cypher WHERE lacks AND","Which directors have directed movies in both the 'Horror' and 'Romance' genres?","MATCH (d:Director)-[:DIRECTED]->(m:Movie)-[:IN_GENRE]->(g:Genre)
 WHERE g.name IN ['Horror', 'Romance']
 WITH d, collect(distinct g.name) AS genres
@@ -2248,7 +2248,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","245","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Which 5 movies have been released in the most number of countries?","MATCH (m:Movie)
 WHERE m.countries IS NOT NULL
 RETURN m.title, size(m.countries) AS numCountries
@@ -2263,7 +2263,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "synthetic-1","recommendations","253","high","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","List the top 5 genres of movies with the most language diversity.","MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
 WITH g, m.languages AS languages
 WITH g, size(languages) AS languageCount
@@ -2280,7 +2280,7 @@ let $lang_count = language_count($m);
 reduce $avg_langs = mean($lang_count) groupby $g;
 sort $avg_langs desc;
 limit 5;
-fetch { ""genre"": $g.name, ""avgLanguages"": $avg_langs };"
+fetch { ""genre"": $g.name, ""avg_languages"": $avg_langs };"
 "synthetic-1","recommendations","270","medium","cypher_missing_distinct","Question asks for distinct/unique but Cypher has no DISTINCT","Which 5 movies have the most distinct countries of release listed?","MATCH (m:Movie)
 RETURN m.title, size(m.countries) AS numCountries
 ORDER BY numCountries DESC
@@ -2294,7 +2294,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "synthetic-1","recommendations","270","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Which 5 movies have the most distinct countries of release listed?","MATCH (m:Movie)
 RETURN m.title, size(m.countries) AS numCountries
 ORDER BY numCountries DESC
@@ -2308,7 +2308,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "synthetic-1","recommendations","276","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","What are the top 3 movies based on the number of different languages they have been released in?","MATCH (m:Movie)
 RETURN m.title, size(m.languages) AS languageCount
 ORDER BY languageCount DESC
@@ -2322,7 +2322,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","276","high","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","What are the top 3 movies based on the number of different languages they have been released in?","MATCH (m:Movie)
 RETURN m.title, size(m.languages) AS languageCount
 ORDER BY languageCount DESC
@@ -2336,7 +2336,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","288","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","What are the first 3 movies that have been released in exactly three different countries?","MATCH (m:Movie)
 WHERE size(m.countries) = 3
 RETURN m.title, m.released, m.countries
@@ -2384,7 +2384,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","327","medium","cypher_missing_distinct","Question asks for distinct/unique but Cypher has no DISTINCT","What are the top 5 movies with the most distinct countries of origin?","MATCH (m:Movie)
 WHERE m.countries IS NOT NULL
 RETURN m.title, size(m.countries) AS numCountries
@@ -2399,7 +2399,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "synthetic-1","recommendations","327","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","What are the top 5 movies with the most distinct countries of origin?","MATCH (m:Movie)
 WHERE m.countries IS NOT NULL
 RETURN m.title, size(m.countries) AS numCountries
@@ -2414,7 +2414,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "synthetic-1","recommendations","338","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","List the top 5 movies with the most number of IMDb votes.","MATCH (m:Movie)
 RETURN m.title, m.imdbVotes
 ORDER BY m.imdbVotes DESC
@@ -2446,7 +2446,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","373","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","What are the first 3 movies that have a language list containing 'Turkish'?","MATCH (m:Movie)
 WHERE 'Turkish' IN m.languages
 RETURN m.title
@@ -2469,7 +2469,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "synthetic-1","recommendations","383","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","List the top 3 movies that have multiple languages but a single country of origin.","MATCH (m:Movie)
 WHERE size(m.languages) > 1 AND size(m.countries) = 1
 RETURN m.title, m.languages, m.countries
@@ -2526,7 +2526,7 @@ distinct;
 reduce $num_countries = count($c) groupby $p;
 sort $num_countries desc;
 limit 3;
-fetch { ""director"": $p.name, ""numberOfCountries"": $num_countries };"
+fetch { ""director"": $p.name, ""number_of_countries"": $num_countries };"
 "synthetic-1","recommendations","396","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","What are the first 3 movies with a majority of non-English languages?","MATCH (m:Movie)
 WHERE size([l IN m.languages WHERE l <> 'English']) > size(m.languages) / 2
 RETURN m.title
@@ -2607,7 +2607,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","458","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","Which movies have been rated 5.0 by more than 10 users?","MATCH (m:Movie)<-[r:RATED]-(u:User)
 WHERE r.rating = 5.0
 WITH m, count(u) AS numRatings
@@ -2615,10 +2615,10 @@ WHERE numRatings > 10
 RETURN m.title, numRatings","match
 $m isa movie, has title $t;
 $r isa rated (user: $u, film: $m), has rating 5.0;
-reduce $numRatings = count($u) groupby $t;
-sort $numRatings desc;
+reduce $num_ratings = count($u) groupby $t;
+sort $num_ratings desc;
 limit 10;
-fetch { ""title"": $t, ""numRatings"": $numRatings };"
+fetch { ""title"": $t, ""num_ratings"": $num_ratings };"
 "synthetic-1","recommendations","467","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","List the movies that have been released in more than 5 countries.","MATCH (m:Movie)
 WHERE size(m.countries) > 5
 RETURN m.title, m.countries","with fun country_count($m: movie) -> integer:
@@ -2649,7 +2649,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","474","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","Find all users who have rated movies from more than three different genres.","MATCH (u:User)-[:RATED]->(m:Movie)-[:IN_GENRE]->(g:Genre)
 WITH u, count(DISTINCT g) AS num_genres
 WHERE num_genres > 3
@@ -2676,7 +2676,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "synthetic-1","recommendations","483","medium","cypher_missing_condition","Question requires ""both...and"" but Cypher WHERE lacks AND","Which directors have directed both a comedy and a drama movie?","MATCH (d:Director)-[:DIRECTED]->(m1:Movie)-[:IN_GENRE]->(g1:Genre {name: 'Comedy'})
 WHERE exists{ (d)-[:DIRECTED]->(m2:Movie)-[:IN_GENRE]->(g2:Genre {name: 'Drama'}) }
 RETURN d.name AS director","match $d isa person, has name $n; directed (director: $d, film: $m1); in_genre (film: $m1, genre: $g1); $g1 has name ""Comedy""; directed (director: $d, film: $m2); in_genre (film: $m2, genre: $g2); $g2 has name ""Drama""; fetch { ""director"": $n };"
@@ -2700,7 +2700,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "synthetic-1","recommendations","505","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","Find all directors who have directed a movie in a language other than English.","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WHERE NOT 'English' IN m.languages
 RETURN DISTINCT d.name AS director","match
@@ -2723,7 +2723,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","528","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","List 5 movies that have both English and French as languages.","MATCH (m:Movie)
 WHERE 'English' IN m.languages AND 'French' IN m.languages
 RETURN m.title
@@ -2747,7 +2747,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "synthetic-1","recommendations","557","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Which 3 directors were born in the same country they directed their first movie?","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WHERE d.bornIn IS NOT NULL AND d.bornIn IN m.countries
 WITH d, m
@@ -2767,7 +2767,7 @@ let $first_year = first_movie_year($d);
 $y == $first_year;
 sort $y asc;
 limit 3;
-fetch { ""director"": $n, ""bornCountry"": $b, ""firstMovie"": $t };"
+fetch { ""director"": $n, ""born_country"": $b, ""first_movie"": $t };"
 "synthetic-1","recommendations","558","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","List the first 3 movies with exactly three languages spoken.","MATCH (m:Movie)
 WHERE size(m.languages) = 3
 RETURN m.title
@@ -2850,10 +2850,10 @@ WHERE numMovies > 1
 RETURN a.name AS actor, numMovies","match
 $a isa person, has name $n;
 acted_in (actor: $a, film: $m);
-reduce $numMovies = count($m) groupby $n;
-sort $numMovies desc;
+reduce $num_movies = count($m) groupby $n;
+sort $num_movies desc;
 limit 5;
-fetch { ""actor"": $n, ""numMovies"": $numMovies };"
+fetch { ""actor"": $n, ""num_movies"": $num_movies };"
 "synthetic-1","recommendations","601","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","Which directors have directed at least three movies with budgets over 100 million dollars?","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WHERE m.budget > 100000000
 WITH d, count(m) AS num_high_budget_movies
@@ -2884,10 +2884,10 @@ WHERE num_ratings > 50
 RETURN u.name AS user, num_ratings","match
 $u isa user, has name $n;
 $r isa rated (user: $u, film: $m);
-reduce $numRatings = count($r) groupby $n;
-sort $numRatings desc;
+reduce $num_ratings = count($r) groupby $n;
+sort $num_ratings desc;
 limit 5;
-fetch { ""name"": $n, ""numRatings"": $numRatings };"
+fetch { ""name"": $n, ""num_ratings"": $num_ratings };"
 "synthetic-1","recommendations","638","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Identify movies that have languages lists containing more than 5 languages.","MATCH (m:Movie)
 WHERE size(m.languages) > 5
 RETURN m.title, m.languages","with fun language_count($m: movie) -> integer:
@@ -2913,7 +2913,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","657","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","List the top 5 movies with the most countries available in their languages list.","MATCH (m:Movie)
 WHERE m.languages IS NOT NULL
 RETURN m.title, size(m.languages) AS languageCount
@@ -2928,7 +2928,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","670","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","Which 3 actors have a poster listed and acted in at least two movies?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE a.poster IS NOT NULL
 WITH a, count(m) AS numMovies
@@ -2937,10 +2937,10 @@ RETURN a.name, a.poster
 LIMIT 3","match
 $a isa person, has name $n;
 acted_in (actor: $a, film: $m);
-reduce $numMovies = count($m) groupby $n;
-sort $numMovies desc;
+reduce $num_movies = count($m) groupby $n;
+sort $num_movies desc;
 limit 3;
-fetch { ""actor"": $n, ""numMovies"": $numMovies };"
+fetch { ""actor"": $n, ""num_movies"": $num_movies };"
 "synthetic-1","recommendations","677","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","List the top 5 movies that were released in languages other than English and have an imdbRating above 7.0.","MATCH (m:Movie)
 WHERE m.imdbRating > 7.0 AND NOT 'English' IN m.languages
 RETURN m.title, m.imdbRating, m.languages
@@ -2951,7 +2951,7 @@ $r > 7.0;
 not { $l like "".*English.*""; };
 sort $r desc;
 limit 5;
-fetch { ""title"": $t, ""imdbRating"": $r, ""languages"": $l };"
+fetch { ""title"": $t, ""imdb_rating"": $r, ""languages"": $l };"
 "synthetic-1","recommendations","683","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","What are the top 5 movies with the highest number of countries represented in their languages list?","MATCH (m:Movie)
 WHERE m.languages IS NOT NULL
 RETURN m.title, size(m.languages) AS languageCount
@@ -2966,7 +2966,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","683","high","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","What are the top 5 movies with the highest number of countries represented in their languages list?","MATCH (m:Movie)
 WHERE m.languages IS NOT NULL
 RETURN m.title, size(m.languages) AS languageCount
@@ -2981,7 +2981,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","686","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which 3 users have rated the same movie with different ratings?","MATCH (u1:User)-[r1:RATED]->(m:Movie)<-[r2:RATED]-(u2:User), 
        (m)<-[r3:RATED]-(u3:User)
 WHERE u1 <> u2 AND u1 <> u3 AND u2 <> u3
@@ -3018,7 +3018,7 @@ let $lang_count = language_count($m);
 $lang_count == 1;
 sort $r desc;
 limit 5;
-fetch { ""title"": $m.title, ""imdbRating"": $r };"
+fetch { ""title"": $m.title, ""imdb_rating"": $r };"
 "synthetic-1","recommendations","703","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","What are the top 5 movies with the most languages and at least one genre being 'Action'?","MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
 WHERE g.name = 'Action'
 RETURN m.title, m.languages
@@ -3065,7 +3065,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "synthetic-1","recommendations","736","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Which 3 actors have acted in both a highest and lowest grossing movie?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WITH a, m
 ORDER BY m.revenue DESC
@@ -3119,7 +3119,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "synthetic-1","recommendations","751","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","Which 3 actors have a bio longer than 1000 characters and have acted in more than 5 movies?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE size(a.bio) > 1000
 WITH a, count(m) AS numMovies
@@ -3188,8 +3188,8 @@ WHERE languageCount > 1
 RETURN s","match
   $s isa stream, has name $sn;
   language_usage (channel: $s, used_language: $l);
-reduce $languageCount = count($l) groupby $sn;
-sort $languageCount desc;"
+reduce $language_count = count($l) groupby $sn;
+sort $language_count desc;"
 "synthetic-1","twitch","69","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","Which users are chatters in more than three streams?","MATCH (u:User)-[:CHATTER]->(s:Stream)
 WITH u, count(s) AS num_streams
 WHERE num_streams > 3
@@ -3216,8 +3216,8 @@ RETURN g.name AS game, minFollowers AS lowestFollowerCount","match
   $s isa stream, has followers $f;
   game_play (streaming_channel: $s, played_game: $g);
   $g has name $gn;
-reduce $minFollowers = min($f) groupby $gn;
-sort $minFollowers asc;
+reduce $min_followers = min($f) groupby $gn;
+sort $min_followers asc;
 limit 10;"
 "synthetic-1","twitch","155","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List the top 5 users who have the role of chatter in the highest number of other user's streams.","MATCH (u:User)-[:CHATTER]->(s:Stream)<-[:CHATTER]-(other:User)
 WHERE u <> other
@@ -3454,7 +3454,7 @@ LIMIT 5","match
   language_usage (channel: $s, used_language: $l2);
   not { $l1 is $l2; };
 limit 5;
-fetch { ""streamName"": $sn, ""streamUrl"": $su };"
+fetch { ""stream_name"": $sn, ""stream_url"": $su };"
 "synthetic-1","twitch","306","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Who are the first 5 moderators in streams that have changed games at least twice?","MATCH (s:Stream)-[:PLAYS]->(:Game)
 WITH s, count(DISTINCT s) AS gameCount
 WHERE gameCount >= 2
@@ -3485,7 +3485,7 @@ LIMIT 3","match
   language_usage (channel: $s, used_language: $l2);
   not { $l1 is $l2; };
 limit 3;
-fetch { ""streamName"": $sn, ""streamUrl"": $su };"
+fetch { ""stream_name"": $sn, ""stream_url"": $su };"
 "synthetic-1","twitch","314","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Who are the first 3 moderators for the oldest stream?","MATCH (s:Stream)<-[:MODERATOR]-(m:User)
 WITH s, m
 ORDER BY s.createdAt
@@ -3594,11 +3594,11 @@ fetch { ""user"": $un, ""num_moderated_streams"": $num_moderated };"
 RETURN s.name AS stream, m.name AS moderator, otherStream.name AS vipInStream","match
   $s isa stream, has name $sn;
   $m isa user, has name $mn;
-  $otherStream isa stream, has name $osn;
+  $other_stream isa stream, has name $osn;
   moderation (moderated_channel: $s, moderating_user: $m);
-  vip_status (channel_with_vips: $otherStream, vip_user: $m);
-  not { $s is $otherStream; };
-fetch { ""stream"": $sn, ""moderator"": $mn, ""vipInStream"": $osn };"
+  vip_status (channel_with_vips: $other_stream, vip_user: $m);
+  not { $s is $other_stream; };
+fetch { ""stream"": $sn, ""moderator"": $mn, ""vip_in_stream"": $osn };"
 "synthetic-1","twitch","438","high","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Which users are VIPs for the stream with the highest follower count?","MATCH (s:Stream)
 WITH s
 ORDER BY s.followers DESC
@@ -3773,10 +3773,10 @@ WHERE otherStream <> s
 RETURN s.name AS stream, u.name AS chatter_and_moderator","match
   $s isa stream, has name $sn;
   $u isa user, has name $un;
-  $otherStream isa stream;
+  $other_stream isa stream;
   chat_activity (channel_with_chatters: $s, chatting_user: $u);
-  moderation (moderated_channel: $otherStream, moderating_user: $u);
-  not { $s is $otherStream; };
+  moderation (moderated_channel: $other_stream, moderating_user: $u);
+  not { $s is $other_stream; };
 fetch { ""stream"": $sn, ""chatter_and_moderator"": $un };"
 "synthetic-1","twitch","532","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Name the top 5 users who have chatted in more than three streams.","MATCH (u:User)-[:CHATTER]->(s:Stream)
 WITH u, count(distinct s) as num_streams
@@ -4146,7 +4146,7 @@ interacted (source_user: $u1, target_user: $u2);
 $u2 has handle $h;
 limit 5;
 fetch {
-  ""interactedUser"": $h
+  ""interacted_user"": $h
 };"
 "synthetic-2","bluesky","107","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","Find 3 users whose y-coordinate is less than -5000.","MATCH (u:User)
 WHERE u.y < -5000
@@ -4187,7 +4187,7 @@ fetch {
     ""title"": $q.title,
     ""text"": $q.text,
     ""link"": $q.link,
-    ""createdAt"": $q.created_at
+    ""created_at"": $q.created_at
 };"
 "synthetic-2","buzzoverflow","73","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which 3 users have asked questions that are all unanswered but highly upVoted?","MATCH (u:User)-[:ASKED]->(q:Question)
 WHERE q.answered = false AND q.upVotes > 0
@@ -4233,7 +4233,7 @@ limit 3;
 fetch {
     ""title"": $q.title,
     ""link"": $q.link,
-    ""createdAt"": $ca
+    ""created_at"": $ca
 };"
 "synthetic-2","buzzoverflow","126","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Which 3 users' questions have the most variations in favorites count?","MATCH (u:User)-[:ASKED]->(q:Question)
 WITH u, collect(q.favorites) AS favoritesList
@@ -4259,7 +4259,7 @@ sort $variation desc;
 limit 3;
 fetch {
   ""user"": $u.display_name,
-  ""favoritesVariation"": $variation
+  ""favorites_variation"": $variation
 };"
 "synthetic-2","buzzoverflow","138","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","Identify the first 3 questions with the most detailed descriptions based on the number of characters.","MATCH (q:Question)
 WITH q, size(q.text) AS descriptionLength
@@ -4273,7 +4273,7 @@ limit 3;
 fetch {
   ""title"": $title,
   ""description"": $text,
-  ""descriptionLength"": $len
+  ""description_length"": $len
 };"
 "synthetic-2","buzzoverflow","178","medium","cypher_missing_return_props","Question asks for ""titles and links"" but neither appears in RETURN","Provide the titles and links of questions that have more than 2 tags.","MATCH (q:Question)-[:TAGGED]->(t:Tag)
 WITH q, COUNT(t) AS tagCount
@@ -4319,7 +4319,7 @@ $u isa user;
 $q isa question, has created_at $ca;
 asked (asker: $u, asked_question: $q);
 $ca like "".*-01T.*"";
-fetch { ""userName"": $u.display_name, ""questionTitle"": $q.title, ""questionDate"": $ca };"
+fetch { ""user_name"": $u.display_name, ""question_title"": $q.title, ""question_date"": $ca };"
 "synthetic-2","buzzoverflow","200","medium","cypher_missing_return_props","Question asks for ""titles and links"" but neither appears in RETURN","Provide the titles and links of questions that were asked by users with an image link containing 'googleusercontent' and have more than 3 favorites.","MATCH (u:User)-[:ASKED]->(q:Question)
 WHERE u.image CONTAINS 'googleusercontent' AND q.favorites > 3
 RETURN q.title AS title, q.link AS link","match
@@ -4364,13 +4364,13 @@ RETURN u.display_name AS userName, questionCount","match
 $u isa user;
 $q isa question;
 asked (asker: $u, asked_question: $q);
-reduce $questionCount = count($q) groupby $u;
+reduce $question_count = count($q) groupby $u;
 match
-$questionCount > 3;
-sort $questionCount desc;
+$question_count > 3;
+sort $question_count desc;
 fetch {
-  ""userName"": $u.display_name,
-  ""questionCount"": $questionCount
+  ""user_name"": $u.display_name,
+  ""question_count"": $question_count
 };"
 "synthetic-2","buzzoverflow","362","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","Which users have asked more than 3 questions?","MATCH (u:User)-[:ASKED]->(q:Question)
 WITH u, COUNT(q) AS questionCount
@@ -4379,13 +4379,13 @@ RETURN u.display_name AS userName, questionCount","match
 $u isa user;
 $q isa question;
 asked (asker: $u, asked_question: $q);
-reduce $questionCount = count($q) groupby $u;
-match $questionCount > 3;
+reduce $question_count = count($q) groupby $u;
+match $question_count > 3;
 $u has display_name $name;
 sort $name;
 fetch {
-  ""userName"": $name,
-  ""questionCount"": $questionCount
+  ""user_name"": $name,
+  ""question_count"": $question_count
 };"
 "synthetic-2","buzzoverflow","440","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","Show the top 5 questions by the number of times they have been favorited.","MATCH (q:Question)
 RETURN q.title, q.favorites
@@ -4412,9 +4412,9 @@ $q isa question;
 not { $u isa user; asked (asker: $u, asked_question: $q2); $q2 isa question, has down_votes $dv; $dv > 0; };
 limit 3;
 fetch {
-  ""userName"": $u.display_name,
-  ""userId"": $u.user_id,
-  ""userLink"": $u.user_link
+  ""user_name"": $u.display_name,
+  ""user_id"": $u.user_id,
+  ""user_link"": $u.user_link
 };"
 "synthetic-2","buzzoverflow","464","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Which 3 users have the highest rate of answered questions?","MATCH (u:User)-[:ASKED]->(q:Question)
 WHERE q.answered = true
@@ -4444,21 +4444,21 @@ sort $answer_rate desc;
 limit 3;
 fetch {
   ""user"": $u.display_name,
-  ""answerRate"": $ans"
+  ""answer_rate"": $ans"
 "synthetic-2","companies","12","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","Identify the top 3 organizations that have a subsidiary with the largest number of employees.","MATCH (parentOrg:Organization)-[:HAS_SUBSIDIARY]->(subOrg:Organization)
 WHERE subOrg.nbrEmployees IS NOT NULL
 RETURN parentOrg.name AS ParentOrganization, subOrg.name AS Subsidiary, subOrg.nbrEmployees AS NumberOfEmployees
 ORDER BY subOrg.nbrEmployees DESC
 LIMIT 3","match
-$parentOrg isa organization, has name $parentName;
-$subOrg isa organization, has nbr_employees $nbrEmployees;
-subsidiary_of (parent: $parentOrg, subsidiary: $subOrg);
-sort $nbrEmployees desc;
+$parent_org isa organization, has name $parent_name;
+$sub_org isa organization, has nbr_employees $nbr_employees;
+subsidiary_of (parent: $parent_org, subsidiary: $sub_org);
+sort $nbr_employees desc;
 limit 3;
 fetch {
-  ""ParentOrganization"": $parentName,
-  ""Subsidiary"": $subOrg.name,
-  ""NumberOfEmployees"": $nbrEmployees
+  ""parent_organization"": $parent_name,
+  ""Subsidiary"": $sub_org.name,
+  ""number_of_employees"": $nbr_employees
 };"
 "synthetic-2","companies","26","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","What are the names of the top 5 organizations in terms of number of employees?","MATCH (o:Organization)
 RETURN o.name, o.nbrEmployees
@@ -4469,7 +4469,7 @@ sort $n desc;
 limit 5;
 fetch {
   ""name"": $o.name,
-  ""nbrEmployees"": $n
+  ""nbr_employees"": $n
 };"
 "synthetic-2","companies","38","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","List the organizations that have a sentiment score above 0.8 in their latest article mention.","MATCH (o:Organization)<-[:MENTIONS]-(a:Article)
 WHERE a.sentiment > 0.8
@@ -4504,7 +4504,7 @@ $c isa organization;
 not { $o is $c; };
 reduce $count = count($c) groupby $o, $name;
 match $count > 2;
-fetch { ""organizationName"": $name, ""competitorCount"": $count };"
+fetch { ""organization_name"": $name, ""competitor_count"": $count };"
 "synthetic-2","companies","78","high","cypher_missing_order","Question asks for top-3 but Cypher has no ORDER BY","Who are the top 3 parents of 'Julie Spellman Sweet'?","MATCH (p:Person {name: ""Julie Spellman Sweet""})-[:HAS_PARENT]->(parent:Person)
 RETURN parent.name AS ParentName
 LIMIT 3","match
@@ -4513,7 +4513,7 @@ parent_of (parent: $parent, child: $p);
 $parent has name $n;
 limit 3;
 fetch {
-  ""ParentName"": $n
+  ""parent_name"": $n
 };"
 "synthetic-2","companies","94","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","List the first 3 organizations with the highest number of employees that are public.","MATCH (o:Organization)
 WHERE o.isPublic = true
@@ -4525,7 +4525,7 @@ sort $n desc;
 limit 3;
 fetch {
   ""name"": $o.name,
-  ""nbrEmployees"": $n
+  ""nbr_employees"": $n
 };"
 "synthetic-2","companies","107","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which organizations are competitors of Deja vu Security?","MATCH (o:Organization {name: ""Deja vu Security""})-[:HAS_COMPETITOR]->(competitor:Organization)
 RETURN competitor.name","match
@@ -4546,7 +4546,7 @@ sort $n asc;
 limit 3;
 fetch {
   ""name"": $o.name,
-  ""nbrEmployees"": $n
+  ""nbr_employees"": $n
 };"
 "synthetic-2","companies","150","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List the first 5 organizations that have a board member with the same name as a CEO of another organization.","MATCH (org1:Organization)-[:HAS_BOARD_MEMBER]->(person:Person)
 MATCH (org2:Organization)-[:HAS_CEO]->(person)
@@ -4563,7 +4563,7 @@ select $n1;
 distinct;
 limit 5;
 fetch {
-  ""OrganizationName"": $n1
+  ""organization_name"": $n1
 };"
 "synthetic-2","companies","153","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which organizations have a board member with a name mentioned in more than one article?","MATCH (o:Organization)-[:HAS_BOARD_MEMBER]->(p:Person)
 WITH o, p
@@ -4581,7 +4581,7 @@ not { $a1 is $a2; };
 select $o;
 distinct;
 fetch {
-  ""organizationName"": $o.name
+  ""organization_name"": $o.name
 };"
 "synthetic-2","companies","155","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Find the top 3 organizations that have the most board members who are also CEOs of other organizations.","MATCH (o:Organization)-[:HAS_BOARD_MEMBER]->(p:Person)-[:HAS_CEO]->(otherOrg:Organization)
 WITH o, COUNT(DISTINCT p) AS boardMemberCEOs
@@ -4590,16 +4590,16 @@ LIMIT 3
 RETURN o.name AS organizationName, boardMemberCEOs","match
 $o isa organization;
 $p isa person;
-$otherOrg isa organization;
+$other_org isa organization;
 board_member_of (organization: $o, member: $p);
-ceo_of (organization: $otherOrg, ceo: $p);
-not { $o is $otherOrg; };
+ceo_of (organization: $other_org, ceo: $p);
+not { $o is $other_org; };
 select $o, $p;
 distinct;
 reduce $count = count($p) groupby $o;
 sort $count desc;
 limit 3;
-fetch { ""organizationName"": $o.name, ""boardMemberCEOs"": $count };"
+fetch { ""organization_name"": $o.name, ""board_member_ce_os"": $count };"
 "synthetic-2","companies","165","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","List the first 5 organizations that have a revenue greater than 10 million and are headquartered in a city named 'Seattle'.","MATCH (o:Organization)-[:IN_CITY]->(c:City {name: ""Seattle""})
 WHERE o.revenue > 10000000
 RETURN o.name, o.revenue
@@ -4624,7 +4624,7 @@ sort $e desc;
 limit 5;
 fetch {
   ""name"": $n,
-  ""nbrEmployees"": $e
+  ""nbr_employees"": $e
 };"
 "synthetic-2","companies","199","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List articles that mention organizations based in countries not in North America.","MATCH (a:Article)-[:MENTIONS]->(o:Organization)-[:IN_CITY]->(c:City)-[:IN_COUNTRY]->(co:Country)
 WHERE co.name <> ""United States of America"" AND co.name <> ""Canada"" AND co.name <> ""Mexico""
@@ -4640,10 +4640,10 @@ not { $cn == ""United States of America""; };
 not { $cn == ""Canada""; };
 not { $cn == ""Mexico""; };
 fetch {
-  ""articleTitle"": $a.title,
-  ""publicationDate"": $a.date,
-  ""organizationName"": $o.name,
-  ""countryName"": $cn
+  ""article_title"": $a.title,
+  ""publication_date"": $a.date,
+  ""organization_name"": $o.name,
+  ""country_name"": $cn
 };"
 "synthetic-2","companies","215","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which organizations have a board member who is also a CEO of another organization?","MATCH (org1:Organization)-[:HAS_BOARD_MEMBER]->(person:Person)-[:HAS_CEO]->(org2:Organization)
 RETURN org1.name AS OrganizationWithBoardMember, person.name AS BoardMemberAndCEO, org2.name AS OrganizationWithCEO","match
@@ -4654,9 +4654,9 @@ board_member_of (organization: $org1, member: $person);
 ceo_of (organization: $org2, ceo: $person);
 not { $org1 is $org2; };
 fetch {
-  ""OrganizationWithBoardMember"": $org1.name,
-  ""BoardMemberAndCEO"": $person.name,
-  ""OrganizationWithCEO"": $org2.name
+  ""organization_with_board_member"": $org1.name,
+  ""board_member_and_ceo"": $person.name,
+  ""organization_with_ceo"": $org2.name
 };"
 "synthetic-2","companies","230","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","Who are the children of 'Julie Spellman Sweet', list the first 3.","MATCH (p:Person {name: ""Julie Spellman Sweet""})-[:HAS_CHILD]->(child:Person)
 RETURN child.name
@@ -4685,7 +4685,7 @@ sort $ne desc;
 limit 1;
 fetch {
   ""organization"": $on,
-  ""numberOfEmployees"": $ne
+  ""number_of_employees"": $ne
 };"
 "synthetic-2","companies","287","medium","cypher_missing_return_props","Question asks for ""names and ids"" but neither appears in RETURN","Provide the names and IDs of the first 3 persons who are CEOs of public companies.","MATCH (p:Person)<-[:HAS_CEO]-(o:Organization)
 WHERE o.isPublic = true
@@ -4709,7 +4709,7 @@ sort $n desc;
 limit 5;
 fetch {
   ""organization"": $o.name,
-  ""numberOfEmployees"": $n
+  ""number_of_employees"": $n
 };"
 "synthetic-2","companies","318","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","Which organizations have more than two competitors?","MATCH (o:Organization)-[:HAS_COMPETITOR]->(c:Organization)
 WITH o, COUNT(c) AS competitorCount
@@ -4723,8 +4723,8 @@ match
 $count > 2;
 sort $org_name;
 fetch {
-  ""organizationName"": $org_name,
-  ""competitorCount"": $count
+  ""organization_name"": $org_name,
+  ""competitor_count"": $count
 };"
 "synthetic-2","companies","378","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which 3 organizations have the most detailed organizational summaries?","MATCH (o:Organization)
 WHERE o.summary IS NOT NULL AND o.summary <> """"
@@ -4765,7 +4765,7 @@ fetch {
   ""title"": $a.title,
   ""date"": $a.date,
   ""author"": $a.author,
-  ""siteName"": $a.site_name,
+  ""site_name"": $a.site_name,
   ""summary"": $a.article_summary
 };"
 "synthetic-2","companies","466","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which organizations have a CEO who is also a board member in another organization?","MATCH (ceo:Person)-[:HAS_CEO]->(org1:Organization),
@@ -4779,8 +4779,8 @@ ceo_of (ceo: $ceo, organization: $org1);
 board_member_of (member: $ceo, organization: $org2);
 not { $org1 is $org2; };
 fetch {
-  ""OrganizationWithCEO"": $org1_name,
-  ""OrganizationWithBoardMember"": $org2_name
+  ""organization_with_ceo"": $org1_name,
+  ""organization_with_board_member"": $org2_name
 };"
 "synthetic-2","companies","471","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","List the first 3 cities that are in countries with more than 100 organizations based in them.","MATCH (c:City)-[:IN_COUNTRY]->(co:Country)<-[:IN_CITY]-(o:Organization)
 WITH co, COUNT(o) AS orgCount, c
@@ -4844,7 +4844,7 @@ sort $e desc;
 limit 1;
 fetch {
   ""organization"": $o.name,
-  ""numberOfEmployees"": $e
+  ""number_of_employees"": $e
 };"
 "synthetic-2","companies","520","high","cypher_missing_threshold","Question mentions threshold 1000000000 but it does not appear in Cypher","What are the top 3 articles by sentiment that mention an organization with a revenue of over 1 billion?","MATCH (a:Article)-[:MENTIONS]->(o:Organization)
 WHERE o.revenue > 1.0E9
@@ -4870,9 +4870,9 @@ $investor has name $investor_name;
 try { $investor has person_id $pid; };
 try { $investor has organization_id $oid; };
 fetch {
-  ""InvestorName"": $investor_name,
-  ""PersonID"": $pid,
-  ""OrganizationID"": $oid
+  ""investor_name"": $investor_name,
+  ""person_id"": $pid,
+  ""organization_id"": $oid
 };"
 "synthetic-2","companies","530","medium","cypher_missing_condition","Question requires ""both...and"" but Cypher WHERE lacks AND","Which organizations are both public and have a CEO named 'Julie Spellman Sweet'?","MATCH (o:Organization)-[:HAS_CEO]->(p:Person {name: ""Julie Spellman Sweet""})
 WHERE o.isPublic = true
@@ -4906,9 +4906,9 @@ $co isa country, has country_name $co_name;
 location-contains (parent: $co, child: $c);
 not { $co_name == ""United States of America""; };
 fetch {
-  ""OrganizationName"": $org_name,
-  ""NumberOfEmployees"": $emp,
-  ""CountryName"": $co_name
+  ""organization_name"": $org_name,
+  ""number_of_employees"": $emp,
+  ""country_name"": $co_name
 };"
 "synthetic-2","companies","557","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","What is the summary description of the organization with the lowest number of employees?","MATCH (o:Organization)
 WHERE o.nbrEmployees IS NOT NULL
@@ -4931,7 +4931,7 @@ supplies (supplier: $org);
 competes_with (competitor: $org);
 select $n;
 distinct;
-fetch { ""organizationName"": $n };"
+fetch { ""organization_name"": $n };"
 "synthetic-2","companies","580","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","List the top 5 organizations by number of employees.","MATCH (o:Organization)
 RETURN o.name, o.nbrEmployees
 ORDER BY o.nbrEmployees DESC
@@ -4941,7 +4941,7 @@ sort $n desc;
 limit 5;
 fetch {
   ""name"": $o.name,
-  ""nbrEmployees"": $n
+  ""nbr_employees"": $n
 };"
 "synthetic-2","companies","596","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Name the organizations with the most board members who are also CEOs of other organizations.","MATCH (o:Organization)-[:HAS_BOARD_MEMBER]->(p:Person)-[:HAS_CEO]->(otherOrg:Organization)
 WITH o, COUNT(DISTINCT p) AS boardMemberCount
@@ -4949,17 +4949,17 @@ ORDER BY boardMemberCount DESC
 RETURN o.name AS organizationName, boardMemberCount
 LIMIT 1","match
 $o isa organization;
-$otherOrg isa organization;
+$other_org isa organization;
 $p isa person;
 board_member_of (organization: $o, member: $p);
-ceo_of (organization: $otherOrg, ceo: $p);
-not { $o is $otherOrg; };
-reduce $boardMemberCount = count($p) groupby $o;
-sort $boardMemberCount desc;
+ceo_of (organization: $other_org, ceo: $p);
+not { $o is $other_org; };
+reduce $board_member_count = count($p) groupby $o;
+sort $board_member_count desc;
 limit 1;
 fetch {
-  ""organizationName"": $o.name,
-  ""boardMemberCount"": $boardMemberCount
+  ""organization_name"": $o.name,
+  ""board_member_count"": $board_member_count
 };"
 "synthetic-2","companies","597","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","List the organizations that have both a high revenue and a high number of employees.","MATCH (o:Organization)
 WHERE o.revenue > 1.0E8 AND o.nbrEmployees > 1000
@@ -4984,7 +4984,7 @@ limit 5;
 fetch {
   ""organization"": $o.name,
   ""ceo"": $p.name,
-  ""numberOfEmployees"": $n
+  ""number_of_employees"": $n
 };"
 "synthetic-2","companies","622","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","List the first 3 articles that mention organizations with a significant number of layoffs in the past year.","MATCH (a:Article)-[:MENTIONS]->(o:Organization)
 WHERE o.nbrEmployees < 1000 AND o.isDissolved = false
@@ -5002,7 +5002,7 @@ fetch {
   ""title"": $a.title,
   ""date"": $d,
   ""author"": $a.author,
-  ""siteName"": $a.site_name
+  ""site_name"": $a.site_name
 };"
 "synthetic-2","companies","635","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List the names of organizations that have a CEO and an investor who are siblings.","MATCH (ceo:Person)-[:HAS_PARENT]->(parent:Person)<-[:HAS_PARENT]-(investor:Person),
       (org:Organization)-[:HAS_CEO]->(ceo),
@@ -5029,7 +5029,7 @@ location-contains (parent: $country, child: $city);
 $country isa country, has country_name $cn;
 not { $cn == ""United States of America""; };
 fetch {
-  ""OrganizationName"": $org_name
+  ""organization_name"": $org_name
 };"
 "synthetic-2","companies","734","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","Which organizations are based in cities that are part of a country with the summary containing 'North America'?","MATCH (c:Country {summary: ""Country in North America""})<-[:IN_COUNTRY]-(ci:City)<-[:IN_CITY]-(o:Organization)
 RETURN o.name AS organizationName, ci.name AS cityName, c.name AS countryName","match
@@ -5041,9 +5041,9 @@ located_in (organization: $o, city: $ci);
 $o isa organization, has name $on;
 $c has country_name $cname;
 fetch {
-  ""organizationName"": $on,
-  ""cityName"": $cn,
-  ""countryName"": $cname
+  ""organization_name"": $on,
+  ""city_name"": $cn,
+  ""country_name"": $cname
 };"
 "synthetic-2","companies","751","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Who are the board members of the first 5 organizations listed by revenue in descending order?","MATCH (o:Organization)
 WITH o
@@ -5064,7 +5064,7 @@ board_member_of (organization: $o, member: $p);
 $p has name $member_name;
 fetch {
   ""Organization"": $org_name,
-  ""BoardMember"": $member_name
+  ""board_member"": $member_name
 };"
 "synthetic-2","companies","756","medium","cypher_missing_return_props","Question asks for ""names and ids"" but neither appears in RETURN","List the names and IDs of the top 5 cities by the number of public organizations located in them.","MATCH (o:Organization)-[:IN_CITY]->(c:City)
 WHERE o.isPublic = true
@@ -5079,9 +5079,9 @@ reduce $count = count($o) groupby $c, $name, $id;
 sort $count desc;
 limit 5;
 fetch {
-  ""cityName"": $name,
-  ""cityId"": $id,
-  ""publicOrgCount"": $count
+  ""city_name"": $name,
+  ""city_id"": $id,
+  ""public_org_count"": $count
 };"
 "synthetic-2","companies","761","medium","cypher_missing_return_props","Question asks for ""names and summaries"" but neither appears in RETURN","List the names and summaries of articles that mention organizations with a revenue of at least $1 million.","MATCH (o:Organization)-[:MENTIONS]-(a:Article)
 WHERE o.revenue >= 1000000
@@ -5091,8 +5091,8 @@ $r >= 1000000;
 $a isa article;
 mentions (article: $a, mentioned: $o);
 fetch {
-  ""articleTitle"": $a.title,
-  ""articleSummary"": $a.article_summary
+  ""article_title"": $a.title,
+  ""article_summary"": $a.article_summary
 };"
 "synthetic-2","companies","762","medium","cypher_missing_condition","Question requires ""both...and"" but Cypher WHERE lacks AND","Identify organizations that are both suppliers and investors to other organizations.","MATCH (supplier:Organization)-[:HAS_SUPPLIER]->(org1:Organization),
       (investor:Organization)-[:HAS_INVESTOR]->(org2:Organization)
@@ -5102,7 +5102,7 @@ $org isa organization;
 supplies (supplier: $org);
 invested_in (investor: $org);
 fetch {
-  ""OrganizationName"": $org.name
+  ""organization_name"": $org.name
 };"
 "synthetic-2","companies","764","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","Find the organizations that are suppliers to 'New Energy Group' and their number of employees.","MATCH (supplier:Organization)-[:HAS_SUPPLIER]->(org:Organization {name: ""New Energy Group""})
 RETURN supplier.name AS SupplierName, supplier.nbrEmployees AS NumberOfEmployees","match
@@ -5110,8 +5110,8 @@ $supplier isa organization, has name $supplier_name, has nbr_employees $emp;
 $org isa organization, has name ""New Energy Group"";
 supplies (supplier: $supplier, customer: $org);
 fetch {
-  ""SupplierName"": $supplier_name,
-  ""NumberOfEmployees"": $emp
+  ""supplier_name"": $supplier_name,
+  ""number_of_employees"": $emp
 };"
 "synthetic-2","companies","766","medium","cypher_missing_return_props","Question asks for ""names and titles"" but neither appears in RETURN","List the names and titles of articles mentioning organizations that have been dissolved.","MATCH (o:Organization {isDissolved: true})<-[:MENTIONS]-(a:Article)
 RETURN a.title AS articleTitle, a.siteName AS articleSiteName","match
@@ -5119,8 +5119,8 @@ $o isa organization, has is_dissolved true;
 $a isa article;
 mentions (article: $a, mentioned: $o);
 fetch {
-  ""articleTitle"": $a.title,
-  ""articleSiteName"": $a.site_name
+  ""article_title"": $a.title,
+  ""article_site_name"": $a.site_name
 };"
 "synthetic-2","companies","788","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","What are the names of the first 3 organizations that have the same investor?","MATCH (investor:Person)-[:HAS_INVESTOR]->(org1:Organization)
 WITH investor, collect(org1) AS orgs
@@ -5172,7 +5172,7 @@ ORDER BY o.nbrEmployees DESC
 LIMIT 3","match $o isa organization, has is_public false, has nbr_employees $n;
 sort $n desc;
 limit 3;
-fetch { ""name"": $o.name, ""nbrEmployees"": $n };"
+fetch { ""name"": $o.name, ""nbr_employees"": $n };"
 "synthetic-2","companies","827","high","cypher_missing_threshold","Question mentions threshold 1000000000 but it does not appear in Cypher","Find the first 3 organizations that have a CEO named 'Julie Spellman Sweet' and have a revenue above 1 billion.","MATCH (ceo:Person {name: ""Julie Spellman Sweet""})<-[:HAS_CEO]-(org:Organization)
 WHERE org.revenue > 1.0E9
 RETURN org.name, org.revenue
@@ -5243,14 +5243,14 @@ MATCH (ceo)-[:HAS_BOARD_MEMBER]->(otherOrg:Organization)
 RETURN org.name AS Organization, ceo.name AS CEO, otherOrg.name AS BoardMemberOf","match
 $ceo isa person;
 $org isa organization;
-$otherOrg isa organization;
+$other_org isa organization;
 ceo_of (ceo: $ceo, organization: $org);
-board_member_of (member: $ceo, organization: $otherOrg);
-not { $org is $otherOrg; };
+board_member_of (member: $ceo, organization: $other_org);
+not { $org is $other_org; };
 fetch {
   ""Organization"": $org.name,
   ""CEO"": $ceo.name,
-  ""BoardMemberOf"": $otherOrg.name
+  ""board_member_of"": $other_org.name
 };"
 "synthetic-2","companies","898","high","cypher_missing_threshold","Question mentions threshold 1000000000 but it does not appear in Cypher","Who are the first 3 competitors of organizations with more than 1 billion in revenue?","MATCH (o:Organization)-[:HAS_COMPETITOR]->(competitor:Organization)
 WHERE o.revenue > 1.0E9
@@ -5267,13 +5267,13 @@ fetch { ""name"": $name };"
 "synthetic-2","companies","902","high","cypher_missing_order","Question asks for top-3 but Cypher has no ORDER BY","List the top 3 CEOs of organizations that are subsidiaries of 'Accenture'.","MATCH (parentOrg:Organization {name: ""Accenture""})-[:HAS_SUBSIDIARY]->(subOrg:Organization)-[:HAS_CEO]->(ceo:Person)
 RETURN ceo.name AS CEO, subOrg.name AS Subsidiary
 LIMIT 3","match
-$parentOrg isa organization, has name ""Accenture"";
-subsidiary_of (parent: $parentOrg, subsidiary: $subOrg);
-ceo_of (organization: $subOrg, ceo: $ceo);
+$parent_org isa organization, has name ""Accenture"";
+subsidiary_of (parent: $parent_org, subsidiary: $sub_org);
+ceo_of (organization: $sub_org, ceo: $ceo);
 limit 3;
 fetch {
   ""CEO"": $ceo.name,
-  ""Subsidiary"": $subOrg.name
+  ""Subsidiary"": $sub_org.name
 };"
 "synthetic-2","companies","909","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which organizations are based in the same city as 'Accenture'?","MATCH (accenture:Organization {name: ""Accenture""})-[:IN_CITY]->(city:City)<-[:IN_CITY]-(org:Organization)
 RETURN org.name AS organizationName","match
@@ -5282,7 +5282,7 @@ located_in (organization: $accenture, city: $city);
 located_in (organization: $org, city: $city);
 not { $org is $accenture; };
 fetch {
-  ""organizationName"": $org.name
+  ""organization_name"": $org.name
 };"
 "synthetic-2","companies","914","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","List the top 5 organizations by number of employees that are located in a country with 'America' in its name.","MATCH (org:Organization)-[:IN_CITY]->(city:City)-[:IN_COUNTRY]->(country:Country)
 WHERE country.name CONTAINS 'America'
@@ -5299,7 +5299,7 @@ sort $emp desc;
 limit 5;
 fetch {
   ""organization"": $org_name,
-  ""numberOfEmployees"": $emp
+  ""number_of_employees"": $emp
 };"
 "synthetic-2","companies","915","high","cypher_missing_threshold","Question mentions threshold 1000000000 but it does not appear in Cypher","Which organizations have a revenue greater than 1 billion and are public?","MATCH (o:Organization)
 WHERE o.revenue > 1.0E9 AND o.isPublic = true
@@ -5362,7 +5362,7 @@ limit 3;
 fetch {
   ""CEO"": $ceo_name,
   ""Organization"": $org_name,
-  ""NumberOfEmployees"": $n
+  ""number_of_employees"": $n
 };"
 "synthetic-2","fincen","46","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","What are the first 3 entities that have filed a transaction where the originator and beneficiary banks are from different countries?","MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)
 WHERE f.originator_bank_country <> f.beneficiary_bank_country
@@ -5819,8 +5819,8 @@ let $total = interacts1_total($c) + interacts2_total($c);
 sort $total desc;
 limit 5;
 fetch {
-    ""characterName"": $c.name,
-    ""totalWeight"": $total
+    ""character_name"": $c.name,
+    ""total_weight"": $total
 };"
 "synthetic-2","gameofthrones","103","medium","cypher_missing_sum","Question asks for total/sum but Cypher has no sum()","Identify the top 3 characters based on the sum of their centrality values across all books.","MATCH (c:Character)
 WITH c, 
@@ -5837,8 +5837,8 @@ let $total = $cent + $b1bc + $b1pr + $b45pr;
 sort $total desc;
 limit 3;
 fetch {
-  ""characterName"": $name,
-  ""totalCentrality"": $total
+  ""character_name"": $name,
+  ""total_centrality"": $total
 };"
 "synthetic-2","gameofthrones","105","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","Find the characters who have a louvain community number of 10 and a pagerank greater than 0.5.","MATCH (c:Character)
 WHERE c.louvain = 10 AND c.pagerank > 0.5
@@ -5870,8 +5870,8 @@ let $total = $b1 + $b45;
 sort $total desc;
 limit 3;
 fetch {
-  ""characterName"": $name,
-  ""totalPageRank"": $total
+  ""character_name"": $name,
+  ""total_page_rank"": $total
 };"
 "synthetic-2","gameofthrones","127","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","Identify the top 3 characters with the highest book1BetweennessCentrality and a community number of 759.","MATCH (c:Character)
 WHERE c.community = 759
@@ -5896,8 +5896,8 @@ let $total = $b1 + $b45 + $pr;
 sort $total desc;
 limit 5;
 fetch {
-  ""characterName"": $c.name,
-  ""totalPageRank"": $total
+  ""character_name"": $c.name,
+  ""total_page_rank"": $total
 };"
 "synthetic-2","gameofthrones","135","high","cypher_missing_avg","Question asks for average but Cypher has no avg()","Identify the top 5 characters based on the average of their centrality values across all books.","MATCH (c:Character)
 WITH c, 
@@ -5914,8 +5914,8 @@ let $avg_centrality = ($cent + $b1bc + $b1pr + $b45pr) / 4.0;
 sort $avg_centrality desc;
 limit 5;
 fetch {
-  ""characterName"": $c.name,
-  ""avgCentrality"": $avg_centrality
+  ""character_name"": $c.name,
+  ""avg_centrality"": $avg_centrality
 };"
 "synthetic-2","gameofthrones","140","high","cypher_missing_order","Question asks for top-5 but Cypher has no ORDER BY","List the characters who have a centrality value of exactly 0.8. Limit to top 5.","MATCH (c:Character)
 WHERE c.centrality = 0.8
@@ -6012,8 +6012,8 @@ RETURN b.name AS businessName, b.address AS businessAddress","match
   $cn like "".*Car Wash.*"";
   in_category (business: $b, category: $c);
 fetch {
-  ""businessName"": $bn,
-  ""businessAddress"": $ba
+  ""business_name"": $bn,
+  ""business_address"": $ba
 };"
 "synthetic-2","grandstack","39","medium","cypher_missing_condition","Question requires ""both...and"" but Cypher WHERE lacks AND","List the names of users who have reviewed businesses in both 'Missoula' and 'San Mateo'.","MATCH (u:User)-[:WROTE]->(r:Review)-[:REVIEWS]->(b:Business)
 WHERE b.city IN ['Missoula', 'San Mateo']
@@ -6046,9 +6046,9 @@ $r isa review, has date $rd;
 in_category (business: $b, category: $c);
 reviews (review: $r, reviewed_business: $b);
 fetch {
-  ""businessName"": $bn,
-  ""categoryName"": $cn,
-  ""reviewDate"": $rd
+  ""business_name"": $bn,
+  ""category_name"": $cn,
+  ""review_date"": $rd
 };"
 "synthetic-2","grandstack","41","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which businesses in 'Missoula' have received reviews only from 'Jenny'?","MATCH (b:Business {city: 'Missoula'})<-[:REVIEWS]-(r:Review)<-[:WROTE]-(u:User {name: 'Jenny'})
 WITH b, collect(distinct u.name) as reviewers
@@ -6066,7 +6066,7 @@ not {
   $other isa user, has name $on;
   $on != ""Jenny"";
 };
-fetch { ""BusinessName"": $bn };"
+fetch { ""business_name"": $bn };"
 "synthetic-2","grandstack","49","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Find businesses in 'Missoula' that have received exactly two reviews and list the names of the reviewers.","MATCH (b:Business {city: 'Missoula'})<-[:REVIEWS]-(r:Review)<-[:WROTE]-(u:User)
 WITH b, COUNT(r) AS reviewCount, COLLECT(u.name) AS reviewers
 WHERE reviewCount = 2
@@ -6080,16 +6080,16 @@ $count == 2;
 reviews (reviewed_business: $b, review: $r);
 wrote (review: $r, author: $u);
 $u has name $un;
-fetch { ""businessName"": $bn, ""reviewerName"": $un };"
+fetch { ""business_name"": $bn, ""reviewer_name"": $un };"
 "synthetic-2","grandstack","63","medium","cypher_missing_return_props","Question asks for ""names and the"" but neither appears in RETURN","Which users have written more than one review? List their names and the number of reviews they've written.","MATCH (u:User)-[:WROTE]->(r:Review)
 WITH u, COUNT(r) AS reviewCount
 WHERE reviewCount > 1
 RETURN u.name AS userName, reviewCount","match
 $u isa user;
 wrote (author: $u, review: $r);
-reduce $reviewCount = count($r) groupby $u;
-match $reviewCount > 1;
-fetch { ""userName"": $u.name, ""reviewCount"": $reviewCount };"
+reduce $review_count = count($r) groupby $u;
+match $review_count > 1;
+fetch { ""user_name"": $u.name, ""review_count"": $review_count };"
 "synthetic-2","grandstack","131","medium","cypher_missing_return_props","Question asks for ""cities and states"" but neither appears in RETURN","List the cities and states for the businesses that have a name starting with 'Z'.","MATCH (b:Business)
 WHERE b.name STARTS WITH 'Z'
 RETURN b.city, b.state","match
@@ -6114,7 +6114,7 @@ not {
   };
 };
 fetch {
-  ""businessName"": $b.name
+  ""business_name"": $b.name
 };"
 "synthetic-2","grandstack","162","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","Which businesses on '1st St W' have been reviewed by 'Will' and what are the review texts?","MATCH (u:User {name: 'Will'})-[:WROTE]->(r:Review)-[:REVIEWS]->(b:Business {address: '313 N 1st St W'})
 RETURN b.name AS businessName, r.text AS reviewText","match
@@ -6124,8 +6124,8 @@ RETURN b.name AS businessName, r.text AS reviewText","match
   $b has address $addr;
   $addr like "".*1st St W.*"";
 fetch {
-  ""businessName"": $b.name,
-  ""reviewText"": $r.text
+  ""business_name"": $b.name,
+  ""review_text"": $r.text
 };"
 "synthetic-2","grandstack","167","medium","cypher_missing_return_props","Question asks for ""names and categories"" but neither appears in RETURN","List the names and categories of businesses on 'Broadway St' that have received a 5-star review.","MATCH (b:Business)-[:IN_CATEGORY]->(c:Category), (r:Review)-[:REVIEWS]->(b)
 WHERE b.address CONTAINS 'Broadway St' AND r.stars = 5.0
@@ -6137,8 +6137,8 @@ in_category (business: $b, category: $c);
 $r isa review, has stars 5.0;
 reviews (review: $r, reviewed_business: $b);
 fetch {
-  ""businessName"": $b.name,
-  ""categoryName"": $c.name
+  ""business_name"": $b.name,
+  ""category_name"": $c.name
 };"
 "synthetic-2","grandstack","180","medium","cypher_missing_return_props","Question asks for ""names and categories"" but neither appears in RETURN","List the names and categories of businesses on 'California Dr' that have received a 3-star review.","MATCH (b:Business)-[:IN_CATEGORY]->(c:Category), (r:Review)-[:REVIEWS]->(b)
 WHERE b.address = '723 California Dr' AND r.stars = 3.0
@@ -6150,8 +6150,8 @@ $r isa review, has stars $s;
 $s == 3.0;
 reviews (review: $r, reviewed_business: $b);
 fetch {
-  ""businessName"": $bn,
-  ""categoryName"": $cn
+  ""business_name"": $bn,
+  ""category_name"": $cn
 };"
 "synthetic-2","grandstack","188","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","What are the names of businesses on 'California Dr' that have been reviewed in '2016' and their review texts?","MATCH (b:Business {address: '723 California Dr'})-[:IN_CATEGORY]->(c:Category),
       (r:Review)-[:REVIEWS]->(b),
@@ -6165,8 +6165,8 @@ reviews (review: $r, reviewed_business: $b);
 $d >= 2016-01-01T00:00:00;
 $d < 2017-01-01T00:00:00;
 fetch {
-  ""businessName"": $bname,
-  ""reviewText"": $rt
+  ""business_name"": $bname,
+  ""review_text"": $rt
 };"
 "synthetic-2","grandstack","235","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Find the top 3 businesses that have received reviews only from users named 'Will'.","MATCH (u:User {name: 'Will'})-[:WROTE]->(r:Review)-[:REVIEWS]->(b:Business)
 WITH b, COUNT(r) AS reviewCount, COLLECT(DISTINCT u.name) AS reviewers
@@ -6189,7 +6189,7 @@ not {
 reduce $count = count($r) groupby $b, $bn;
 sort $count desc;
 limit 3;
-fetch { ""businessName"": $bn };"
+fetch { ""business_name"": $bn };"
 "synthetic-2","grandstack","296","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","What are the top 3 businesses that have been reviewed in both 2016 and 2017?","MATCH (b:Business)<-[:REVIEWS]-(r:Review)
 WHERE r.date >= date('2016-01-01') AND r.date <= date('2016-12-31')
 WITH b, count(r) AS reviews_2016
@@ -6240,7 +6240,7 @@ reviews (review: $r, reviewed_business: $b);
 reduce $avg = mean($s) groupby $b;
 sort $avg desc;
 limit 3;
-fetch { ""name"": $b.name, ""avgRating"": $avg };"
+fetch { ""name"": $b.name, ""avg_rating"": $avg };"
 "synthetic-2","grandstack","350","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","List the first 5 businesses with reviews mentioning 'car wash' in 'Burlingame'.","MATCH (b:Business)-[:IN_CATEGORY]->(:Category),
       (r:Review)-[:REVIEWS]->(b),
       (u:User)-[:WROTE]->(r)
@@ -6254,8 +6254,8 @@ LIMIT 5","match
 sort $bn;
 limit 5;
 fetch {
-  ""businessName"": $bn,
-  ""reviewText"": $rt
+  ""business_name"": $bn,
+  ""review_text"": $rt
 };"
 "synthetic-2","grandstack","405","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","List the first 3 reviews for businesses on 'California Dr'.","MATCH (b:Business {address: '723 California Dr'})<-[:REVIEWS]-(r:Review)<-[:WROTE]-(u:User)
 RETURN r.reviewId, r.date, r.text, r.stars, u.name
@@ -6270,11 +6270,11 @@ $u isa user, has name $uname;
 sort $d asc;
 limit 3;
 fetch {
-  ""reviewId"": $rid,
+  ""review_id"": $rid,
   ""date"": $d,
   ""text"": $t,
   ""stars"": $s,
-  ""userName"": $uname
+  ""user_name"": $uname
 };"
 "synthetic-2","grandstack","448","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","List the businesses on 'E 5th Ave' and their review texts.","MATCH (b:Business {address: '111 E 5th Ave'})&lt;-[:REVIEWS]-(r:Review)
 RETURN b.name AS businessName, r.text AS reviewText","match
@@ -6283,8 +6283,8 @@ $addr like "".*E 5th Ave.*"";
 $r isa review, has text $rt;
 reviews (reviewed_business: $b, review: $r);
 fetch {
-  ""businessName"": $bname,
-  ""reviewText"": $rt
+  ""business_name"": $bname,
+  ""review_text"": $rt
 };"
 "synthetic-2","grandstack","450","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","Which business on 'California Dr' has the highest number of reviews?","MATCH (b:Business {address: '723 California Dr'})<-[:REVIEWS]-(r:Review)
 RETURN b.name, COUNT(r) AS reviewCount
@@ -6297,7 +6297,7 @@ reviews (review: $r, reviewed_business: $b);
 reduce $count = count($r) groupby $b, $name;
 sort $count desc;
 limit 1;
-fetch { ""name"": $name, ""reviewCount"": $count };"
+fetch { ""name"": $name, ""review_count"": $count };"
 "synthetic-2","grandstack","478","medium","cypher_missing_return_props","Question asks for ""businesses and their"" but neither appears in RETURN","List the businesses and their review text for reviews with more than 4.5 stars.","MATCH (b:Business)<-[:REVIEWS]-(r:Review)
 WHERE r.stars > 4.5
 RETURN b.name AS businessName, r.text AS reviewText","match
@@ -6306,8 +6306,8 @@ $r isa review, has stars $s, has text $t;
 reviews (reviewed_business: $b, review: $r);
 $s > 4.5;
 fetch {
-  ""businessName"": $b.name,
-  ""reviewText"": $t
+  ""business_name"": $b.name,
+  ""review_text"": $t
 };"
 "synthetic-2","grandstack","488","medium","cypher_missing_condition","Question requires ""both...and"" but Cypher WHERE lacks AND","Which user has reviewed businesses in both 'Missoula' and 'San Mateo'?","MATCH (u:User)-[:WROTE]->(r:Review)-[:REVIEWS]->(b:Business)
 WHERE b.city IN ['Missoula', 'San Mateo']
@@ -6366,7 +6366,7 @@ RETURN r.reviewId, r.text","match
   $r isa review, has review_id $rid, has text $t;
   reviews (reviewed_business: $b, review: $r);
 fetch {
-  ""reviewId"": $rid,
+  ""review_id"": $rid,
   ""text"": $t
 };"
 "synthetic-2","grandstack","538","medium","cypher_missing_return_props","Question asks for ""names and cities"" but neither appears in RETURN","Display the names and cities of businesses that are in the 'Library' category.","MATCH (b:Business)-[:IN_CATEGORY]->(c:Category {name: 'Library'})
@@ -6375,7 +6375,7 @@ $b isa business;
 $c isa category, has name ""Library"";
 in_category (business: $b, category: $c);
 fetch {
-  ""businessName"": $b.name,
+  ""business_name"": $b.name,
   ""city"": $b.city
 };"
 "synthetic-2","grandstack","565","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Which businesses have a review with stars greater than the average stars of all reviews?","// First, calculate the average stars of all reviews
@@ -6396,7 +6396,7 @@ let $avg = avg_stars();
 match $s > $avg;
 select $b;
 distinct;
-fetch { ""businessName"": $b.name };"
+fetch { ""business_name"": $b.name };"
 "synthetic-2","grandstack","569","medium","cypher_missing_return_props","Question asks for ""businesses and their"" but neither appears in RETURN","List the businesses and their review counts in descending order of reviews.","MATCH (b:Business)<-[:REVIEWS]-(r:Review)
 WITH b, count(r) AS reviewCount
 RETURN b.name AS businessName, reviewCount
@@ -6406,7 +6406,7 @@ $r isa review;
 reviews (reviewed_business: $b, review: $r);
 reduce $count = count($r) groupby $b;
 sort $count desc;
-fetch { ""businessName"": $b.name, ""reviewCount"": $count };"
+fetch { ""business_name"": $b.name, ""review_count"": $count };"
 "synthetic-2","grandstack","575","medium","cypher_missing_return_props","Question asks for ""locations and names"" but neither appears in RETURN","Show the locations and names of businesses in 'Burlingame' with reviews rating exactly 4 stars.","MATCH (b:Business)-[:IN_CATEGORY]->(:Category),
       (r:Review)-[:REVIEWS]->(b),
       (u:User)-[:WROTE]->(r)
@@ -6417,8 +6417,8 @@ $r isa review, has stars $s;
 $s == 4.0;
 reviews (review: $r, reviewed_business: $b);
 fetch {
-  ""businessName"": $name,
-  ""businessLocation"": $loc
+  ""business_name"": $name,
+  ""business_location"": $loc
 };"
 "synthetic-2","grandstack","580","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List the names of businesses that have only 4-star reviews.","MATCH (b:Business)<-[:REVIEWS]-(r:Review)
 WHERE r.stars = 4.0
@@ -6434,7 +6434,7 @@ not {
   $s2 != 4.0;
 };
 fetch {
-  ""businessName"": $b.name
+  ""business_name"": $b.name
 };"
 "synthetic-2","grandstack","586","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List the businesses that have only received 5-star reviews.","MATCH (b:Business)<-[:REVIEWS]-(r:Review)
 WHERE r.stars = 5.0
@@ -6449,7 +6449,7 @@ not {
   $s2 != 5.0;
 };
 fetch {
-  ""businessName"": $b.name
+  ""business_name"": $b.name
 };"
 "synthetic-2","grandstack","630","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","List the businesses that have been reviewed more than once.","MATCH (b:Business)<-[:REVIEWS]-(r:Review)
 WITH b, COUNT(r) AS reviewCount
@@ -6458,22 +6458,22 @@ RETURN b.name AS businessName, reviewCount","match
 $b isa business;
 $r isa review;
 reviews (reviewed_business: $b, review: $r);
-reduce $reviewCount = count($r) groupby $b;
+reduce $review_count = count($r) groupby $b;
 match
-$reviewCount > 1;
+$review_count > 1;
 $b has name $name;
-sort $reviewCount desc;
+sort $review_count desc;
 fetch {
-  ""businessName"": $name,
-  ""reviewCount"": $reviewCount
+  ""business_name"": $name,
+  ""review_count"": $review_count
 };"
 "synthetic-2","grandstack","660","medium","cypher_missing_return_props","Question asks for ""names and addresses"" but neither appears in RETURN","List the names and addresses of all businesses in 'San Mateo'.","MATCH (b:Business)
 WHERE b.city = 'San Mateo'
 RETURN b.name AS businessName, b.address AS businessAddress","match
 $b isa business, has city ""San Mateo"";
 fetch {
-  ""businessName"": $b.name,
-  ""businessAddress"": $b.address
+  ""business_name"": $b.name,
+  ""business_address"": $b.address
 };"
 "synthetic-2","grandstack","678","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which businesses have been reviewed by all users?","MATCH (u:User)
 WITH collect(u.userId) AS allUserIds
@@ -6489,7 +6489,7 @@ not {
     reviews (review: $r, reviewed_business: $b);
   };
 };
-fetch { ""businessName"": $b.name };"
+fetch { ""business_name"": $b.name };"
 "synthetic-2","grandstack","682","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List the businesses that are in the same category as 'Neo4j'.","MATCH (b:Business {name: 'Neo4j'})-[:IN_CATEGORY]->(c:Category)<-[:IN_CATEGORY]-(other:Business)
 RETURN other.name AS businessName","match
 $b isa business, has name ""Neo4j"";
@@ -6497,7 +6497,7 @@ in_category (business: $b, category: $c);
 in_category (business: $other, category: $c);
 not { $other is $b; };
 fetch {
-  ""businessName"": $other.name
+  ""business_name"": $other.name
 };"
 "synthetic-2","grandstack","691","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","Show the reviews for businesses with addresses on 'California Dr'.","MATCH (b:Business {address: '723 California Dr'})<-[:REVIEWS]-(r:Review)
 RETURN r","match
@@ -6520,10 +6520,10 @@ RETURN r.text AS reviewText, r.stars AS reviewStars, r.date AS reviewDate, u.nam
   $r has text $text, has stars $stars, has date $date;
   $u has name $uname;
 fetch {
-  ""reviewText"": $text,
-  ""reviewStars"": $stars,
-  ""reviewDate"": $date,
-  ""userName"": $uname
+  ""review_text"": $text,
+  ""review_stars"": $stars,
+  ""review_date"": $date,
+  ""user_name"": $uname
 };"
 "synthetic-2","grandstack","734","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which businesses are in the same city as 'Zootown Brew'?","MATCH (b1:Business {name: 'Zootown Brew'})-[:IN_CATEGORY]->(:Category)<-[:IN_CATEGORY]-(b2:Business)
 WHERE b1.city = b2.city AND b1.name <> b2.name
@@ -6532,7 +6532,7 @@ $b1 isa business, has name ""Zootown Brew"", has city $c;
 $b2 isa business, has name $n2, has city $c;
 not { $n2 == ""Zootown Brew""; };
 fetch {
-  ""BusinessName"": $n2
+  ""business_name"": $n2
 };"
 "synthetic-2","grandstack","765","medium","cypher_missing_return_props","Question asks for ""names and addresses"" but neither appears in RETURN","Display the names and addresses of businesses in 'MT' with reviews dated before 2017.","MATCH (b:Business)-[:REVIEWS]-(r:Review)
 WHERE b.state = 'MT' AND r.date < date('2017-01-01')
@@ -6542,8 +6542,8 @@ $r isa review, has date $d;
 reviews (review: $r, reviewed_business: $b);
 $d < 2017-01-01T00:00:00;
 fetch {
-  ""businessName"": $name,
-  ""businessAddress"": $addr
+  ""business_name"": $name,
+  ""business_address"": $addr
 };"
 "synthetic-2","movies","86","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Which people have reviewed the movie with the highest votes?","MATCH (m:Movie)
 WITH m
@@ -6581,8 +6581,8 @@ follows (follower: $laurence, followed: $followed);
 follows (follower: $follower, followed: $laurence);
 limit 5;
 fetch {
-  ""FollowedByLaurence"": $followed.name,
-  ""FollowsLaurence"": $follower.name
+  ""followed_by_laurence"": $followed.name,
+  ""follows_laurence"": $follower.name
 };"
 "synthetic-2","movies","233","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which people have reviewed the same movie and what were their review summaries?","MATCH (p1:Person)-[r1:REVIEWED]->(m:Movie)<-[r2:REVIEWED]-(p2:Person)
 WHERE p1 <> p2
@@ -6617,7 +6617,7 @@ $p isa person, has born $b;
 let $min = min_born();
 $b == $min;
 acted_in (actor: $p, film: $m);
-fetch { ""MovieTitle"": $m.title };"
+fetch { ""movie_title"": $m.title };"
 "synthetic-2","movies","283","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Name the people who have the role of both actor and director in the most movies.","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
 WITH p, count(m) AS actedInCount
 MATCH (p)-[:DIRECTED]->(m:Movie)
@@ -6639,7 +6639,7 @@ match
 let $total = acted_count($p) + directed_count($p);
 sort $total desc;
 limit 1;
-fetch { ""personName"": $p.name, ""totalMovies"": $total };"
+fetch { ""person_name"": $p.name, ""total_movies"": $total };"
 "synthetic-2","movies","309","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","Which 3 movies reviewed with a rating above 90 have the tagline 'Dark, but compelling'?","MATCH (m:Movie)<-[:REVIEWED]-(p:Person)
 WHERE m.tagline = 'Dark, but compelling' AND p.rating > 90
 RETURN m.title
@@ -6690,7 +6690,7 @@ $rating > 90;
 sort $rating desc;
 limit 3;
 fetch {
-  ""MovieTitle"": $m.title,
+  ""movie_title"": $m.title,
   ""Rating"": $rating
 };"
 "synthetic-2","movies","422","medium","cypher_missing_condition","Question requires ""both...and"" but Cypher WHERE lacks AND","Which movies released before 2000 have a person who both acted and directed in them?","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
@@ -6702,8 +6702,8 @@ $r < 2000;
 acted_in (actor: $p, film: $m);
 directed (director: $p, film: $m);
 fetch {
-  ""MovieTitle"": $title,
-  ""PersonName"": $name
+  ""movie_title"": $title,
+  ""person_name"": $name
 };"
 "synthetic-2","movies","430","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","List the top 5 movies with roles including 'Doctor' and the actors who played them.","MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
 WHERE 'Doctor' IN p.roles
@@ -6718,8 +6718,8 @@ $roles like "".*Doctor.*"";
 sort $v desc;
 limit 5;
 fetch {
-  ""MovieTitle"": $m.title,
-  ""ActorName"": $p.name,
+  ""movie_title"": $m.title,
+  ""actor_name"": $p.name,
   ""Roles"": $roles
 };"
 "synthetic-2","movies","453","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","List the first 3 movies with roles that include 'Captain' and their actors.","MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
@@ -6758,7 +6758,7 @@ reduce $count = count($m) groupby $p;
 match $count > 1;
 $p has name $n;
 sort $count desc;
-fetch { ""actorName"": $n, ""movieCount"": $count };"
+fetch { ""actor_name"": $n, ""movie_count"": $count };"
 "synthetic-2","movies","679","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Who has produced, directed, and acted in the most movies?","MATCH (p:Person)-[:PRODUCED]->(m1:Movie)
 MATCH (p)-[:DIRECTED]->(m2:Movie)
 MATCH (p)-[:ACTED_IN]->(m3:Movie)
@@ -6794,9 +6794,9 @@ $b < 1970;
 directed (director: $p, film: $m);
 sort $b;
 fetch {
-  ""DirectorName"": $p.name,
-  ""BirthYear"": $b,
-  ""DirectedMovies"": [ $m.title ]
+  ""director_name"": $p.name,
+  ""birth_year"": $b,
+  ""directed_movies"": [ $m.title ]
 };"
 "synthetic-2","movies","697","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Find persons who have acted in, directed, and produced different movies.","MATCH (p:Person)-[:ACTED_IN]->(m1:Movie),
       (p)-[:DIRECTED]->(m2:Movie),
@@ -6899,8 +6899,8 @@ $c isa country, has country_name $cn;
 produced_in_country (media: $m, country: $c);
 not { $cn == ""United States of America""; };
 fetch {
-  ""MovieTitle"": $t,
-  ""CountryName"": $cn
+  ""movie_title"": $t,
+  ""country_name"": $cn
 };"
 "synthetic-2","neoflix","312","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Find all movies where the original and spoken languages are different.","MATCH (m:Movie)-[:ORIGINAL_LANGUAGE]->(ol:Language), 
       (m)-[:SPOKEN_IN_LANGUAGE]->(sl:Language)
@@ -6913,9 +6913,9 @@ original_language (media: $m, language: $ol);
 spoken_in_language (media: $m, language: $sl);
 not { $ol_id == $sl_id; };
 fetch {
-  ""MovieTitle"": $m.title,
-  ""OriginalLanguage"": $ol.language_name,
-  ""SpokenLanguage"": $sl.language_name
+  ""movie_title"": $m.title,
+  ""original_language"": $ol.language_name,
+  ""spoken_language"": $sl.language_name
 };"
 "synthetic-2","neoflix","343","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","Name 3 movies with a release date after 2000.","MATCH (m:Movie)
 WHERE m.release_date > date('2000-01-01')
@@ -6941,8 +6941,8 @@ $count >= 100;
 $m has title $t;
 sort $count desc;
 fetch {
-  ""MovieTitle"": $t,
-  ""NumberOfRatings"": $count
+  ""movie_title"": $t,
+  ""number_of_ratings"": $count
 };"
 "synthetic-2","neoflix","482","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","What are the jobs of the first 3 crew members for the movie with the highest budget?","MATCH (m:Movie)
 WITH m
@@ -7045,16 +7045,16 @@ LIMIT 3","match
 $p isa process, has pid 8966;
 instance_of (running_instance: $p, template: $v);
 $v isa version;
-instance_of (running_instance: $relatedProcess, template: $v);
-$relatedProcess isa process, has start_time $st;
-not { $relatedProcess is $p; };
+instance_of (running_instance: $related_process, template: $v);
+$related_process isa process, has start_time $st;
+not { $related_process is $p; };
 sort $st asc;
 limit 3;
 fetch {
-  ""relatedProcess"": {
-    ""name"": $relatedProcess.name,
-    ""start_time"": $relatedProcess.start_time,
-    ""pid"": $relatedProcess.pid
+  ""related_process"": {
+    ""name"": $related_process.name,
+    ""start_time"": $related_process.start_time,
+    ""pid"": $related_process.pid
   }
 };"
 "synthetic-2","network","335","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List all interfaces that connect racks in zone 4.","MATCH (r1:Rack {zone: 4})-[:HOLDS]->(m1:Machine)-[:ROUTES]->(i:Interface)<-[:ROUTES]-(m2:Machine)<-[:HOLDS]-(r2:Rack {zone: 4})
@@ -7071,7 +7071,7 @@ not { $r1 is $r2; };
 $i has ip $ip;
 select $ip;
 distinct;
-fetch { ""InterfaceIP"": $ip };"
+fetch { ""interface_ip"": $ip };"
 "synthetic-2","network","353","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Find all interfaces connected to '10.0.0.254'.","MATCH (i1:Interface {ip: '10.0.0.254'})-[:CONNECTS]-(i2:Interface)
 RETURN i2.ip AS connected_interfaces","match
   $i1 isa interface, has ip ""10.0.0.254"";
@@ -7178,7 +7178,7 @@ not {
   $d has discontinued true;
 };
 fetch {
-  ""categoryName"": $c.category_name
+  ""category_name"": $c.category_name
 };"
 "synthetic-2","northwind","0","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which product categories do not have any discontinued items?","MATCH (c:Category)<-[:PART_OF]-(p:Product)
 WHERE p.discontinued = false
@@ -7194,7 +7194,7 @@ not {
   $d has discontinued true;
 };
 fetch {
-  ""categoryName"": $c.category_name
+  ""category_name"": $c.category_name
 };"
 "synthetic-2","northwind","43","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","Which products are supplied by suppliers with a fax number of 'NULL'?","MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)
 WHERE s.fax = 'NULL'
@@ -7203,7 +7203,7 @@ $s isa supplier, has fax ""NULL"";
 $p isa product;
 supplies (supplier: $s, product: $p);
 fetch {
-  ""productName"": $p.product_name
+  ""product_name"": $p.product_name
 };"
 "synthetic-2","northwind","45","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","What are the names of products with a reorder level greater than the average reorder level of all products?","// First, calculate the average reorder level of all products
 MATCH (p:Product)
@@ -7219,7 +7219,7 @@ match
 $p isa product, has reorder_level $rl;
 let $avg = avg_reorder_level();
 $rl > $avg;
-fetch { ""productName"": $p.product_name };"
+fetch { ""product_name"": $p.product_name };"
 "synthetic-2","northwind","76","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List the first 3 orders that have been shipped to a region other than 'NULL'.","MATCH (o:Order)
 WHERE o.shipRegion IS NOT NULL AND o.shipRegion <> 'NULL'
 RETURN o.orderID, o.shipName, o.shipCity, o.shipRegion, o.shipCountry, o.shipAddress, o.shipPostalCode, o.shippedDate
@@ -7232,14 +7232,14 @@ not { $sr == ""NULL""; };
 sort $sd;
 limit 3;
 fetch {
-  ""orderID"": $o.order_id,
-  ""shipName"": $o.ship_name,
-  ""shipCity"": $o.ship_city,
-  ""shipRegion"": $o.ship_region,
-  ""shipCountry"": $o.ship_country,
-  ""shipAddress"": $o.ship_address,
-  ""shipPostalCode"": $o.ship_postal_code,
-  ""shippedDate"": $o.shipped_date
+  ""order_id"": $o.order_id,
+  ""ship_name"": $o.ship_name,
+  ""ship_city"": $o.ship_city,
+  ""ship_region"": $o.ship_region,
+  ""ship_country"": $o.ship_country,
+  ""ship_address"": $o.ship_address,
+  ""ship_postal_code"": $o.ship_postal_code,
+  ""shipped_date"": $o.shipped_date
 };"
 "synthetic-2","northwind","95","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Find all suppliers that have a home page listed and supply products in the 'Seafood' category.","MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)-[:PART_OF]->(c:Category {categoryName: 'Seafood'})
 WHERE s.homePage IS NOT NULL AND s.homePage <> 'NULL'
@@ -7251,8 +7251,8 @@ supplies (supplier: $s, product: $p);
 part_of (product: $p, category: $c);
 not { $hp == ""NULL""; };
 fetch {
-  ""companyName"": $cn,
-  ""homePage"": $hp
+  ""company_name"": $cn,
+  ""home_page"": $hp
 };"
 "synthetic-2","northwind","120","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which suppliers have a home page listed? Provide names for the first 5.","MATCH (s:Supplier)
 WHERE s.homePage IS NOT NULL AND s.homePage <> 'NULL'
@@ -7261,15 +7261,15 @@ LIMIT 5","match
 $s isa supplier, has home_page $hp, has company_name $name;
 not { $hp == ""NULL""; };
 limit 5;
-fetch { ""companyName"": $name };"
+fetch { ""company_name"": $name };"
 "synthetic-2","northwind","147","high","cypher_missing_negation","Question implies negation but Cypher has no NOT/WHERE NOT/IS NULL","Find all suppliers who do not have a homepage listed.","MATCH (s:Supplier)
 WHERE s.homePage = 'NULL'
 RETURN s.companyName, s.contactName, s.phone, s.address, s.city, s.country","match
 $s isa supplier;
 not { $s has home_page $hp; };
 fetch {
-  ""companyName"": $s.company_name,
-  ""contactName"": $s.contact_name,
+  ""company_name"": $s.company_name,
+  ""contact_name"": $s.contact_name,
   ""phone"": $s.phone,
   ""address"": $s.address,
   ""city"": $s.city,
@@ -7281,8 +7281,8 @@ RETURN s.companyName, s.contactName, s.phone, s.address, s.city, s.country","mat
 $s isa supplier;
 not { $s has home_page $hp; };
 fetch {
-  ""companyName"": $s.company_name,
-  ""contactName"": $s.contact_name,
+  ""company_name"": $s.company_name,
+  ""contact_name"": $s.contact_name,
   ""phone"": $s.phone,
   ""address"": $s.address,
   ""city"": $s.city,
@@ -7296,8 +7296,8 @@ $p isa product, has product_name $pn;
 supplies (supplier: $s, product: $p);
 not { $f == ""NULL""; };
 fetch {
-  ""productName"": $pn,
-  ""supplierName"": $sn
+  ""product_name"": $pn,
+  ""supplier_name"": $sn
 };"
 "synthetic-2","northwind","171","medium","cypher_missing_condition","Question requires ""both...and"" but Cypher WHERE lacks AND","Find all products that are both in 'Beverages' and 'Condiments' categories.","MATCH (p:Product)-[:PART_OF]->(c:Category)
 WHERE c.categoryName IN ['Beverages', 'Condiments']
@@ -7310,7 +7310,7 @@ $c2 isa category, has category_name ""Condiments"";
 part_of (product: $p, category: $c1);
 part_of (product: $p, category: $c2);
 fetch {
-  ""productName"": $p.product_name
+  ""product_name"": $p.product_name
 };"
 "synthetic-2","northwind","208","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which categories do not have any discontinued products?","MATCH (c:Category)<-[:PART_OF]-(p:Product)
 WHERE p.discontinued = false
@@ -7325,7 +7325,7 @@ not {
   part_of (product: $p, category: $c);
 };
 fetch {
-  ""categoryName"": $c.category_name
+  ""category_name"": $c.category_name
 };"
 "synthetic-2","northwind","238","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","List the top 5 suppliers based on the number of cities they supply to.","MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)<-[:ORDERS]-(o:Order)
 WITH s, COLLECT(DISTINCT o.shipCity) AS cities
@@ -7341,14 +7341,14 @@ distinct;
 reduce $city_count = count groupby $s, $name;
 sort $city_count desc;
 limit 5;
-fetch { ""supplier"": $name, ""cityCount"": $city_count };"
+fetch { ""supplier"": $name, ""city_count"": $city_count };"
 "synthetic-2","northwind","320","high","cypher_missing_negation","Question implies negation but Cypher has no NOT/WHERE NOT/IS NULL","Identify suppliers who do not have a home page listed.","MATCH (s:Supplier)
 WHERE s.homePage = 'NULL'
 RETURN s.companyName AS SupplierName","match
 $s isa supplier;
 not { $s has home_page $hp; };
 fetch {
-  ""SupplierName"": $s.company_name
+  ""supplier_name"": $s.company_name
 };"
 "synthetic-2","northwind","320","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Identify suppliers who do not have a home page listed.","MATCH (s:Supplier)
 WHERE s.homePage = 'NULL'
@@ -7356,7 +7356,7 @@ RETURN s.companyName AS SupplierName","match
 $s isa supplier;
 not { $s has home_page $hp; };
 fetch {
-  ""SupplierName"": $s.company_name
+  ""supplier_name"": $s.company_name
 };"
 "synthetic-2","northwind","337","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List all suppliers that are based outside of 'USA' and 'UK'.","MATCH (s:Supplier)
 WHERE s.country <> 'USA' AND s.country <> 'UK'
@@ -7365,7 +7365,7 @@ $s isa supplier, has country $c;
 not { $c == ""USA""; };
 not { $c == ""UK""; };
 fetch {
-  ""SupplierName"": $s.company_name,
+  ""supplier_name"": $s.company_name,
   ""Country"": $c
 };"
 "synthetic-2","northwind","343","medium","cypher_missing_condition","Question requires ""both...and"" but Cypher WHERE lacks AND","Find all suppliers who supply products in both 'Beverages' and 'Condiments' categories.","MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)-[:PART_OF]->(c:Category)
@@ -7385,7 +7385,7 @@ supplies (supplier: $s, product: $p2);
 part_of (product: $p1, category: $c1);
 part_of (product: $p2, category: $c2);
 fetch {
-  ""supplierName"": $s.company_name
+  ""supplier_name"": $s.company_name
 };"
 "synthetic-2","northwind","348","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Display products with 'unitPrice' higher than the average unit price of their category.","MATCH (p:Product)-[:PART_OF]->(c:Category)
 WITH c, avg(p.unitPrice) AS avgPrice
@@ -7403,9 +7403,9 @@ match
 let $avg = avg_price_for_category($c);
 $up > $avg;
 fetch {
-  ""productName"": $pn,
-  ""unitPrice"": $up,
-  ""categoryName"": $cn
+  ""product_name"": $pn,
+  ""unit_price"": $up,
+  ""category_name"": $cn
 };"
 "synthetic-2","northwind","365","high","cypher_missing_order","Question asks for top-5 but Cypher has no ORDER BY","List the top 5 customers based in London.","MATCH (c:Customer {city: ""London""})
 RETURN c.companyName, c.contactName, c.contactTitle, c.address, c.postalCode, c.phone, c.fax
@@ -7413,11 +7413,11 @@ LIMIT 5","match
 $c isa customer, has city ""London"";
 limit 5;
 fetch {
-  ""companyName"": $c.company_name,
-  ""contactName"": $c.contact_name,
-  ""contactTitle"": $c.contact_title,
+  ""company_name"": $c.company_name,
+  ""contact_name"": $c.contact_name,
+  ""contact_title"": $c.contact_title,
   ""address"": $c.address,
-  ""postalCode"": $c.postal_code,
+  ""postal_code"": $c.postal_code,
   ""phone"": $c.phone,
   ""fax"": $c.fax
 };"
@@ -7439,7 +7439,7 @@ supplies (supplier: $s, product: $p2);
 part_of (product: $p1, category: $c1);
 part_of (product: $p2, category: $c2);
 limit 3;
-fetch { ""supplierName"": $name };"
+fetch { ""supplier_name"": $name };"
 "synthetic-2","northwind","394","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which 3 categories have products that are all discontinued?","MATCH (c:Category)<-[:PART_OF]-(p:Product)
 WHERE p.discontinued = true
 WITH c, COUNT(p) AS totalProducts
@@ -7457,7 +7457,7 @@ not {
 };
 sort $name;
 limit 3;
-fetch { ""categoryName"": $name };"
+fetch { ""category_name"": $name };"
 "synthetic-2","northwind","398","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List the first 3 customers who have never ordered a discontinued product.","MATCH (c:Customer)-[:PURCHASED]->(o:Order)-[:ORDERS]->(p:Product)
 WHERE p.discontinued = false
 WITH c, COUNT(DISTINCT p) AS productCount
@@ -7476,9 +7476,9 @@ not {
 };
 limit 3;
 fetch {
-  ""customerName"": $c.company_name,
-  ""contactName"": $c.contact_name,
-  ""customerID"": $c.customer_id
+  ""customer_name"": $c.company_name,
+  ""contact_name"": $c.contact_name,
+  ""customer_id"": $c.customer_id
 };"
 "synthetic-2","northwind","436","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which suppliers do not have a homePage listed?","MATCH (s:Supplier)
 WHERE s.homePage = 'NULL'
@@ -7486,7 +7486,7 @@ RETURN s.companyName AS supplierName","match
 $s isa supplier;
 not { $s has home_page $hp; };
 fetch {
-  ""supplierName"": $s.company_name
+  ""supplier_name"": $s.company_name
 };"
 "synthetic-2","northwind","473","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which suppliers have all their products with a unit price above 20?","MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)
 WITH s, COLLECT(p.unitPrice > 20) AS prices
@@ -7502,7 +7502,7 @@ not {
   $price2 <= 20;
 };
 fetch {
-  ""companyName"": $s.company_name
+  ""company_name"": $s.company_name
 };"
 "synthetic-2","northwind","505","high","cypher_missing_threshold","Question mentions threshold 5 but it does not appear in Cypher","List the first 3 products that have been ordered with a discount of more than 5%.","MATCH (o:Order)-[ord:ORDERS]->(p:Product)
 WHERE toFloat(ord.discount) > 0.05
@@ -7516,7 +7516,7 @@ $d > 0.05;
 sort $d desc;
 limit 3;
 fetch {
-  ""ProductName"": $p.product_name,
+  ""product_name"": $p.product_name,
   ""Discount"": $d
 };"
 "synthetic-2","northwind","547","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List the first 5 categories that do not have any discontinued products.","MATCH (c:Category)<-[:PART_OF]-(p:Product)
@@ -7532,7 +7532,7 @@ not {
   $p2 has discontinued true;
 };
 limit 5;
-fetch { ""categoryName"": $c.category_name };"
+fetch { ""category_name"": $c.category_name };"
 "synthetic-2","northwind","565","high","cypher_missing_negation","Question implies negation but Cypher has no NOT/WHERE NOT/IS NULL","List the first 5 suppliers whose products have never been out of stock.","MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)
 WHERE p.unitsInStock > 0
 WITH s, COUNT(p) AS totalProducts, SUM(CASE WHEN p.unitsInStock > 0 THEN 1 ELSE 0 END) AS inStockProducts
@@ -7548,7 +7548,7 @@ not {
 };
 limit 5;
 fetch {
-  ""companyName"": $s.company_name
+  ""company_name"": $s.company_name
 };"
 "synthetic-2","northwind","565","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List the first 5 suppliers whose products have never been out of stock.","MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)
 WHERE p.unitsInStock > 0
@@ -7565,7 +7565,7 @@ not {
 };
 limit 5;
 fetch {
-  ""companyName"": $s.company_name
+  ""company_name"": $s.company_name
 };"
 "synthetic-2","northwind","573","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List the first 5 suppliers with a 'homePage' listed.","MATCH (s:Supplier)
 WHERE s.homePage IS NOT NULL AND s.homePage <> 'NULL'
@@ -7575,8 +7575,8 @@ $s isa supplier, has home_page $hp, has company_name $cn;
 not { $hp == ""NULL""; };
 limit 5;
 fetch {
-  ""companyName"": $cn,
-  ""homePage"": $hp
+  ""company_name"": $cn,
+  ""home_page"": $hp
 };"
 "synthetic-2","northwind","576","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","Which 3 suppliers provide products to the most number of unique cities?","MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)<-[:ORDERS]-(o:Order)
 WITH s, o.shipCity AS city
@@ -7594,7 +7594,7 @@ distinct;
 reduce $city_count = count groupby $s, $cn;
 sort $city_count desc;
 limit 3;
-fetch { ""supplier"": $cn, ""cityCount"": $city_count };"
+fetch { ""supplier"": $cn, ""city_count"": $city_count };"
 "synthetic-2","northwind","617","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","List the first 5 products that have a unit price less than the average unit price of all products.","// Step 1: Calculate the average unit price of all products
 MATCH (p:Product)
 WITH avg(p.unitPrice) AS avgUnitPrice
@@ -7615,7 +7615,7 @@ match
   $up < $avg;
 sort $up;
 limit 5;
-fetch { ""productName"": $pn, ""unitPrice"": $up };"
+fetch { ""product_name"": $pn, ""unit_price"": $up };"
 "synthetic-2","northwind","669","medium","cypher_missing_sum","Question asks for total/sum but Cypher has no sum()","Identify the customers who have ordered products with a total discount of 0.","MATCH (c:Customer)-[:PURCHASED]->(o:Order)-[r:ORDERS]->(p:Product)
 WHERE r.discount = ""0""
 RETURN DISTINCT c.companyName AS customerName, c.contactName AS contactName","match
@@ -7626,8 +7626,8 @@ purchased (customer: $c, order: $o);
 $rel isa orders (order: $o, product: $p), has discount $d;
 $d == 0.0;
 fetch {
-  ""customerName"": $c.company_name,
-  ""contactName"": $c.contact_name
+  ""customer_name"": $c.company_name,
+  ""contact_name"": $c.contact_name
 };"
 "synthetic-2","northwind","673","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List the suppliers that have a fax number listed.","MATCH (s:Supplier)
 WHERE s.fax IS NOT NULL AND s.fax <> 'NULL'
@@ -7635,16 +7635,16 @@ RETURN s.companyName AS supplierName, s.fax AS faxNumber","match
 $s isa supplier, has fax $f;
 not { $f == ""NULL""; };
 fetch {
-  ""supplierName"": $s.company_name,
-  ""faxNumber"": $f
+  ""supplier_name"": $s.company_name,
+  ""fax_number"": $f
 };"
 "synthetic-2","northwind","691","medium","cypher_missing_negation","Question implies negation but Cypher has no NOT/WHERE NOT/IS NULL","Identify suppliers who do not have a home page listed.","MATCH (s:Supplier)
 WHERE s.homePage = 'NULL'
 RETURN s.companyName AS SupplierName, s.contactName AS ContactName, s.phone AS Phone","match
 $s isa supplier, has home_page ""NULL"";
 fetch {
-  ""SupplierName"": $s.company_name,
-  ""ContactName"": $s.contact_name,
+  ""supplier_name"": $s.company_name,
+  ""contact_name"": $s.contact_name,
   ""Phone"": $s.phone
 };"
 "synthetic-2","northwind","709","medium","cypher_missing_condition","Question requires ""both...and"" but Cypher WHERE lacks AND","Which suppliers provide products to both 'Beverages' and 'Seafood' categories?","MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)-[:PART_OF]->(c:Category)
@@ -7663,7 +7663,7 @@ $p2 isa product;
 $c2 isa category, has category_name ""Seafood"";
 supplies (supplier: $s, product: $p2);
 part_of (product: $p2, category: $c2);
-fetch { ""supplierName"": $s.company_name };"
+fetch { ""supplier_name"": $s.company_name };"
 "synthetic-2","northwind","744","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which 5 categories contain products that are all actively being supplied (none discontinued)?","MATCH (c:Category)<-[:PART_OF]-(p:Product)
 WHERE p.discontinued = false
 WITH c, COUNT(p) AS totalProducts
@@ -7679,7 +7679,7 @@ not {
   part_of (product: $p2, category: $c);
 };
 limit 5;
-fetch { ""categoryName"": $name };"
+fetch { ""category_name"": $name };"
 "synthetic-2","northwind","796","high","cypher_missing_negation","Question implies negation but Cypher has no NOT/WHERE NOT/IS NULL","Find the 5 suppliers whose products have never been out of stock.","MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)
 WHERE p.unitsInStock > 0
 WITH s, COUNT(p) AS totalProducts, SUM(CASE WHEN p.unitsInStock > 0 THEN 1 ELSE 0 END) AS inStockProducts
@@ -7696,7 +7696,7 @@ not {
 select $s;
 distinct;
 limit 5;
-fetch { ""companyName"": $s.company_name };"
+fetch { ""company_name"": $s.company_name };"
 "synthetic-2","northwind","796","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Find the 5 suppliers whose products have never been out of stock.","MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)
 WHERE p.unitsInStock > 0
 WITH s, COUNT(p) AS totalProducts, SUM(CASE WHEN p.unitsInStock > 0 THEN 1 ELSE 0 END) AS inStockProducts
@@ -7713,7 +7713,7 @@ not {
 select $s;
 distinct;
 limit 5;
-fetch { ""companyName"": $s.company_name };"
+fetch { ""company_name"": $s.company_name };"
 "synthetic-2","offshoreleaks","96","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which entities have the same name as 'TIANSHENG INDUSTRY AND TRADING CO., LTD.'?","MATCH (e:Entity {name: 'TIANSHENG INDUSTRY AND TRADING CO., LTD.'})-[:same_name_as]-(other:Entity)
 RETURN other.name","match
 $e isa offshore_entity, has name ""TIANSHENG INDUSTRY AND TRADING CO., LTD."";
@@ -7768,7 +7768,7 @@ $a isa postal_address, has address $addr;
   not { $r1 is $r2; };
 };
 limit 3;
-fetch { ""sharedAddress"": $addr };"
+fetch { ""shared_address"": $addr };"
 "synthetic-2","offshoreleaks","170","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Find all entities that have been registered to the same address as 'ORION HOUSE SERVICES (HK) LIMITED'.","MATCH (e:Entity)-[:registered_address]->(a:Address {address: ""ORION HOUSE SERVICES (HK) LIMITED ROOM 1401; 14/F.""})
 RETURN e.name AS entity_name, e.address AS entity_address","match
 $a isa postal_address, has address ""ORION HOUSE SERVICES (HK) LIMITED ROOM 1401; 14/F."";
@@ -7838,7 +7838,7 @@ $m isa movie, has languages $l, has title $t;
 $l like "".*French.*"";
 limit 5;
 fetch {
-  ""MovieTitle"": $t,
+  ""movie_title"": $t,
   ""Languages"": $l
 };"
 "synthetic-2","recommendations","100","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","List the top 3 actors by the number of IMDb votes they've received for their movies.","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
@@ -7849,10 +7849,10 @@ LIMIT 3","match
 $a isa person;
 $m isa movie, has imdb_votes $v;
 acted_in (actor: $a, film: $m);
-reduce $totalVotes = sum($v) groupby $a;
-sort $totalVotes desc;
+reduce $total_votes = sum($v) groupby $a;
+sort $total_votes desc;
 limit 3;
-fetch { ""actorName"": $a.name, ""totalVotes"": $totalVotes };"
+fetch { ""actor_name"": $a.name, ""total_votes"": $total_votes };"
 "synthetic-2","recommendations","112","high","cypher_missing_count","Question asks ""how many"" but Cypher has no COUNT()","List the top 5 movies with the most number of IMDb votes.","MATCH (m:Movie)
 RETURN m.title AS title, m.imdbVotes AS votes
 ORDER BY m.imdbVotes DESC
@@ -7898,8 +7898,8 @@ not {
   rated (user: $u, film: $m2);
   in_genre (film: $m2, genre: $g2);
 };
-reduce $ratingCount = count($rel) groupby $u, $name;
-sort $ratingCount desc;
+reduce $rating_count = count($rel) groupby $u, $name;
+sort $rating_count desc;
 limit 3;"
 "synthetic-2","recommendations","132","medium","cypher_missing_condition","Question requires ""both...and"" but Cypher WHERE lacks AND","Which three movies feature both American and Japanese actors?","MATCH (m:Movie)<-[:ACTED_IN]-(a:Actor)
 WHERE a.bornIn = ""USA"" OR a.bornIn = ""Japan""
@@ -7914,7 +7914,7 @@ acted_in (actor: $a1, film: $m);
 acted_in (actor: $a2, film: $m);
 limit 3;
 fetch {
-  ""MovieTitle"": $m.title
+  ""movie_title"": $m.title
 };"
 "synthetic-2","recommendations","152","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Which 3 users have rated movies with the most diverse range of imdbRatings?","MATCH (u:User)-[r:RATED]->(m:Movie)
 WITH u, collect(m.imdbRating) AS ratings
@@ -7945,7 +7945,7 @@ let $min_r = min_imdb_rating($u);
 let $range = $max_r - $min_r;
 sort $range desc;
 limit 3;
-fetch { ""userId"": $u.user_id, ""name"": $u.name, ""ratingRange"": $range };"
+fetch { ""user_id"": $u.user_id, ""name"": $u.name, ""rating_range"": $range };"
 "synthetic-2","recommendations","191","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","Which 3 actors have played roles in both acting and directing for the same movie?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(a)
 WITH a, m
 MATCH (a)-[:DIRECTED]->(m)
@@ -7958,8 +7958,8 @@ $m has title $mt;
 sort $an, $mt;
 limit 3;
 fetch {
-  ""actorName"": $an,
-  ""movieTitle"": $mt
+  ""actor_name"": $an,
+  ""movie_title"": $mt
 };"
 "synthetic-2","recommendations","199","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","List the movies where the primary language is English and have a runtime of exactly 96 minutes.","MATCH (m:Movie)
 WHERE ""English"" IN m.languages AND m.runtime = 96
@@ -7968,7 +7968,7 @@ $m isa movie, has runtime $r, has languages $l;
 $r == 96;
 $l like "".*English.*"";
 fetch {
-  ""MovieTitle"": $m.title,
+  ""movie_title"": $m.title,
   ""Runtime"": $r,
   ""Languages"": $l
 };"
@@ -8029,11 +8029,11 @@ MATCH (actor)-[:ACTED_IN]->(lowBudgetMovie:Movie)
 WHERE lowBudgetMovie.budget < 10000000
 RETURN DISTINCT actor.name","match
 $actor isa person;
-acted_in (actor: $actor, film: $highBudget);
-$highBudget isa movie, has budget $hb;
+acted_in (actor: $actor, film: $high_budget);
+$high_budget isa movie, has budget $hb;
 $hb > 200000000;
-acted_in (actor: $actor, film: $lowBudget);
-$lowBudget isa movie, has budget $lb;
+acted_in (actor: $actor, film: $low_budget);
+$low_budget isa movie, has budget $lb;
 $lb < 10000000;
 select $actor;
 distinct;
@@ -8061,7 +8061,7 @@ $l like "".*English.*"";
 $l like "".*Japanese.*"";
 limit 3;
 fetch {
-  ""MovieTitle"": $m.title
+  ""movie_title"": $m.title
 };"
 "synthetic-2","recommendations","369","medium","cypher_missing_sum","Question asks for total/sum but Cypher has no sum()","Find movies where the sum of the revenue and budget is more than 1 billion dollars.","MATCH (m:Movie)
 WHERE (m.revenue + m.budget) > 1000000000
@@ -8081,7 +8081,7 @@ $m isa movie, has languages $l, has title $t;
 $l like "".*English.*"";
 $l like "".*French.*"";
 fetch {
-  ""MovieTitle"": $m.title,
+  ""movie_title"": $m.title,
   ""Languages"": $m.languages
 };"
 "synthetic-2","recommendations","404","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","Identify movies that have been released in both English and French.","MATCH (m:Movie)
@@ -8091,8 +8091,8 @@ $m isa movie, has languages $l, has title $t, has released $r;
 $l like "".*English.*"";
 $l like "".*French.*"";
 fetch {
-  ""MovieTitle"": $t,
-  ""ReleaseDate"": $r
+  ""movie_title"": $t,
+  ""release_date"": $r
 };"
 "synthetic-2","recommendations","409","high","cypher_missing_negation","Question implies negation but Cypher has no NOT/WHERE NOT/IS NULL","Identify directors who have never directed a movie rated under 6 on IMDb.","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WHERE m.imdbRating >= 6
@@ -8109,7 +8109,7 @@ not {
   $r < 6.0;
 };
 fetch {
-  ""DirectorName"": $d.name
+  ""director_name"": $d.name
 };"
 "synthetic-2","recommendations","409","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Identify directors who have never directed a movie rated under 6 on IMDb.","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WHERE m.imdbRating >= 6
@@ -8126,7 +8126,7 @@ not {
   $r < 6.0;
 };
 fetch {
-  ""DirectorName"": $d.name
+  ""director_name"": $d.name
 };"
 "synthetic-2","recommendations","432","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List all actors who have acted in movies with at least two different directors.","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(d:Director)
 WITH a, m, COUNT(DISTINCT d) AS directorCount
@@ -8139,7 +8139,7 @@ directed (director: $d2, film: $m);
 not { $d1 is $d2; };
 select $a;
 distinct;
-fetch { ""ActorName"": $a.name };"
+fetch { ""actor_name"": $a.name };"
 "synthetic-2","recommendations","491","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Which 3 users have the highest average movie rating with at least 20 rated movies?","MATCH (u:User)-[r:RATED]->(m:Movie)
 WITH u, COUNT(r) AS ratedMovies, AVG(r.rating) AS avgRating
 WHERE ratedMovies >= 20
@@ -8157,7 +8157,7 @@ $rel has rating $r;
 reduce $avg = mean($r) groupby $u;
 sort $avg desc;
 limit 3;
-fetch { ""userName"": $u.name, ""avgRating"": $avg };"
+fetch { ""user_name"": $u.name, ""avg_rating"": $avg };"
 "synthetic-2","recommendations","501","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","List the first 3 movies that have both English and French languages.","MATCH (m:Movie)
 WHERE ""English"" IN m.languages AND ""French"" IN m.languages
 RETURN m.title AS title, m.languages AS languages
@@ -8205,7 +8205,7 @@ match
   rated (user: $user, film: $old_movie);
   rated (user: $user, film: $new_movie);
 limit 3;
-fetch { ""userName"": $user.n"
+fetch { ""user_name"": $user.n"
 "synthetic-2","recommendations","530","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which 3 actors have acted in both a highest and lowest grossing movie?","// Find the highest and lowest grossing movies
 MATCH (highestGrossing:Movie)
 WITH highestGrossing
@@ -8230,7 +8230,7 @@ LIMIT 3","match
   acted_in (actor: $actor, film: $low);
   $actor has name $name;
 limit 3;
-fetch { ""actorName"": $name };"
+fetch { ""actor_name"": $name };"
 "synthetic-2","recommendations","558","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Which 3 actors have the lowest average imdbRating for movies they acted in and acted in more than three movies?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WITH a, avg(m.imdbRating) AS avgRating, count(m) AS movieCount
 WHERE movieCount > 3
@@ -8248,7 +8248,7 @@ match $mc > 3;
 reduce $avg_rating = mean($r) groupby $a;
 sort $avg_rating asc;
 limit 3;
-fetch { ""actorName"": $a.name, ""avgRating"": $avg_rating };"
+fetch { ""actor_name"": $a.name, ""avg_rating"": $avg_rating };"
 "synthetic-2","recommendations","568","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","What are the top 5 movies that were directed by persons who were not primarily directors?","MATCH (p:Person)-[:DIRECTED]->(m:Movie)
 WHERE NOT EXISTS {
   MATCH (p)-[:DIRECTED]->(:Movie)
@@ -8274,7 +8274,7 @@ match
   $dc <= $ac;
 sort $r desc;
 limit 5;
-fetch { ""MovieTitle"": $m.title, ""Rating"": $r };"
+fetch { ""movie_title"": $m.title, ""Rating"": $r };"
 "synthetic-2","recommendations","576","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","What are the top 5 movies by revenue that were released in languages other than English?","MATCH (m:Movie)
 WHERE NOT ""English"" IN m.languages
 RETURN m.title AS title, m.revenue AS revenue
@@ -8292,7 +8292,7 @@ $m isa movie, has languages $l, has title $t;
 $l like "".*English.*"";
 $l like "".*Spanish.*"";
 fetch {
-  ""MovieTitle"": $t,
+  ""movie_title"": $t,
   ""Languages"": $l
 };"
 "synthetic-2","recommendations","589","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","Find all movies where the main language is English and have a budget over 50 million dollars.","MATCH (m:Movie)
@@ -8329,7 +8329,7 @@ match
   $user_genres == $total_genres;
 sort $user_genres desc;
 limit 3;
-fetch { ""userName"": $u.name, ""genresRatedCount"": $user_genres };"
+fetch { ""user_name"": $u.name, ""genres_rated_count"": $user_genres };"
 "synthetic-2","recommendations","690","medium","cypher_lacks_string_op_vs_typeql","TypeQL uses like pattern but Cypher has no CONTAINS/STARTS WITH/regex","List 5 movies that have both English and French as languages.","MATCH (m:Movie)
 WHERE ""English"" IN m.languages AND ""French"" IN m.languages
 RETURN m.title
@@ -8477,24 +8477,24 @@ RETURN u.name AS moderatorName, streamCount","match
 $u isa user, has name $n;
 $s isa stream;
 moderation (moderating_user: $u, moderated_channel: $s);
-reduce $streamCount = count($s) groupby $u, $n;
-match $streamCount > 1;
-sort $streamCount desc;
-fetch { ""moderatorName"": $n, ""streamCount"": $streamCount };"
+reduce $stream_count = count($s) groupby $u, $n;
+match $stream_count > 1;
+sort $stream_count desc;
+fetch { ""moderator_name"": $n, ""stream_count"": $stream_count };"
 "synthetic-2","twitch","75","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","Which streams have more than two team associations?","MATCH (s:Stream)-[:HAS_TEAM]->(t:Team)
 WITH s, COUNT(t) AS teamCount
 WHERE teamCount > 2
 RETURN s.name AS streamName, teamCount","match
 $s isa stream;
 team_membership (member_stream: $s, organization: $t);
-reduce $teamCount = count($t) groupby $s;
+reduce $team_count = count($t) groupby $s;
 match
-$teamCount > 2;
+$team_count > 2;
 $s has name $name;
 sort $name;
 fetch {
-  ""streamName"": $name,
-  ""teamCount"": $teamCount
+  ""stream_name"": $name,
+  ""team_count"": $team_count
 };"
 "synthetic-2","twitch","81","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Name the top 3 users who are VIPs in the stream with the most followers.","MATCH (s:Stream)
 WITH s
@@ -8549,7 +8549,7 @@ vip_status (vip_user: $u, vip_channel: $s2);
 not { $s1 is $s2; };
 limit 3;
 fetch {
-  ""userName"": $u.name
+  ""user_name"": $u.name
 };"
 "synthetic-2","twitch","115","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","List the first 3 users who are both moderators and VIPs in different streams.","MATCH (u:User)-[:MODERATOR]->(s1:Stream), (u)-[:VIP]->(s2:Stream)
 WHERE s1 <> s2
@@ -8563,7 +8563,7 @@ vip_status (vip_user: $u, vip_channel: $s2);
 not { $s1 is $s2; };
 limit 3;
 fetch {
-  ""userName"": $u.name
+  ""user_name"": $u.name
 };"
 "synthetic-2","twitch","128","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Who are the first 3 moderators for the oldest stream?","MATCH (s:Stream)
 WITH s
@@ -8636,7 +8636,7 @@ not { $s2 is $s1; };
 vip_status (vip_user: $u, channel_with_vips: $s1);
 vip_status (vip_user: $u, channel_with_vips: $s2);
 fetch {
-  ""vipUser"": $uname
+  ""vip_user"": $uname
 };"
 "synthetic-2","twitch","206","high","cypher_lacks_negation_vs_typeql","TypeQL uses not{} but Cypher has no negation","Which users are VIP in both 'itsbigchase' and another stream?","MATCH (u:User)-[:VIP]->(s1:Stream {name: 'itsbigchase'}),
       (u)-[:VIP]->(s2:Stream)
@@ -8649,7 +8649,7 @@ not { $s2 is $s1; };
 vip_status (vip_user: $u, channel_with_vips: $s1);
 vip_status (vip_user: $u, channel_with_vips: $s2);
 fetch {
-  ""vipUser"": $uname
+  ""vip_user"": $uname
 };"
 "synthetic-2","twitch","257","medium","cypher_lacks_sort_vs_typeql","TypeQL uses sort but Cypher has no ORDER BY","Show streams that feature more than 3 games.","MATCH (s:Stream)-[:PLAYS]->(g:Game)
 WITH s, COUNT(g) AS gameCount
@@ -8658,13 +8658,13 @@ RETURN s.name AS streamName, gameCount","match
 $s isa stream;
 $g isa game;
 game_play (streaming_channel: $s, played_game: $g);
-reduce $gameCount = count($g) groupby $s;
-match $gameCount > 3;
-$s has name $streamName;
-sort $streamName;
+reduce $game_count = count($g) groupby $s;
+match $game_count > 3;
+$s has name $stream_name;
+sort $stream_name;
 fetch {
-  ""streamName"": $streamName,
-  ""gameCount"": $gameCount
+  ""stream_name"": $stream_name,
+  ""game_count"": $game_count
 };"
 "synthetic-2","twitch","258","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Which users are VIPs for the stream with the highest follower count?","MATCH (s:Stream)
 WITH s
@@ -8721,17 +8721,17 @@ ORDER BY vipCount DESC
 LIMIT 5","match
 $s isa stream;
 $u isa user;
-$otherStream isa stream;
+$other_stream isa stream;
 vip_status (channel_with_vips: $s, vip_user: $u);
-vip_status (channel_with_vips: $otherStream, vip_user: $u);
-not { $s is $otherStream; };
-select $s, $otherStream;
+vip_status (channel_with_vips: $other_stream, vip_user: $u);
+not { $s is $other_stream; };
+select $s, $other_stream;
 distinct;
-reduce $vipCount = count($otherStream) groupby $s;
-match $vipCount > 1;
-sort $vipCount desc;
+reduce $vip_count = count($other_stream) groupby $s;
+match $vip_count > 1;
+sort $vip_count desc;
 limit 5;
-fetch { ""streamName"": $s.name, ""streamUrl"": $s.url, ""vipCount"": $vipCount };"
+fetch { ""stream_name"": $s.name, ""stream_url"": $s.url, ""vip_count"": $vip_count };"
 "synthetic-2","twitch","473","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Who are the top 3 users who chatter in the stream with the highest total view count?","MATCH (s:Stream)-[:CHATTER]->(u:User)
 WITH s, u
 ORDER BY s.total_view_count DESC
@@ -8754,7 +8754,7 @@ match
 reduce $count = count($rel) groupby $u;
 sort $count desc;
 limit 3;
-fetch { ""userName"": $u.name };"
+fetch { ""user_name"": $u.name };"
 "synthetic-2","twitch","487","medium","cypher_lacks_optional_vs_typeql","TypeQL uses try{}/custom function but Cypher has no OPTIONAL MATCH","Who are the top 3 moderators for the stream with the highest follower count?","MATCH (s:Stream)
 WITH s
 ORDER BY s.followers DESC

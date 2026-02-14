@@ -28,11 +28,11 @@ ORDER BY numRatings DESC
 LIMIT 5","match
 $u isa user, has name $n;
 $r isa rated (user: $u, film: $m);
-reduce $numRatings = count($r) groupby $u, $n;
-match $numRatings > 20;
-sort $numRatings desc;
+reduce $num_ratings = count($r) groupby $u, $n;
+match $num_ratings > 20;
+sort $num_ratings desc;
 limit 5;
-fetch { ""name"": $n, ""numRatings"": $numRatings };"
+fetch { ""name"": $n, ""num_ratings"": $num_ratings };"
 "3","Identify the top 5 actors who have acted in more than 10 movies.","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WITH a, count(m) AS numMovies
 WHERE numMovies > 10
@@ -41,11 +41,11 @@ ORDER BY numMovies DESC
 LIMIT 5","match
 $a isa person, has name $n;
 acted_in (actor: $a, film: $m);
-reduce $numMovies = count($m) groupby $a, $n;
-match $numMovies > 10;
-sort $numMovies desc;
+reduce $num_movies = count($m) groupby $a, $n;
+match $num_movies > 10;
+sort $num_movies desc;
 limit 5;
-fetch { ""actor"": $n, ""numMovies"": $numMovies };"
+fetch { ""actor"": $n, ""num_movies"": $num_movies };"
 "4","What are the top 3 genres associated with movies released after 2000?","MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
 WHERE m.year > 2000
 RETURN g.name AS genre, count(*) AS count
@@ -95,10 +95,10 @@ $a isa person, has name $n;
 acted_in (actor: $a, film: $m);
 $m has revenue $rev;
 $rev > 500000000;
-reduce $numHighRevenueMovies = count($m) groupby $n;
-sort $numHighRevenueMovies desc;
+reduce $num_high_revenue_movies = count($m) groupby $n;
+sort $num_high_revenue_movies desc;
 limit 3;
-fetch { ""actor"": $n, ""numHighRevenueMovies"": $numHighRevenueMovies };"
+fetch { ""actor"": $n, ""num_high_revenue_movies"": $num_high_revenue_movies };"
 "8","What are the first 5 movies that were rated by users named 'John Smith'?","MATCH (u:User {name: 'John Smith'})-[r:RATED]->(m:Movie)
 RETURN m.title
 ORDER BY r.timestamp
@@ -121,7 +121,7 @@ sort $avg desc;
 limit 3;
 fetch {
   ""user"": $u.name,
-  ""avgRating"": $avg
+  ""avg_rating"": $avg
 };"
 "10","Which 5 movies have the most number of votes on IMDb?","MATCH (m:Movie)
 RETURN m.title, m.imdbVotes
@@ -130,7 +130,7 @@ LIMIT 5","match
 $m isa movie, has title $t, has imdb_votes $v;
 sort $v desc;
 limit 5;
-fetch { ""title"": $t, ""imdbVotes"": $v };"
+fetch { ""title"": $t, ""imdb_votes"": $v };"
 "11","Identify the first 3 genres most frequently linked to movies directed by 'Steven Spielberg'.","MATCH (d:Director {name: 'Steven Spielberg'})-[:DIRECTED]->(m:Movie)-[:IN_GENRE]->(g:Genre)
 RETURN g.name AS genre, count(*) AS frequency
 ORDER BY frequency DESC
@@ -187,7 +187,7 @@ sort $count desc;
 limit 5;
 fetch {
   ""name"": $n,
-  ""numMovies"": $count
+  ""num_movies"": $count
 };"
 "15","What are the top 3 movies with the highest IMDb ratings that were released in the 1990s?","MATCH (m:Movie)
 WHERE m.imdbRating IS NOT NULL AND m.year >= 1990 AND m.year < 2000
@@ -199,7 +199,7 @@ $y >= 1990;
 $y < 2000;
 sort $r desc;
 limit 3;
-fetch { ""title"": $t, ""imdbRating"": $r, ""year"": $y };"
+fetch { ""title"": $t, ""imdb_rating"": $r, ""year"": $y };"
 "16","List the first 5 movies that involve actors born in France.","MATCH (m:Movie)<-[:ACTED_IN]-(a:Actor {bornIn: 'France'})
 RETURN m.title
 LIMIT 5","match
@@ -280,7 +280,7 @@ let $lang_count = language_count($m);
 reduce $max_langs = max($lang_count) groupby $g;
 sort $max_langs desc;
 limit 5;
-fetch { ""genre"": $g.name, ""maxLanguages"": $max_langs };"
+fetch { ""genre"": $g.name, ""max_languages"": $max_langs };"
 "24","List the top 3 movies that have been released on Christmas Day.","MATCH (m:Movie)
 WHERE m.released ENDS WITH ""12-25""
 RETURN m.title, m.released, m.imdbRating
@@ -290,7 +290,7 @@ $m isa movie, has title $t, has released $r, has imdb_rating $ir;
 $r like ""%12-25"";
 sort $ir desc;
 limit 3;
-fetch { ""title"": $t, ""released"": $r, ""imdbRating"": $ir };"
+fetch { ""title"": $t, ""released"": $r, ""imdb_rating"": $ir };"
 "25","Which 5 actors have the highest number of credited roles in the database?","MATCH (a:Actor)-[r:ACTED_IN]->(m:Movie)
 RETURN a.name AS actor, count(r) AS roles
 ORDER BY roles DESC
@@ -390,7 +390,7 @@ sort $count desc;
 limit 3;
 fetch {
   ""movie"": $t,
-  ""genreCount"": $count
+  ""genre_count"": $count
 };"
 "33","Show the top 5 movies with the most languages spoken.","MATCH (m:Movie)
 WHERE m.languages IS NOT NULL
@@ -405,7 +405,7 @@ $m isa movie, has languages $lang;
 let $lang_count = language_count($m);
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "34","What are the first 5 movies where the main actor has also directed the film?","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
 RETURN m.title
 LIMIT 5","match
@@ -428,7 +428,7 @@ sort $count desc;
 limit 3;
 fetch {
   ""director"": $d.name,
-  ""directedAndActedCount"": $count
+  ""directed_and_acted_count"": $count
 };"
 "36","Identify the first 3 users who have rated movies released before 1980.","MATCH (u:User)-[r:RATED]->(m:Movie)
 WHERE m.year < 1980
@@ -452,7 +452,7 @@ $m isa movie, has title $t, has imdb_votes $v, has year $y;
 $y > 2010;
 sort $v desc;
 limit 5;
-fetch { ""title"": $t, ""imdbVotes"": $v, ""year"": $y };"
+fetch { ""title"": $t, ""imdb_votes"": $v, ""year"": $y };"
 "38","What are the first 5 movies with a plot containing the word 'adventure'?","MATCH (m:Movie)
 WHERE m.plot CONTAINS 'adventure'
 RETURN m.title
@@ -499,9 +499,9 @@ acted_in (actor: $a, film: $m);
 directed (director: $d, film: $m);
 select $a, $n, $d;
 distinct;
-reduce $numDirectors = count($d) groupby $a, $n;
-match $numDirectors >= 3;
-sort $numDirectors desc;
+reduce $num_directors = count($d) groupby $a, $n;
+match $num_directors >= 3;
+sort $num_directors desc;
 limit 3;
 fetch { ""actor"": $n };"
 "42","Show the top 5 highest IMDb rated movies directed by female directors.","MATCH (m:Movie)<-[:DIRECTED]-(d:Person)
@@ -548,7 +548,7 @@ sort $count desc;
 limit 5;
 fetch {
   ""user"": $n,
-  ""comedyRatings"": $count
+  ""comedy_ratings"": $count
 };"
 "46","Identify the first 3 movies that have been rated by users younger than 25.","MATCH (u:User)-[r:RATED]->(m:Movie)
 WHERE u.age < 25
@@ -590,7 +590,7 @@ WHERE m.imdbVotes > 600000
 RETURN m.title, m.imdbVotes","match
 $m isa movie, has title $t, has imdb_votes $v;
 $v > 600000;
-fetch { ""title"": $t, ""imdbVotes"": $v };"
+fetch { ""title"": $t, ""imdb_votes"": $v };"
 "51","Name the top 5 highest-grossing movies directed by Harold Lloyd.","MATCH (d:Director {name: 'Harold Lloyd'})-[:DIRECTED]->(m:Movie)
 RETURN m.title AS movie, m.revenue AS revenue
 ORDER BY revenue DESC
@@ -629,14 +629,14 @@ sort $count desc;
 limit 5;
 fetch {
   ""actor"": $a.name,
-  ""movieCount"": $count
+  ""movie_count"": $count
 };"
 "55","What are the IMDb ratings of movies directed by François Lallement?","MATCH (p:Person {name: 'François Lallement'})-[:DIRECTED]->(m:Movie)
 RETURN m.title AS movie, m.imdbRating AS imdbRating","match
 $d isa person, has name ""François Lallement"";
 $m isa movie, has title $t, has imdb_rating $r;
 directed (director: $d, film: $m);
-fetch { ""movie"": $t, ""imdbRating"": $r };"
+fetch { ""movie"": $t, ""imdb_rating"": $r };"
 "56","Which users rated the movie with an IMDb ID '0787474'?","MATCH (u:User)-[r:RATED]->(m:Movie {imdbId: '0787474'})
 RETURN u.name AS user, r.rating AS rating","match
 $m isa movie, has imdb_id ""0787474"";
@@ -707,7 +707,7 @@ RETURN m.title, m.revenue, m.imdbRating","match
 $m isa movie, has title $t, has revenue $r, has imdb_rating $ir;
 $r > 200000000;
 $ir < 6.0;
-fetch { ""title"": $t, ""revenue"": $r, ""imdbRating"": $ir };"
+fetch { ""title"": $t, ""revenue"": $r, ""imdb_rating"": $ir };"
 "65","List the movies where the primary language is English and have a runtime of exactly 96 minutes.","MATCH (m:Movie)
 WHERE 'English' IN m.languages AND m.runtime = 96
 RETURN m.title","match
@@ -724,7 +724,7 @@ $m isa movie, has title $t, has imdb_votes $v, has year $y;
 $y < 2000;
 sort $v desc;
 limit 5;
-fetch { ""title"": $t, ""imdbVotes"": $v };"
+fetch { ""title"": $t, ""imdb_votes"": $v };"
 "67","Which genres have the most movies with a runtime over 120 minutes?","MATCH (g:Genre)<-[:IN_GENRE]-(m:Movie)
 WHERE m.runtime > 120
 RETURN g.name AS genre, count(m) AS numMovies
@@ -739,7 +739,7 @@ sort $count desc;
 limit 10;
 fetch {
   ""genre"": $g.name,
-  ""numMovies"": $count
+  ""num_movies"": $count
 };"
 "68","List the names of movies that have a plot mentioning 'friendship'.","MATCH (m:Movie)
 WHERE m.plot CONTAINS 'friendship'
@@ -804,7 +804,7 @@ $rev > 0;
 let $ratio = $bud / $rev;
 sort $ratio desc;
 limit 3;
-fetch { ""title"": $t, ""budgetRevenueRatio"": $ratio };"
+fetch { ""title"": $t, ""budget_revenue_ratio"": $ratio };"
 "76","Name genres in which Harold Lloyd has directed movies.","MATCH (d:Director {name: 'Harold Lloyd'})-[:DIRECTED]->(m:Movie)-[:IN_GENRE]->(g:Genre)
 RETURN DISTINCT g.name","match
 $d isa person, has name ""Harold Lloyd"";
@@ -869,7 +869,7 @@ WHERE m.plot CONTAINS 'evil exterminator'
 RETURN m.title, m.imdbRating","match
 $m isa movie, has title $t, has plot $p, has imdb_rating $r;
 $p like ""%evil exterminator%"";
-fetch { ""title"": $t, ""imdbRating"": $r };"
+fetch { ""title"": $t, ""imdb_rating"": $r };"
 "84","Name the movies that have been acted in and directed by the same person.","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
 RETURN m.title","match
 $p isa person;
@@ -914,7 +914,7 @@ sort $count desc;
 limit 5;
 fetch {
   ""actor"": $a.name,
-  ""movieCount"": $count
+  ""movie_count"": $count
 };"
 "89","What are the top 3 genres by the number of movies?","MATCH (g:Genre)<-[:IN_GENRE]-(m:Movie)
 RETURN g.name AS genre, count(m) AS movieCount
@@ -927,7 +927,7 @@ sort $count desc;
 limit 3;
 fetch {
   ""genre"": $g.name,
-  ""movieCount"": $count
+  ""movie_count"": $count
 };"
 "90","Who are the top 5 directors by the number of movies they have directed?","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WITH d, count(m) AS numMovies
@@ -941,7 +941,7 @@ sort $count desc;
 limit 5;
 fetch {
   ""director"": $d.name,
-  ""numMovies"": $count
+  ""num_movies"": $count
 };"
 "91","What are the top 5 movies by IMDB rating that have more than 100,000 IMDB votes?","MATCH (m:Movie)
 WHERE m.imdbVotes > 100000
@@ -952,7 +952,7 @@ $m isa movie, has title $t, has imdb_rating $r, has imdb_votes $v;
 $v > 100000;
 sort $r desc;
 limit 5;
-fetch { ""title"": $t, ""imdbRating"": $r };"
+fetch { ""title"": $t, ""imdb_rating"": $r };"
 "92","Which movies have been rated by user '1' and have a rating greater than 8?","MATCH (u:User {userId: '1'})-[r:RATED]->(m:Movie)
 WHERE r.rating > 8
 RETURN m.title, r.rating","match
@@ -997,7 +997,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "97","What are the 3 most common countries for movie settings in the database?","MATCH (m:Movie)
 WHERE m.countries IS NOT NULL
 UNWIND m.countries AS country
@@ -1019,14 +1019,14 @@ $y >= 1990;
 $y < 2000;
 $r > 7;
 limit 3;
-fetch { ""title"": $t, ""year"": $y, ""imdbRating"": $r };"
+fetch { ""title"": $t, ""year"": $y, ""imdb_rating"": $r };"
 "99","Which directors were born in the USA?","MATCH (d:Director)
 WHERE d.bornIn CONTAINS 'USA'
 RETURN d.name AS director, d.bornIn AS bornIn","match
 $d isa person, has name $n, has born_in $b;
 directed (director: $d, film: $m);
 $b like ""%USA%"";
-fetch { ""director"": $n, ""bornIn"": $b };"
+fetch { ""director"": $n, ""born_in"": $b };"
 "100","What are the top 5 highest-rated movies by users, based on the average user rating?","MATCH (m:Movie)<-[r:RATED]-(u:User)
 WITH m, avg(r.rating) AS avgRating
 ORDER BY avgRating DESC
@@ -1039,7 +1039,7 @@ sort $avg desc;
 limit 5;
 fetch {
   ""movie"": $t,
-  ""avgRating"": $avg
+  ""avg_rating"": $avg
 };"
 "101","List the movies that have a budget greater than 200 million USD.","MATCH (m:Movie)
 WHERE m.budget > 200000000
@@ -1106,7 +1106,7 @@ RETURN m.title, m.revenue, m.imdbRating","match
 $m isa movie, has title $t, has revenue $r, has imdb_rating $ir;
 $r > 500000000;
 $ir > 8.0;
-fetch { ""title"": $t, ""revenue"": $r, ""imdbRating"": $ir };"
+fetch { ""title"": $t, ""revenue"": $r, ""imdb_rating"": $ir };"
 "108","What are the most recent 3 movies directed by any director born in Canada?","MATCH (d:Director {bornIn: 'Canada'})-[:DIRECTED]->(m:Movie)
 RETURN m.title, m.year
 ORDER BY m.year DESC
@@ -1129,7 +1129,7 @@ sort $count desc;
 limit 3;
 fetch {
   ""user"": $n,
-  ""numRatings"": $count
+  ""num_ratings"": $count
 };"
 "110","What are the top 3 highest budget movies that failed to gross more than their budget?","MATCH (m:Movie)
 WHERE m.revenue < m.budget
@@ -1180,7 +1180,7 @@ LIMIT 5","match
 $m isa movie, has title $t, has imdb_rating $r;
 sort $r desc;
 limit 5;
-fetch { ""title"": $t, ""imdbRating"": $r };"
+fetch { ""title"": $t, ""imdb_rating"": $r };"
 "115","What are the names of actors who have acted in more than five movies?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WITH a, count(m) AS numMovies
 WHERE numMovies > 5
@@ -1230,7 +1230,7 @@ reduce $count = count($m) groupby $g, $gn;
 match $count > 10;
 fetch {
   ""genre"": $gn,
-  ""movieCount"": $count
+  ""movie_count"": $count
 };"
 "120","Which movies have been rated by both user '1' and user '2'?","MATCH (u1:User {userId: '1'})-[r1:RATED]->(m:Movie)<-[r2:RATED]-(u2:User {userId: '2'})
 RETURN m.title","match
@@ -1260,7 +1260,7 @@ $y >= 2010;
 $y <= 2020;
 reduce $count = count($m) groupby $y;
 sort $y asc;
-fetch { ""year"": $y, ""numMovies"": $count };"
+fetch { ""year"": $y, ""num_movies"": $count };"
 "123","Which actors have acted in movies from at least three different countries?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WITH a, size(collect(distinct m.countries)) AS numCountries
 WHERE numCountries >= 3
@@ -1273,7 +1273,7 @@ distinct;
 reduce $num_countries = count($c) groupby $p;
 match
 $num_countries >= 3;
-fetch { ""actor"": $p.name, ""numCountries"": $num_countries };"
+fetch { ""actor"": $p.name, ""num_countries"": $num_countries };"
 "124","List the top 3 movies with the most IMDb votes.","MATCH (m:Movie)
 RETURN m.title, m.imdbVotes
 ORDER BY m.imdbVotes DESC
@@ -1281,7 +1281,7 @@ LIMIT 3","match
 $m isa movie, has title $t, has imdb_votes $v;
 sort $v desc;
 limit 3;
-fetch { ""title"": $t, ""imdbVotes"": $v };"
+fetch { ""title"": $t, ""imdb_votes"": $v };"
 "125","Which directors have a bio that mentions 'Academy Award'?","MATCH (d:Director)
 WHERE d.bio CONTAINS 'Academy Award'
 RETURN d.name, d.bio","match
@@ -1312,10 +1312,10 @@ $a isa person, has name $n;
 acted_in (actor: $a, film: $m);
 $m has year $y;
 $y < 1980;
-reduce $numRoles = count($m) groupby $n;
-sort $numRoles desc;
+reduce $num_roles = count($m) groupby $n;
+sort $num_roles desc;
 limit 1;
-fetch { ""actor"": $n, ""numRoles"": $numRoles };"
+fetch { ""actor"": $n, ""num_roles"": $num_roles };"
 "129","Can you list all genres that a movie with the title 'Toy Story' falls under?","MATCH (m:Movie {title: 'Toy Story'})-[:IN_GENRE]->(g:Genre)
 RETURN g.name AS genre","match
 $m isa movie, has title ""Toy Story"";
@@ -1354,7 +1354,7 @@ sort $count desc;
 limit 1;
 fetch {
   ""movie"": $t,
-  ""numActors"": $count
+  ""num_actors"": $count
 };"
 "134","List all movies directed by someone who was born after 1970.","MATCH (p:Person)-[:DIRECTED]->(m:Movie)
 WHERE p.born > date('1970-01-01')
@@ -1363,14 +1363,14 @@ $p isa person, has name $n, has born $b;
 directed (director: $p, film: $m);
 $m has title $t;
 $b > 1970-01-01;
-fetch { ""movie"": $t, ""director"": $n, ""birthDate"": $b };"
+fetch { ""movie"": $t, ""director"": $n, ""birth_date"": $b };"
 "135","What is the average IMDb rating of movies with a runtime under 90 minutes?","MATCH (m:Movie)
 WHERE m.runtime < 90 AND m.imdbRating IS NOT NULL
 RETURN avg(m.imdbRating) AS averageRating","match
 $m isa movie, has runtime $rt, has imdb_rating $r;
 $rt < 90;
-reduce $averageRating = mean($r);
-fetch { ""averageRating"": $averageRating };"
+reduce $average_rating = mean($r);
+fetch { ""average_rating"": $average_rating };"
 "136","Which movies have been rated exactly 5 by more than one user?","MATCH (m:Movie)<-[r:RATED]-(u:User)
 WHERE r.rating = 5
 WITH m, count(u) AS numRatings
@@ -1383,7 +1383,7 @@ reduce $count = count($u) groupby $m, $t;
 match $count > 1;
 fetch {
   ""movie"": $t,
-  ""numRatings"": $count
+  ""num_ratings"": $count
 };"
 "137","Find movies where the sum of the revenue and budget is more than 1 billion dollars.","MATCH (m:Movie)
 WHERE m.revenue + m.budget > 1000000000
@@ -1458,7 +1458,7 @@ sort $count desc;
 limit 1;
 fetch {
   ""actor"": $n,
-  ""genreCount"": $count
+  ""genre_count"": $count
 };
 "
 "144","What are the names of the users who rated the movie 'Dracula Untold'?","MATCH (m:Movie {title: 'Dracula Untold'})<-[r:RATED]-(u:User)
@@ -1486,8 +1486,8 @@ RETURN sum(m.revenue) AS totalRevenue","match
 $d isa person, has name $n, has born_in ""Burchard, Nebraska, USA"";
 directed (director: $d, film: $m);
 $m has revenue $rev;
-reduce $totalRevenue = sum($rev);
-fetch { ""totalRevenue"": $totalRevenue };"
+reduce $total_revenue = sum($rev);
+fetch { ""total_revenue"": $total_revenue };"
 "148","Which movies have a plot description longer than 150 characters?","MATCH (m:Movie)
 WHERE m.plot IS NOT NULL AND size(m.plot) > 150
 RETURN m.title, m.plot","match
@@ -1516,7 +1516,7 @@ WHERE m.imdbVotes > 500000
 RETURN m.imdbId","match
 $m isa movie, has imdb_id $id, has imdb_votes $v;
 $v > 500000;
-fetch { ""imdbId"": $id };"
+fetch { ""imdb_id"": $id };"
 "152","Which movies have been acted in by persons born before 1900?","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
 WHERE p.born < date('1900-01-01')
 RETURN m.title AS movie, p.name AS actor, p.born AS birthDate","match
@@ -1524,7 +1524,7 @@ $p isa person, has name $n, has born $b;
 acted_in (actor: $p, film: $m);
 $m has title $t;
 $b < 1900-01-01;
-fetch { ""movie"": $t, ""actor"": $n, ""birthDate"": $b };"
+fetch { ""movie"": $t, ""actor"": $n, ""birth_date"": $b };"
 "153","What are the top 5 movies by revenue released in 1995?","MATCH (m:Movie)
 WHERE m.year = 1995 AND m.revenue IS NOT NULL
 RETURN m.title, m.revenue
@@ -1551,7 +1551,7 @@ in_genre (film: $m, genre: $g);
 $rel < ""2000-01-01"";
 sort $r desc;
 limit 3;
-fetch { ""title"": $t, ""imdbRating"": $r };"
+fetch { ""title"": $t, ""imdb_rating"": $r };"
 "156","What are the top 5 oldest actors who have acted in English language movies?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE a.born IS NOT NULL AND 'English' IN m.languages
 RETURN a.name, a.born
@@ -1584,7 +1584,7 @@ LIMIT 3","match
 $m isa movie, has title $t, has imdb_votes $v;
 sort $v desc;
 limit 3;
-fetch { ""title"": $t, ""imdbVotes"": $v };"
+fetch { ""title"": $t, ""imdb_votes"": $v };"
 "159","What are the top 5 movies with the most countries listed in their production?","MATCH (m:Movie)
 WHERE m.countries IS NOT NULL
 RETURN m.title, m.countries
@@ -1603,20 +1603,20 @@ RETURN u.name AS user, numHighRatings","match
 $u isa user, has name $n;
 $r isa rated (user: $u, film: $m), has rating $rating;
 $rating > 7.0;
-reduce $numHighRatings = count($r) groupby $n;
-sort $numHighRatings desc;
+reduce $num_high_ratings = count($r) groupby $n;
+sort $num_high_ratings desc;
 limit 10;
-fetch { ""user"": $n, ""numHighRatings"": $numHighRatings };"
+fetch { ""user"": $n, ""num_high_ratings"": $num_high_ratings };"
 "161","List the top 3 genres with the most movies associated with them.","MATCH (g:Genre)<-[:IN_GENRE]-(m:Movie)
 RETURN g.name AS genre, count(m) AS movieCount
 ORDER BY movieCount DESC
 LIMIT 3","match
 $g isa genre, has name $n;
 in_genre (film: $m, genre: $g);
-reduce $movieCount = count($m) groupby $n;
-sort $movieCount desc;
+reduce $movie_count = count($m) groupby $n;
+sort $movie_count desc;
 limit 3;
-fetch { ""genre"": $n, ""movieCount"": $movieCount };"
+fetch { ""genre"": $n, ""movie_count"": $movie_count };"
 "162","What are the 5 most recent movies directed by directors born in the USA?","MATCH (d:Director {bornIn: 'USA'})-[:DIRECTED]->(m:Movie)
 RETURN m.title, m.released
 ORDER BY m.released DESC
@@ -1651,7 +1651,7 @@ $rev > 0;
 let $ratio = $bud / $rev;
 sort $ratio desc;
 limit 3;
-fetch { ""title"": $t, ""budgetRevenueRatio"": $ratio };"
+fetch { ""title"": $t, ""budget_revenue_ratio"": $ratio };"
 "165","Which movies have been rated by more than 1000 users?","MATCH (m:Movie)
 WHERE m.imdbVotes > 1000
 RETURN m.title, m.imdbVotes","match
@@ -1659,7 +1659,7 @@ $m isa movie, has title $t, has imdb_votes $v;
 $v > 1000;
 fetch {
   ""title"": $t,
-  ""imdbVotes"": $v
+  ""imdb_votes"": $v
 };"
 "166","What are the top 5 movies that have the most languages spoken in them?","MATCH (m:Movie)
 WHERE m.languages IS NOT NULL
@@ -1675,7 +1675,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "167","List the top 3 movies that have the highest revenue and were released in 2014.","MATCH (m:Movie)
 WHERE m.year = 2014
 RETURN m.title, m.revenue
@@ -1708,7 +1708,7 @@ $rel isa rated (user: $u, film: $m), has rating $r;
 reduce $count = count($rel), $avg = mean($r) groupby $u, $n;
 match $count >= 3;
 sort $avg desc;
-fetch { ""user"": $n, ""avgRating"": $avg };"
+fetch { ""user"": $n, ""avg_rating"": $avg };"
 "170","List the genres that have movies with an imdbRating less than 4.0.","MATCH (g:Genre)<-[:IN_GENRE]-(m:Movie)
 WHERE m.imdbRating < 4.0
 RETURN DISTINCT g.name","match
@@ -1742,7 +1742,7 @@ sort $count desc;
 limit 10;
 fetch {
   ""actor"": $a.name,
-  ""numRoles"": $count
+  ""num_roles"": $count
 };"
 "173","List the top 3 movies with the lowest imdbVotes released after 2000.","MATCH (m:Movie)
 WHERE m.year > 2000 AND m.imdbVotes IS NOT NULL
@@ -1753,7 +1753,7 @@ $m isa movie, has title $t, has imdb_votes $v, has year $y;
 $y > 2000;
 sort $v asc;
 limit 3;
-fetch { ""title"": $t, ""imdbVotes"": $v };"
+fetch { ""title"": $t, ""imdb_votes"": $v };"
 "174","What are the top 5 actors by number of movies acted in with a revenue greater than 500 million dollars?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE m.revenue > 500000000
 WITH a, count(m) AS numMovies
@@ -1764,10 +1764,10 @@ $a isa person, has name $n;
 acted_in (actor: $a, film: $m);
 $m has revenue $rev;
 $rev > 500000000;
-reduce $numHighRevenueMovies = count($m) groupby $n;
-sort $numHighRevenueMovies desc;
+reduce $num_high_revenue_movies = count($m) groupby $n;
+sort $num_high_revenue_movies desc;
 limit 5;
-fetch { ""actor"": $n, ""numHighRevenueMovies"": $numHighRevenueMovies };"
+fetch { ""actor"": $n, ""num_high_revenue_movies"": $num_high_revenue_movies };"
 "175","Which directors have directed movies in more than three different languages?","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WHERE m.languages IS NOT NULL
 WITH d, size(collect(DISTINCT m.languages)) AS num_languages 
@@ -1803,7 +1803,7 @@ sort $count desc;
 limit 5;
 fetch {
   ""movie"": $t,
-  ""numActors"": $count
+  ""num_actors"": $count
 };"
 "178","Which users have rated the same movie more than once?","MATCH (u:User)-[r1:RATED]->(m:Movie)<-[r2:RATED]-(u)
 WHERE r1.timestamp <> r2.timestamp
@@ -1823,7 +1823,7 @@ $m isa movie, has title $t, has imdb_rating $r, has imdb_votes $v;
 $v > 500;
 sort $r asc;
 limit 3;
-fetch { ""title"": $t, ""imdbRating"": $r };"
+fetch { ""title"": $t, ""imdb_rating"": $r };"
 "180","What are the top 5 actors who have acted in movies directed by Denzel Washington?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(d:Director {name: 'Denzel Washington'})
 RETURN a.name AS actor, count(*) AS appearances
 ORDER BY appearances DESC
@@ -1860,7 +1860,7 @@ sort $count desc;
 limit 5;
 fetch {
   ""movie"": $t,
-  ""distinctGenres"": $count
+  ""distinct_genres"": $count
 };"
 "183","List the top 3 actors by number of movies acted in that were released in the 1990s.","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE m.released STARTS WITH '199'
@@ -1873,10 +1873,10 @@ $m isa movie, has year $y;
 $y >= 1990;
 $y < 2000;
 acted_in (actor: $a, film: $m);
-reduce $numMovies = count($m) groupby $a, $n;
-sort $numMovies desc;
+reduce $num_movies = count($m) groupby $a, $n;
+sort $num_movies desc;
 limit 3;
-fetch { ""actor"": $n, ""numMovies"": $numMovies };"
+fetch { ""actor"": $n, ""num_movies"": $num_movies };"
 "184","What are the top 5 directors who have directed movies that won an academy award?","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WHERE m.plot CONTAINS 'Academy Award'
 WITH d, count(m) AS awardCount
@@ -1902,7 +1902,7 @@ $b1 > 200000000;
 acted_in (actor: $a, film: $m2);
 $m2 has budget $b2, has title $t2;
 $b2 < 10000000;
-fetch { ""actor"": $n, ""highBudgetMovie"": $t1, ""lowBudgetMovie"": $t2 };"
+fetch { ""actor"": $n, ""high_budget_movie"": $t1, ""low_budget_movie"": $t2 };"
 "186","List the top 3 movies with a plot involving 'love' that have a runtime over 120 minutes.","MATCH (m:Movie)
 WHERE m.plot CONTAINS 'love' AND m.runtime > 120
 RETURN m.title, m.plot, m.runtime
@@ -1924,7 +1924,7 @@ in_genre (film: $m, genre: $g);
 $rel like ""20%"";
 sort $r desc;
 limit 5;
-fetch { ""title"": $t, ""imdbRating"": $r, ""year"": $y };"
+fetch { ""title"": $t, ""imdb_rating"": $r, ""year"": $y };"
 "188","Which directors have directed movies in both the 'Horror' and 'Romance' genres?","MATCH (d:Director)-[:DIRECTED]->(m:Movie)-[:IN_GENRE]->(g:Genre)
 WHERE g.name IN ['Horror', 'Romance']
 WITH d, collect(distinct g.name) AS genres
@@ -1958,7 +1958,7 @@ sort $avg desc;
 limit 3;
 fetch {
   ""actor"": $n,
-  ""avgRating"": $avg
+  ""avg_rating"": $avg
 };"
 "190","List the names of the top 5 movies with the highest revenue.","MATCH (m:Movie)
 WHERE m.revenue IS NOT NULL
@@ -1985,7 +1985,7 @@ LIMIT 5","match
 $m isa movie, has title $t, has imdb_rating $r;
 sort $r asc;
 limit 5;
-fetch { ""title"": $t, ""imdbRating"": $r };"
+fetch { ""title"": $t, ""imdb_rating"": $r };"
 "193","List the top 5 movies with the most imdbVotes.","MATCH (m:Movie)
 WHERE m.imdbVotes IS NOT NULL
 RETURN m.title, m.imdbVotes
@@ -1994,7 +1994,7 @@ LIMIT 5","match
 $m isa movie, has title $t, has imdb_votes $v;
 sort $v desc;
 limit 5;
-fetch { ""title"": $t, ""imdbVotes"": $v };"
+fetch { ""title"": $t, ""imdb_votes"": $v };"
 "194","Find the names of the top 5 directors by the number of movies they have directed.","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WITH d, count(m) AS numMovies
 ORDER BY numMovies DESC
@@ -2007,7 +2007,7 @@ sort $count desc;
 limit 5;
 fetch {
   ""director"": $d.name,
-  ""numMovies"": $count
+  ""num_movies"": $count
 };"
 "195","What are the top 5 actors who acted in the most number of movies?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WITH a, count(m) AS numMovies
@@ -2021,7 +2021,7 @@ sort $count desc;
 limit 5;
 fetch {
   ""actor"": $n,
-  ""numMovies"": $count
+  ""num_movies"": $count
 };"
 "196","List the names of the first 3 genres that have the most movies associated with them.","MATCH (g:Genre)<-[:IN_GENRE]-(m:Movie)
 RETURN g.name AS genre, count(m) AS movieCount
@@ -2044,7 +2044,7 @@ sort $count desc;
 limit 5;
 fetch {
   ""movie"": $m.title,
-  ""numRatings"": $count
+  ""num_ratings"": $count
 };"
 "198","What are the top 5 countries where the most movies originate from based on the 'countries' property of movies?","MATCH (m:Movie)
 WHERE m.countries IS NOT NULL
@@ -2056,7 +2056,7 @@ $m isa movie, has countries $c;
 reduce $count = count($m) groupby $c;
 sort $count desc;
 limit 5;
-fetch { ""country"": $c, ""numMovies"": $count };"
+fetch { ""country"": $c, ""num_movies"": $count };"
 "199","List the names of the top 3 users who have rated the most movies.","MATCH (u:User)-[r:RATED]->(m:Movie)
 RETURN u.name AS user, count(r) AS numRatings
 ORDER BY numRatings DESC
@@ -2189,7 +2189,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "220","Who are the top 3 actors based on the number of movies they have acted in?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WITH a, count(m) AS numMovies
 ORDER BY numMovies DESC
@@ -2255,7 +2255,7 @@ $rev > 0;
 let $ratio = $bud / $rev;
 sort $ratio desc;
 limit 3;
-fetch { ""title"": $t, ""budgetRevenueRatio"": $ratio };"
+fetch { ""title"": $t, ""budget_revenue_ratio"": $ratio };"
 "230","List the first 5 actors who were born before 1900.","MATCH (a:Actor)
 WHERE a.born < date('1900-01-01')
 RETURN a.name, a.born
@@ -2353,7 +2353,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "246","Show the first 3 movies that feature an actor from France.","MATCH (m:Movie)<-[:ACTED_IN]-(a:Actor)
 WHERE a.bornIn = 'France'
 RETURN m.title
@@ -2403,7 +2403,7 @@ let $lang_count = language_count($m);
 reduce $avg_langs = mean($lang_count) groupby $g;
 sort $avg_langs desc;
 limit 5;
-fetch { ""genre"": $g.name, ""avgLanguages"": $avg_langs };"
+fetch { ""genre"": $g.name, ""avg_languages"": $avg_langs };"
 "254","Which 3 actors have the most roles listed in their ACTED_IN relationships?","MATCH (a:Actor)-[r:ACTED_IN]->(m:Movie)
 RETURN a.name AS actor, count(r) AS numRoles
 ORDER BY numRoles DESC
@@ -2431,7 +2431,7 @@ reduce $count = count($d) groupby $a, $n;
 match $count >= 3;
 sort $count desc;
 limit 5;
-fetch { ""actor"": $n, ""numDirectors"": $count };"
+fetch { ""actor"": $n, ""num_directors"": $count };"
 "257","Which 3 movies have the most detailed plot descriptions (longest text)?","MATCH (m:Movie)
 WHERE m.plot IS NOT NULL
 RETURN m.title, m.plot
@@ -2472,7 +2472,7 @@ limit 5;
 fetch {
   ""name"": $n,
   ""born_in"": ""USA"",
-  ""numMovies"": $count
+  ""num_movies"": $count
 };"
 "261","Show the first 3 movies that have a poster URL and were released after 2010.","MATCH (m:Movie)
 WHERE m.poster IS NOT NULL AND m.released > '2010'
@@ -2525,7 +2525,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "271","Show the first 3 actors who have directed a movie.","MATCH (p:Person)-[:DIRECTED]->(:Movie)
 RETURN p.name AS actor, p.tmdbId
 LIMIT 3","match
@@ -2579,7 +2579,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "277","Which 5 directors have the most movies released in the 2000s?","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WHERE m.year >= 2000 AND m.year < 2010
 WITH d, count(m) AS numMovies
@@ -2641,7 +2641,7 @@ match
 $num_countries > 3;
 sort $num_countries desc;
 limit 5;
-fetch { ""director"": $p.name, ""numCountries"": $num_countries };"
+fetch { ""director"": $p.name, ""num_countries"": $num_countries };"
 "286","Show the first 3 actors who have acted in movies with a budget under 10 million USD.","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE m.budget < 10000000
 RETURN a.name
@@ -2727,12 +2727,12 @@ LIMIT 3","match
 $u isa user, has name $n;
 rated (user: $u, film: $m);
 $m has imdb_rating $r;
-reduce $maxRating = max($r), $minRating = min($r) groupby $u, $n;
+reduce $max_rating = max($r), $min_rating = min($r) groupby $u, $n;
 match
-let $ratingRange = $maxRating - $minRating;
-sort $ratingRange desc;
+let $rating_range = $max_rating - $min_rating;
+sort $rating_range desc;
 limit 3;
-fetch { ""user"": $n, ""maxRating"": $maxRating, ""minRating"": $minRating, ""ratingRange"": $ratingRange };"
+fetch { ""user"": $n, ""max_rating"": $max_rating, ""min_rating"": $min_rating, ""rating_range"": $rating_range };"
 "299","List the first 5 movies with at least three different languages listed.","MATCH (m:Movie)
 WHERE size(m.languages) >= 3
 RETURN m.title, m.languages
@@ -2775,11 +2775,11 @@ ORDER BY numMovies DESC
 LIMIT 5","match
 $a isa person, has name $n;
 acted_in (actor: $a, film: $m);
-reduce $numMovies = count($m) groupby $a, $n;
-match $numMovies > 10;
-sort $numMovies desc;
+reduce $num_movies = count($m) groupby $a, $n;
+match $num_movies > 10;
+sort $num_movies desc;
 limit 5;
-fetch { ""actor"": $n, ""numMovies"": $numMovies };"
+fetch { ""actor"": $n, ""num_movies"": $num_movies };"
 "304","What are the top 3 most profitable movies, considering the difference between revenue and budget?","MATCH (m:Movie)
 WHERE m.revenue IS NOT NULL AND m.budget IS NOT NULL
 RETURN m.title AS movie, m.revenue - m.budget AS profit
@@ -2841,8 +2841,8 @@ sort $avg desc;
 limit 5;
 fetch {
   ""movie"": $t,
-  ""avgRating"": $avg,
-  ""numRatings"": $count
+  ""avg_rating"": $avg,
+  ""num_ratings"": $count
 };"
 "314","Which 3 movies have the highest IMDb votes?","MATCH (m:Movie)
 RETURN m.title, m.imdbVotes
@@ -2895,7 +2895,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "323","List the top 5 actors with the most roles in movies released before 1980.","MATCH (a:Actor)-[r:ACTED_IN]->(m:Movie)
 WHERE m.year < 1980
 WITH a, count(r) AS numRoles
@@ -2931,7 +2931,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "328","Which 3 actors have the most roles in comedy movies?","MATCH (a:Actor)-[r:ACTED_IN]->(m:Movie)-[:IN_GENRE]->(:Genre {name: 'Comedy'})
 RETURN a.name AS actor, count(r) AS roles
 ORDER BY roles DESC
@@ -2971,7 +2971,7 @@ $rev > 0;
 let $ratio = $bud / $rev;
 sort $ratio desc;
 limit 5;
-fetch { ""title"": $t, ""budgetRevenueRatio"": $ratio };"
+fetch { ""title"": $t, ""budget_revenue_ratio"": $ratio };"
 "336","What are the top 5 movies with the highest revenue?","MATCH (m:Movie)
 WHERE m.revenue IS NOT NULL
 RETURN m.title, m.revenue
@@ -3139,7 +3139,7 @@ sort $avg desc;
 limit 3;
 fetch {
   ""genre"": $n,
-  ""avgRating"": $avg
+  ""avg_rating"": $avg
 };"
 "360","What are the first 3 movies where the main actor was born in France?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE a.bornIn = 'France'
@@ -3158,7 +3158,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "362","List the top 3 movies that were most frequently rated by users.","MATCH (m:Movie)<-[r:RATED]-(u:User)
 RETURN m.title AS movie, count(r) AS numRatings
 ORDER BY numRatings DESC
@@ -3258,7 +3258,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "378","List the top 3 actors who have directed movies they acted in.","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
 WITH p, count(m) AS both
 ORDER BY both DESC
@@ -3396,7 +3396,7 @@ distinct;
 reduce $num_countries = count($c) groupby $p;
 sort $num_countries desc;
 limit 3;
-fetch { ""director"": $p.name, ""numberOfCountries"": $num_countries };"
+fetch { ""director"": $p.name, ""number_of_countries"": $num_countries };"
 "393","What are the first 3 movies that have a plot mentioning 'adventure'?","MATCH (m:Movie)
 WHERE m.plot CONTAINS 'adventure'
 RETURN m.title
@@ -3452,12 +3452,12 @@ sort $count desc;
 limit 3;
 fetch {
   ""user"": $n,
-  ""numGenres"": $count
+  ""num_genres"": $count
 };"
 "398","List the top 3 movies that have been directed by actors.","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
 RETURN m.title AS movie, count(*) AS actorDirectorCount
 ORDER BY actorDirectorCount DESC
-LIMIT 3","match $p isa person; acted_in (actor: $p); directed (director: $p, film: $m); $m has title $t; select $m, $p, $t; distinct; reduce $count = count($p) groupby $m, $t; sort $count desc; limit 3; fetch { ""movie"": $t, ""actorDirectorCount"": $count };"
+LIMIT 3","match $p isa person; acted_in (actor: $p); directed (director: $p, film: $m); $m has title $t; select $m, $p, $t; distinct; reduce $count = count($p) groupby $m, $t; sort $count desc; limit 3; fetch { ""movie"": $t, ""actor_director_count"": $count };"
 "399","What are the first 3 movies with a plot mentioning 'family'?","MATCH (m:Movie)
 WHERE m.plot CONTAINS 'family'
 RETURN m.title
@@ -3538,7 +3538,7 @@ sort $count desc;
 limit 3;
 fetch {
   ""genre"": $g.name,
-  ""numMovies"": $count
+  ""num_movies"": $count
 };"
 "409","What are the first 3 movies with an actor born before 1900?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE a.born < date('1900-01-01')
@@ -3570,7 +3570,7 @@ sort $count desc;
 limit 3;
 fetch {
   ""director"": $n,
-  ""numActors"": $count
+  ""num_actors"": $count
 };
 "
 "412","What are the first 3 movies with plots that involve a natural disaster?","MATCH (m:Movie)
@@ -3594,7 +3594,7 @@ sort $avg desc;
 limit 3;
 fetch {
   ""user"": $n,
-  ""avgBudget"": $avg
+  ""avg_budget"": $avg
 };"
 "414","List the top 3 actors who have acted in both 'Action' and 'Romance' genres.","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)-[:IN_GENRE]->(g:Genre)
 WHERE g.name IN ['Action', 'Romance']
@@ -3627,7 +3627,7 @@ sort $avg desc;
 limit 3;
 fetch {
   ""director"": $n,
-  ""avgRuntime"": $avg
+  ""avg_runtime"": $avg
 };"
 "417","List the top 3 movies with a significant plot twist mentioned in the plot.","MATCH (m:Movie)
 WHERE m.plot CONTAINS 'twist'
@@ -3648,7 +3648,7 @@ LIMIT 3","match $m isa movie, has title $t, has revenue $r; $r < 1000; sort $r a
 WITH u, count(DISTINCT g) AS genreCount
 ORDER BY genreCount DESC
 LIMIT 3
-RETURN u.name AS user, genreCount AS distinctGenresRated","match $u isa user, has name $n; rated (user: $u, film: $m); in_genre (film: $m, genre: $g); select $n, $g; distinct; reduce $count = count($g) groupby $n; sort $count desc; limit 3; fetch { ""user"": $n, ""distinctGenresRated"": $count };"
+RETURN u.name AS user, genreCount AS distinctGenresRated","match $u isa user, has name $n; rated (user: $u, film: $m); in_genre (film: $m, genre: $g); select $n, $g; distinct; reduce $count = count($g) groupby $n; sort $count desc; limit 3; fetch { ""user"": $n, ""distinct_genres_rated"": $count };"
 "420","List the top 3 actors who have the most diverse filmography in terms of genres they acted in.","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)-[:IN_GENRE]->(g:Genre)
 WITH a, count(DISTINCT g) AS genreCount
 ORDER BY genreCount DESC
@@ -3664,7 +3664,7 @@ sort $count desc;
 limit 3;
 fetch {
   ""actor"": $n,
-  ""numGenres"": $count
+  ""num_genres"": $count
 };"
 "421","What are the first 3 movies with a poster URL containing 'moon'?","MATCH (m:Movie)
 WHERE m.poster CONTAINS 'moon'
@@ -3703,7 +3703,7 @@ $m has imdb_rating $r;
 reduce $avg = mean($r) groupby $n;
 sort $avg asc;
 limit 3;
-fetch { ""genre"": $n, ""avgRating"": $avg };"
+fetch { ""genre"": $n, ""avg_rating"": $avg };"
 "425","List the top 3 movies that have been rated by over 1000 users.","MATCH (m:Movie)<-[r:RATED]-()
 WITH m, count(r) AS numRatings
 WHERE numRatings > 1000
@@ -3712,11 +3712,11 @@ ORDER BY numRatings DESC
 LIMIT 3","match
 $m isa movie, has title $t, has year $y;
 $r isa rated (user: $u, film: $m);
-reduce $numRatings = count($r) groupby $m, $t, $y;
-match $numRatings > 1000;
-sort $numRatings desc;
+reduce $num_ratings = count($r) groupby $m, $t, $y;
+match $num_ratings > 1000;
+sort $num_ratings desc;
 limit 3;
-fetch { ""title"": $t, ""year"": $y, ""numRatings"": $numRatings };"
+fetch { ""title"": $t, ""year"": $y, ""num_ratings"": $num_ratings };"
 "426","What are the first 3 movies with a plot mentioning 'magic'?","MATCH (m:Movie)
 WHERE m.plot CONTAINS 'magic'
 RETURN m.title
@@ -3740,7 +3740,7 @@ sort $count desc;
 limit 3;
 fetch {
   ""director"": $n,
-  ""numShortMovies"": $count
+  ""num_short_movies"": $count
 };"
 "428","Which movies have a runtime greater than 120 minutes and less than 180 minutes?","MATCH (m:Movie)
 WHERE m.runtime > 120 AND m.runtime < 180
@@ -3778,9 +3778,9 @@ WHERE num_ratings > 50
 RETURN u.name AS user, num_ratings","match
 $u isa user, has name $n;
 $r isa rated (user: $u, film: $m);
-reduce $numRatings = count($r) groupby $u, $n;
-match $numRatings > 50;
-fetch { ""user"": $n, ""numRatings"": $numRatings };"
+reduce $num_ratings = count($r) groupby $u, $n;
+match $num_ratings > 50;
+fetch { ""user"": $n, ""num_ratings"": $num_ratings };"
 "435","Which genres are associated with movies that have a budget over 100 million?","MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
 WHERE m.budget > 100000000
 RETURN DISTINCT g.name AS genre
@@ -3799,7 +3799,7 @@ sort $count desc;
 limit 5;
 fetch {
   ""name"": $n,
-  ""numMovies"": $count
+  ""num_movies"": $count
 };"
 "437","What are the top 3 movies with the highest IMDb rating released before 1990?","MATCH (m:Movie)
 WHERE m.released < '1990-01-01' AND m.imdbRating IS NOT NULL
@@ -3876,7 +3876,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "451","Find all actors who have acted in a movie directed by someone born in France.","MATCH (actor:Actor)-[:ACTED_IN]->(movie:Movie)<-[:DIRECTED]-(director:Director {bornIn: 'France'})
 RETURN actor.name, movie.title
 LIMIT 5","match $actor isa person, has name $an; $director isa person, has name $dn; acted_in (actor: $actor, film: $movie); directed (director: $director, film: $movie); $director has born_in ""France""; $movie has title $t; limit 5; fetch { ""actor"": $an, ""movie"": $t };"
@@ -3913,10 +3913,10 @@ WHERE numRatings > 10
 RETURN m.title, numRatings","match
 $m isa movie, has title $t;
 $r isa rated (user: $u, film: $m), has rating 5.0;
-reduce $numRatings = count($u) groupby $t;
-sort $numRatings desc;
+reduce $num_ratings = count($u) groupby $t;
+sort $num_ratings desc;
 limit 10;
-fetch { ""title"": $t, ""numRatings"": $numRatings };"
+fetch { ""title"": $t, ""num_ratings"": $num_ratings };"
 "459","List all movies where the main actor is also the director.","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
 RETURN m.title, p.name
 LIMIT 5","match $p isa person, has name $n; acted_in (actor: $p, film: $m); directed (director: $p, film: $m); $m has title $t; limit 5; fetch { ""title"": $t, ""person"": $n };"
@@ -4009,7 +4009,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "474","Find all users who have rated movies from more than three different genres.","MATCH (u:User)-[:RATED]->(m:Movie)-[:IN_GENRE]->(g:Genre)
 WITH u, count(DISTINCT g) AS num_genres
 WHERE num_genres > 3
@@ -4046,7 +4046,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "478","Find all directors who have directed a movie in their country of birth.","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WHERE d.bornIn IN m.countries
 RETURN DISTINCT d.name AS director, d.bornIn AS bornIn","match
@@ -4054,7 +4054,7 @@ $d isa person, has born_in $b, has name $n;
 directed (director: $d, film: $m);
 $m has countries $c;
 $b == $c;
-fetch { ""director"": $n, ""bornIn"": $b };"
+fetch { ""director"": $n, ""born_in"": $b };"
 "479","Which movies have actors who have also directed a movie?","MATCH (actor:Actor)-[:ACTED_IN]->(movie:Movie)
 WHERE exists{ (actor)-[:DIRECTED]->(:Movie) }
 RETURN movie.title, actor.name","match $actor isa person, has name $an; acted_in (actor: $actor, film: $movie); directed (director: $actor); $movie has title $t; fetch { ""title"": $t, ""name"": $an };"
@@ -4074,7 +4074,7 @@ RETURN m","match
 $m isa movie, has movie_id $mid, has title $t;
 $mid like ""1%"";
 rated (user: $u, film: $m);
-fetch { ""title"": $t, ""movieId"": $mid };"
+fetch { ""title"": $t, ""movie_id"": $mid };"
 "486","Which actors have acted in movies that have a plot mentioning 'adventure'?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE m.plot CONTAINS 'adventure'
 RETURN a.name AS actor","match
@@ -4182,7 +4182,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "505","Find all directors who have directed a movie in a language other than English.","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WHERE NOT 'English' IN m.languages
 RETURN DISTINCT d.name AS director","match
@@ -4227,7 +4227,7 @@ limit 5;
 fetch { ""title"": $m.title, ""plot"": $p };"
 "511","Find all actors who have acted in movies that have been released on New Year's Day.","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE m.released ENDS WITH ""01-01""
-RETURN a.name AS actor, m.title AS movie, m.released AS releaseDate","match $a isa person, has name $an; acted_in (actor: $a, film: $m); $m has title $t, has released $r; $r like "".*01-01$""; fetch { ""actor"": $an, ""movie"": $t, ""releaseDate"": $r };"
+RETURN a.name AS actor, m.title AS movie, m.released AS releaseDate","match $a isa person, has name $an; acted_in (actor: $a, film: $m); $m has title $t, has released $r; $r like "".*01-01$""; fetch { ""actor"": $an, ""movie"": $t, ""release_date"": $r };"
 "512","Which movies have been directed by directors who have also acted in movies?","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WHERE exists{ (d)-[:ACTED_IN]->(:Movie) }
 RETURN m.title AS movie, d.name AS director","match $d isa person, has name $dn; directed (director: $d, film: $m); acted_in (actor: $d); $m has title $t; fetch { ""movie"": $t, ""director"": $dn };"
@@ -4256,7 +4256,7 @@ LIMIT 5","match $m isa movie, has title $t, has imdb_rating $r; sort $r desc; li
 WITH u, count(r) AS numRatings
 ORDER BY numRatings DESC
 LIMIT 3
-RETURN u.name AS user, numRatings","match $u isa user, has name $n; rated (user: $u, film: $m); reduce $numRatings = count($m) groupby $n; sort $numRatings desc; limit 3; fetch { ""user"": $n, ""numRatings"": $numRatings };"
+RETURN u.name AS user, numRatings","match $u isa user, has name $n; rated (user: $u, film: $m); reduce $num_ratings = count($m) groupby $n; sort $num_ratings desc; limit 3; fetch { ""user"": $n, ""num_ratings"": $num_ratings };"
 "518","What are the top 5 longest movies by runtime?","MATCH (m:Movie)
 RETURN m.title, m.runtime
 ORDER BY m.runtime DESC
@@ -4269,7 +4269,7 @@ $d isa person, has born_in $b, has name $n;
 directed (director: $d, film: $m);
 $b like "".*USA.*"";
 limit 3;
-fetch { ""name"": $n, ""bornIn"": $b };"
+fetch { ""name"": $n, ""born_in"": $b };"
 "520","Which movies released after 2010 have a budget over 100 million? Limit to 5 movies.","MATCH (m:Movie)
 WHERE m.released > '2010' AND m.budget > 100000000
 RETURN m.title, m.released, m.budget
@@ -4278,7 +4278,7 @@ LIMIT 5","match $m isa movie, has title $t, has released $r, has budget $b; $r >
 "521","What are the top 3 genres by number of movies?","MATCH (g:Genre)<-[:IN_GENRE]-(m:Movie)
 RETURN g.name AS genre, count(m) AS movieCount
 ORDER BY movieCount DESC
-LIMIT 3","match $g isa genre, has name $n; in_genre (genre: $g, film: $m); reduce $movieCount = count($m) groupby $n; sort $movieCount desc; limit 3; fetch { ""genre"": $n, ""movieCount"": $movieCount };"
+LIMIT 3","match $g isa genre, has name $n; in_genre (genre: $g, film: $m); reduce $movie_count = count($m) groupby $n; sort $movie_count desc; limit 3; fetch { ""genre"": $n, ""movie_count"": $movie_count };"
 "522","List 5 actors who have acted in more than 10 movies.","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WITH a, count(m) AS numMovies
 WHERE numMovies > 10
@@ -4287,15 +4287,15 @@ ORDER BY numMovies DESC
 LIMIT 5","match
 $a isa person, has name $n;
 acted_in (actor: $a, film: $m);
-reduce $numMovies = count($m) groupby $a, $n;
-match $numMovies > 10;
-sort $numMovies desc;
+reduce $num_movies = count($m) groupby $a, $n;
+match $num_movies > 10;
+sort $num_movies desc;
 limit 5;
-fetch { ""actor"": $n, ""numMovies"": $numMovies };"
+fetch { ""actor"": $n, ""num_movies"": $num_movies };"
 "523","Which 3 movies have been rated by the most users?","MATCH (m:Movie)<-[r:RATED]-(u:User)
 RETURN m.title, count(r) AS numRatings
 ORDER BY numRatings DESC
-LIMIT 3","match $m isa movie, has title $t; rated (film: $m, user: $u); reduce $numRatings = count($u) groupby $t; sort $numRatings desc; limit 3; fetch { ""title"": $t, ""numRatings"": $numRatings };"
+LIMIT 3","match $m isa movie, has title $t; rated (film: $m, user: $u); reduce $num_ratings = count($u) groupby $t; sort $num_ratings desc; limit 3; fetch { ""title"": $t, ""num_ratings"": $num_ratings };"
 "524","What are the top 5 movies with the most languages spoken?","MATCH (m:Movie)
 WHERE m.languages IS NOT NULL
 RETURN m.title, m.languages, size(m.languages) AS languageCount
@@ -4310,7 +4310,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "525","List the first 3 directors who have also acted in movies.","MATCH (p:Person)
 WHERE exists{ (p)-[:DIRECTED]->(:Movie) } 
   AND exists{ (p)-[:ACTED_IN]->(:Movie) }
@@ -4346,7 +4346,7 @@ fetch { ""title"": $t };"
 WITH u, avg(r.rating) AS avgRating
 ORDER BY avgRating DESC
 LIMIT 3
-RETURN u.name AS user, avgRating","match $u isa user, has name $n; $r isa rated (user: $u), has rating $rating; reduce $avgRating = mean($rating) groupby $n; sort $avgRating desc; limit 3; fetch { ""user"": $n, ""avgRating"": $avgRating };"
+RETURN u.name AS user, avgRating","match $u isa user, has name $n; $r isa rated (user: $u), has rating $rating; reduce $avg_rating = mean($rating) groupby $n; sort $avg_rating desc; limit 3; fetch { ""user"": $n, ""avg_rating"": $avg_rating };"
 "530","List the top 5 movies with the lowest imdbVotes.","MATCH (m:Movie)
 WHERE m.imdbVotes IS NOT NULL
 RETURN m.title, m.imdbVotes
@@ -4372,7 +4372,7 @@ WHERE m.budget > 50000000
 WITH d, count(m) AS numMovies
 ORDER BY numMovies DESC
 LIMIT 5
-RETURN d.name AS director, numMovies","match $d isa person, has name $n; directed (director: $d, film: $m); $m has budget $b; $b > 50000000; reduce $numMovies = count($m) groupby $n; sort $numMovies desc; limit 5; fetch { ""director"": $n, ""numMovies"": $numMovies };"
+RETURN d.name AS director, numMovies","match $d isa person, has name $n; directed (director: $d, film: $m); $m has budget $b; $b > 50000000; reduce $num_movies = count($m) groupby $n; sort $num_movies desc; limit 5; fetch { ""director"": $n, ""num_movies"": $num_movies };"
 "535","List the first 3 actors who have acted in a movie released before 1950.","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE m.released < '1950'
 RETURN a.name
@@ -4391,7 +4391,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "538","Which 5 movies have the most detailed (longest) plots?","MATCH (m:Movie)
 WHERE m.plot IS NOT NULL
 RETURN m.title, m.plot
@@ -4441,17 +4441,17 @@ $rev > 0;
 let $ratio = $bud / $rev;
 sort $ratio desc;
 limit 3;
-fetch { ""title"": $t, ""budgetRevenueRatio"": $ratio };"
+fetch { ""title"": $t, ""budget_revenue_ratio"": $ratio };"
 "545","Which 5 movies have the most actors involved?","MATCH (m:Movie)<-[:ACTED_IN]-(a:Actor)
 RETURN m.title AS movie, count(a) AS numActors
 ORDER BY numActors DESC
-LIMIT 5","match $m isa movie, has title $t; acted_in (film: $m, actor: $a); reduce $numActors = count($a) groupby $t; sort $numActors desc; limit 5; fetch { ""movie"": $t, ""numActors"": $numActors };"
+LIMIT 5","match $m isa movie, has title $t; acted_in (film: $m, actor: $a); reduce $num_actors = count($a) groupby $t; sort $num_actors desc; limit 5; fetch { ""movie"": $t, ""num_actors"": $num_actors };"
 "546","List the top 5 directors by number of movies directed in the 1990s.","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WHERE m.year >= 1990 AND m.year < 2000
 WITH d, count(m) AS numMovies
 ORDER BY numMovies DESC
 LIMIT 5
-RETURN d.name AS director, numMovies","match $d isa person, has name $n; directed (director: $d, film: $m); $m has year $y; $y >= 1990; $y < 2000; reduce $numMovies = count($m) groupby $n; sort $numMovies desc; limit 5; fetch { ""director"": $n, ""numMovies"": $numMovies };"
+RETURN d.name AS director, numMovies","match $d isa person, has name $n; directed (director: $d, film: $m); $m has year $y; $y >= 1990; $y < 2000; reduce $num_movies = count($m) groupby $n; sort $num_movies desc; limit 5; fetch { ""director"": $n, ""num_movies"": $num_movies };"
 "547","What are the first 3 movies with a runtime less than 90 minutes and an imdbRating over 7?","MATCH (m:Movie)
 WHERE m.runtime < 90 AND m.imdbRating > 7
 RETURN m.title, m.runtime, m.imdbRating
@@ -4484,12 +4484,12 @@ fetch { ""title"": $t, ""poster"": $p };"
 WITH u, count(distinct g) AS genreCount
 ORDER BY genreCount DESC
 LIMIT 5
-RETURN u.name AS user, genreCount AS distinctGenresRated","match $u isa user, has name $n; rated (user: $u, film: $m); in_genre (film: $m, genre: $g); reduce $genreCount = count($g) groupby $n; sort $genreCount desc; limit 5; fetch { ""user"": $n, ""distinctGenresRated"": $genreCount };"
+RETURN u.name AS user, genreCount AS distinctGenresRated","match $u isa user, has name $n; rated (user: $u, film: $m); in_genre (film: $m, genre: $g); reduce $genre_count = count($g) groupby $n; sort $genre_count desc; limit 5; fetch { ""user"": $n, ""distinct_genres_rated"": $genre_count };"
 "551","List the top 5 actors by number of different genres they've acted in.","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)-[:IN_GENRE]->(g:Genre)
 WITH a, count(distinct g) AS genreCount
 ORDER BY genreCount DESC
 LIMIT 5
-RETURN a.name AS actor, genreCount AS numberOfGenres","match $a isa person, has name $n; acted_in (actor: $a, film: $m); in_genre (film: $m, genre: $g); reduce $genreCount = count($g) groupby $n; sort $genreCount desc; limit 5; fetch { ""actor"": $n, ""numberOfGenres"": $genreCount };"
+RETURN a.name AS actor, genreCount AS numberOfGenres","match $a isa person, has name $n; acted_in (actor: $a, film: $m); in_genre (film: $m, genre: $g); reduce $genre_count = count($g) groupby $n; sort $genre_count desc; limit 5; fetch { ""actor"": $n, ""number_of_genres"": $genre_count };"
 "552","What are the first 3 most recently released movies with a revenue under 10 million?","MATCH (m:Movie)
 WHERE m.revenue < 10000000
 RETURN m.title, m.released, m.revenue
@@ -4503,11 +4503,11 @@ ORDER BY avgRating DESC
 LIMIT 5","match
 $m isa movie, has title $t;
 $r isa rated (user: $u, film: $m), has rating $rating;
-reduce $avgRating = mean($rating), $numRatings = count($r) groupby $m, $t;
-match $numRatings >= 10;
-sort $avgRating desc;
+reduce $avg_rating = mean($rating), $num_ratings = count($r) groupby $m, $t;
+match $num_ratings >= 10;
+sort $avg_rating desc;
 limit 5;
-fetch { ""movie"": $t, ""avgRating"": $avgRating };"
+fetch { ""movie"": $t, ""avg_rating"": $avg_rating };"
 "554","List the first 3 directors who died after 2000.","MATCH (d:Director)
 WHERE d.died > date('2000-01-01')
 RETURN d.name, d.died
@@ -4522,7 +4522,7 @@ LIMIT 5","match $m isa movie, has title $t, has imdb_votes $v; sort $v desc; lim
 WITH m, avg(r.rating) AS avgRating
 ORDER BY avgRating
 LIMIT 5
-RETURN m.title AS movie, avgRating","match $m isa movie, has title $t; $r isa rated (film: $m), has rating $rating; reduce $avgRating = mean($rating) groupby $t; sort $avgRating asc; limit 5; fetch { ""movie"": $t, ""avgRating"": $avgRating };"
+RETURN m.title AS movie, avgRating","match $m isa movie, has title $t; $r isa rated (film: $m), has rating $rating; reduce $avg_rating = mean($rating) groupby $t; sort $avg_rating asc; limit 5; fetch { ""movie"": $t, ""avg_rating"": $avg_rating };"
 "557","Which 3 directors were born in the same country they directed their first movie?","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WHERE d.bornIn IS NOT NULL AND d.bornIn IN m.countries
 WITH d, m
@@ -4542,7 +4542,7 @@ let $first_year = first_movie_year($d);
 $y == $first_year;
 sort $y asc;
 limit 3;
-fetch { ""director"": $n, ""bornCountry"": $b, ""firstMovie"": $t };"
+fetch { ""director"": $n, ""born_country"": $b, ""first_movie"": $t };"
 "558","List the first 3 movies with exactly three languages spoken.","MATCH (m:Movie)
 WHERE size(m.languages) = 3
 RETURN m.title
@@ -4603,7 +4603,7 @@ LIMIT 3","match $d isa person, has name $n; directed (director: $d); not { $d ha
 WHERE r.role CONTAINS 'uncredited'
 RETURN a.name AS actor, count(r) AS uncreditedRoles
 ORDER BY uncreditedRoles DESC
-LIMIT 5","match $a isa person, has name $n; $r isa acted_in (actor: $a), has character_role $role; $role like "".*uncredited.*""; reduce $uncreditedRoles = count($r) groupby $a; sort $uncreditedRoles desc; limit 5; fetch { ""actor"": $a.name, ""uncreditedRoles"": $uncreditedRoles };"
+LIMIT 5","match $a isa person, has name $n; $r isa acted_in (actor: $a), has character_role $role; $role like "".*uncredited.*""; reduce $uncredited_roles = count($r) groupby $a; sort $uncredited_roles desc; limit 5; fetch { ""actor"": $a.name, ""uncredited_roles"": $uncredited_roles };"
 "566","List the top 5 most reviewed movies on IMDb.","MATCH (m:Movie)
 RETURN m.title, m.imdbVotes
 ORDER BY m.imdbVotes DESC
@@ -4645,7 +4645,7 @@ LIMIT 3","match $m isa movie, has title $t, has poster $p; not { $m has imdb_id 
 WITH m, count(g) AS genreCount
 ORDER BY genreCount DESC
 LIMIT 5
-RETURN m.title AS movie, genreCount AS numberOfGenres","match $m isa movie, has title $t; in_genre (film: $m, genre: $g); reduce $genreCount = count($g) groupby $t; sort $genreCount desc; limit 5; fetch { ""movie"": $t, ""numberOfGenres"": $genreCount };"
+RETURN m.title AS movie, genreCount AS numberOfGenres","match $m isa movie, has title $t; in_genre (film: $m, genre: $g); reduce $genre_count = count($g) groupby $t; sort $genre_count desc; limit 5; fetch { ""movie"": $t, ""number_of_genres"": $genre_count };"
 "575","Which 5 movies have been directed by a person who also acted in them?","MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:ACTED_IN]-(p)
 RETURN m.title
 LIMIT 5","match $p isa person; directed (director: $p, film: $m); acted_in (actor: $p, film: $m); $m has title $t; limit 5; fetch { ""title"": $t };"
@@ -4653,13 +4653,13 @@ LIMIT 5","match $p isa person; directed (director: $p, film: $m); acted_in (acto
 WHERE a.bornIn = 'USA'
 RETURN m.title AS movie, count(a) AS numActors
 ORDER BY numActors DESC
-LIMIT 5","match $m isa movie, has title $t; acted_in (film: $m, actor: $a); $a has born_in ""USA""; reduce $numActors = count($a) groupby $t; sort $numActors desc; limit 5; fetch { ""movie"": $t, ""numActors"": $numActors };"
+LIMIT 5","match $m isa movie, has title $t; acted_in (film: $m, actor: $a); $a has born_in ""USA""; reduce $num_actors = count($a) groupby $t; sort $num_actors desc; limit 5; fetch { ""movie"": $t, ""num_actors"": $num_actors };"
 "578","Which 5 movies have the most diverse cast in terms of countries of origin?","MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
 WHERE p.bornIn IS NOT NULL
 WITH m, count(DISTINCT p.bornIn) AS numCountries
 ORDER BY numCountries DESC
 LIMIT 5
-RETURN m.title AS movie, numCountries AS distinctCountriesRepresented","match $m isa movie, has title $t; acted_in (film: $m, actor: $p); $p has born_in $b; reduce $numCountries = count($b) groupby $t; sort $numCountries desc; limit 5; fetch { ""movie"": $t, ""distinctCountriesRepresented"": $numCountries };"
+RETURN m.title AS movie, numCountries AS distinctCountriesRepresented","match $m isa movie, has title $t; acted_in (film: $m, actor: $p); $p has born_in $b; reduce $num_countries = count($b) groupby $t; sort $num_countries desc; limit 5; fetch { ""movie"": $t, ""distinct_countries_represented"": $num_countries };"
 "579","List the first 3 directors who have directed a movie with a runtime over 180 minutes.","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WHERE m.runtime > 180
 RETURN d.name AS director
@@ -4690,7 +4690,7 @@ WHERE m.budget > 100000000
 WITH a, count(m) AS numMovies
 ORDER BY numMovies DESC
 LIMIT 5
-RETURN a.name AS actor, numMovies","match $a isa person, has name $n; acted_in (actor: $a, film: $m); $m has budget $b; $b > 100000000; reduce $numMovies = count($m) groupby $n; sort $numMovies desc; limit 5; fetch { ""actor"": $n, ""numMovies"": $numMovies };"
+RETURN a.name AS actor, numMovies","match $a isa person, has name $n; acted_in (actor: $a, film: $m); $m has budget $b; $b > 100000000; reduce $num_movies = count($m) groupby $n; sort $num_movies desc; limit 5; fetch { ""actor"": $n, ""num_movies"": $num_movies };"
 "584","What are the first 3 movies with the highest number of languages available?","MATCH (m:Movie)
 WHERE m.languages IS NOT NULL
 RETURN m.title, m.languages
@@ -4740,7 +4740,7 @@ WHERE m.imdbRating IS NOT NULL
 WITH d, avg(m.imdbRating) AS avgRating
 ORDER BY avgRating DESC
 LIMIT 5
-RETURN d.name AS director, avgRating","match $d isa person, has name $n; directed (director: $d, film: $m); $m has imdb_rating $r; reduce $avgRating = mean($r) groupby $n; sort $avgRating desc; limit 5; fetch { ""director"": $n, ""avgRating"": $avgRating };"
+RETURN d.name AS director, avgRating","match $d isa person, has name $n; directed (director: $d, film: $m); $m has imdb_rating $r; reduce $avg_rating = mean($r) groupby $n; sort $avg_rating desc; limit 5; fetch { ""director"": $n, ""avg_rating"": $avg_rating };"
 "590","List the first 3 movies with the most different directors involved.","MATCH (m:Movie)
 WITH m, size([(m)<-[:DIRECTED]-(d) | d]) AS numDirectors
 ORDER BY numDirectors DESC
@@ -4752,7 +4752,7 @@ directed (director: $d, film: $m);
 reduce $num_directors = count($d) groupby $m;
 sort $num_directors desc;
 limit 3;
-fetch { ""movie"": $m.title, ""numDirectors"": $num_directors };"
+fetch { ""movie"": $m.title, ""num_directors"": $num_directors };"
 "592","List the first 3 movies where the main actor is also the director.","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
 RETURN m.title
 LIMIT 3","match $p isa person; acted_in (actor: $p, film: $m); directed (director: $p, film: $m); $m has title $t; limit 3; fetch { ""title"": $t };"
@@ -4761,7 +4761,7 @@ WHERE m.released ENDS WITH ""12-25""
 WITH a, count(m) AS numMovies
 ORDER BY numMovies DESC
 LIMIT 5
-RETURN a.name AS actor, numMovies","match $a isa person, has name $n; acted_in (actor: $a, film: $m); $m has released $r; $r like "".*12-25$""; reduce $numMovies = count($m) groupby $n; sort $numMovies desc; limit 5; fetch { ""actor"": $n, ""numMovies"": $numMovies };"
+RETURN a.name AS actor, numMovies","match $a isa person, has name $n; acted_in (actor: $a, film: $m); $m has released $r; $r like "".*12-25$""; reduce $num_movies = count($m) groupby $n; sort $num_movies desc; limit 5; fetch { ""actor"": $n, ""num_movies"": $num_movies };"
 "595","What are the first 3 movies with a plot containing the word 'evil'?","MATCH (m:Movie)
 WHERE m.plot CONTAINS 'evil'
 RETURN m.title
@@ -4774,7 +4774,7 @@ fetch { ""title"": $t };"
 WITH d, sum(m.runtime) AS totalRuntime
 RETURN d.name AS director, totalRuntime
 ORDER BY totalRuntime DESC
-LIMIT 5","match $d isa person, has name $n; directed (director: $d, film: $m); $m has runtime $r; reduce $totalRuntime = sum($r) groupby $n; sort $totalRuntime desc; limit 5; fetch { ""director"": $n, ""totalRuntime"": $totalRuntime };"
+LIMIT 5","match $d isa person, has name $n; directed (director: $d, film: $m); $m has runtime $r; reduce $total_runtime = sum($r) groupby $n; sort $total_runtime desc; limit 5; fetch { ""director"": $n, ""total_runtime"": $total_runtime };"
 "597","Which movies have a runtime greater than 120 minutes and were released after 2010?","MATCH (m:Movie)
 WHERE m.runtime > 120 AND m.released > '2010-01-01'
 RETURN m.title, m.released, m.runtime","match $m isa movie, has title $t, has released $rel, has runtime $rt; $rt > 120; $rel > ""2010-01-01""; fetch { ""title"": $t, ""released"": $rel, ""runtime"": $rt };"
@@ -4792,10 +4792,10 @@ WHERE numMovies > 1
 RETURN a.name AS actor, numMovies","match
 $a isa person, has name $n;
 acted_in (actor: $a, film: $m);
-reduce $numMovies = count($m) groupby $n;
-sort $numMovies desc;
+reduce $num_movies = count($m) groupby $n;
+sort $num_movies desc;
 limit 5;
-fetch { ""actor"": $n, ""numMovies"": $numMovies };"
+fetch { ""actor"": $n, ""num_movies"": $num_movies };"
 "601","Which directors have directed at least three movies with budgets over 100 million dollars?","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WHERE m.budget > 100000000
 WITH d, count(m) AS num_high_budget_movies
@@ -4839,7 +4839,7 @@ RETURN m.title, m.poster, m.imdbRating","match
 $m isa movie, has poster $p, has title $t, has imdb_rating $r;
 $p like "".*face.*"";
 $r > 8.0;
-fetch { ""title"": $t, ""poster"": $p, ""imdbRating"": $r };"
+fetch { ""title"": $t, ""poster"": $p, ""imdb_rating"": $r };"
 "608","List all genres associated with movies that have a budget less than 5 million dollars.","MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
 WHERE m.budget < 5000000
 RETURN DISTINCT g.name","match $m isa movie, has budget $b; $b < 5000000; in_genre (film: $m, genre: $g); $g has name $n; fetch { ""genre"": $n };"
@@ -4895,22 +4895,22 @@ fetch { ""title"": $t };"
 WHERE m.imdbRating > 8
 WITH d, count(m) AS numHighRatedMovies
 ORDER BY numHighRatedMovies DESC
-RETURN d.name AS director, numHighRatedMovies","match $d isa person, has name $n; directed (director: $d, film: $m); $m has imdb_rating $r; $r > 8; reduce $numHighRatedMovies = count($m) groupby $n; sort $numHighRatedMovies desc; fetch { ""director"": $n, ""numHighRatedMovies"": $numHighRatedMovies };"
+RETURN d.name AS director, numHighRatedMovies","match $d isa person, has name $n; directed (director: $d, film: $m); $m has imdb_rating $r; $r > 8; reduce $num_high_rated_movies = count($m) groupby $n; sort $num_high_rated_movies desc; fetch { ""director"": $n, ""num_high_rated_movies"": $num_high_rated_movies };"
 "620","List all users who have rated more than 50 movies.","MATCH (u:User)-[r:RATED]->(m:Movie)
 WITH u, count(r) AS num_ratings
 WHERE num_ratings > 50
 RETURN u.name AS user, num_ratings","match
 $u isa user, has name $n;
 $r isa rated (user: $u, film: $m);
-reduce $numRatings = count($r) groupby $n;
-sort $numRatings desc;
+reduce $num_ratings = count($r) groupby $n;
+sort $num_ratings desc;
 limit 5;
-fetch { ""name"": $n, ""numRatings"": $numRatings };"
+fetch { ""name"": $n, ""num_ratings"": $num_ratings };"
 "621","What are the top 3 most popular movies among users named 'John'?","MATCH (u:User {name: 'John'})-[r:RATED]->(m:Movie)
 WITH m, avg(r.rating) AS avgRating, count(r) AS numRatings
 ORDER BY avgRating DESC, numRatings DESC
 RETURN m.title AS movie, avgRating, numRatings
-LIMIT 3","match $u isa user, has name ""John""; $r isa rated (user: $u, film: $m), has rating $rating; $m has title $t; reduce $avgRating = mean($rating), $numRatings = count($r) groupby $t; sort $avgRating desc, $numRatings desc; limit 3; fetch { ""movie"": $t, ""avgRating"": $avgRating, ""numRatings"": $numRatings };"
+LIMIT 3","match $u isa user, has name ""John""; $r isa rated (user: $u, film: $m), has rating $rating; $m has title $t; reduce $avg_rating = mean($rating), $num_ratings = count($r) groupby $t; sort $avg_rating desc, $num_ratings desc; limit 3; fetch { ""movie"": $t, ""avg_rating"": $avg_rating, ""num_ratings"": $num_ratings };"
 "622","Identify movies with more than 10,000 IMDb votes and a runtime under 90 minutes.","MATCH (m:Movie)
 WHERE m.imdbVotes > 10000 AND m.runtime < 90
 RETURN m.title, m.imdbVotes, m.runtime","match $m isa movie, has title $t, has imdb_votes $v, has runtime $r; $v > 10000; $r < 90; fetch { ""title"": $t, ""imdb_votes"": $v, ""runtime"": $r };"
@@ -4935,7 +4935,7 @@ RETURN m.title, m.imdbRating, m.plot","match
 $m isa movie, has plot $p, has title $t, has imdb_rating $r;
 $p like "".*zombie.*"";
 $r > 7.0;
-fetch { ""title"": $t, ""imdbRating"": $r, ""plot"": $p };"
+fetch { ""title"": $t, ""imdb_rating"": $r, ""plot"": $p };"
 "627","Which movies have actors with a bio that includes 'Wikipedia' and a revenue over 300 million dollars?","MATCH (m:Movie)<-[:ACTED_IN]-(a:Actor)
 WHERE a.bio CONTAINS 'Wikipedia' AND m.revenue > 300000000
 RETURN m.title, m.revenue, a.name, a.bio","match
@@ -4965,7 +4965,7 @@ $n like "".*USA.*"";
 reduce $avg = mean($rating) groupby $t;
 sort $avg desc;
 limit 5;
-fetch { ""movie"": $t, ""avgRating"": $avg };"
+fetch { ""movie"": $t, ""avg_rating"": $avg };"
 "630","Identify movies released in 'December' that have a genre of 'Horror'.","MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
 WHERE g.name = 'Horror' AND m.released STARTS WITH 'December'
 RETURN m.title, m.released","match
@@ -5035,9 +5035,9 @@ acted_in (actor: $a, film: $m);
 directed (director: $d, film: $m);
 select $a, $d;
 distinct;
-reduce $numDirectors = count($d) groupby $a;
-match $numDirectors >= 2;
-fetch { ""actor"": $a.name, ""numDirectors"": $numDirectors };"
+reduce $num_directors = count($d) groupby $a;
+match $num_directors >= 2;
+fetch { ""actor"": $a.name, ""num_directors"": $num_directors };"
 "641","What are the top 3 movies with a revenue of exactly 50 million dollars?","MATCH (m:Movie)
 WHERE m.revenue = 50000000
 RETURN m.title, m.revenue
@@ -5054,8 +5054,8 @@ RETURN m","match
 $m isa movie, has imdb_rating $ir;
 $ir > 8;
 $r isa rated (film: $m);
-reduce $numRatings = count($r) groupby $m, $ir;
-match $numRatings >= 10;
+reduce $num_ratings = count($r) groupby $m, $ir;
+match $num_ratings >= 10;
 fetch { ""movie"": $m };"
 "643","Which movies have actors who were born in Canada and have acted in a thriller genre?","MATCH (m:Movie)-[:IN_GENRE]->(:Genre {name: 'Thriller'})
 MATCH (a:Actor {bornIn: 'Canada'})-[:ACTED_IN]->(m)
@@ -5068,11 +5068,11 @@ LIMIT 5","match $m isa movie, has title $t, has imdb_rating $r; sort $r desc; li
 "645","Which 3 actors have acted in the most number of movies?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 RETURN a.name AS actor, count(m) AS movieCount
 ORDER BY movieCount DESC
-LIMIT 3","match $a isa person, has name $n; acted_in (actor: $a, film: $m); reduce $movieCount = count($m) groupby $n; sort $movieCount desc; limit 3; fetch { ""actor"": $n, ""movieCount"": $movieCount };"
+LIMIT 3","match $a isa person, has name $n; acted_in (actor: $a, film: $m); reduce $movie_count = count($m) groupby $n; sort $movie_count desc; limit 3; fetch { ""actor"": $n, ""movie_count"": $movie_count };"
 "646","List the top 5 directors by the number of movies they have directed.","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 RETURN d.name AS director, count(m) AS numberOfMovies
 ORDER BY numberOfMovies DESC
-LIMIT 5","match $d isa person, has name $n; directed (director: $d, film: $m); reduce $numberOfMovies = count($m) groupby $n; sort $numberOfMovies desc; limit 5; fetch { ""director"": $n, ""numberOfMovies"": $numberOfMovies };"
+LIMIT 5","match $d isa person, has name $n; directed (director: $d, film: $m); reduce $number_of_movies = count($m) groupby $n; sort $number_of_movies desc; limit 5; fetch { ""director"": $n, ""number_of_movies"": $number_of_movies };"
 "647","What are the top 3 highest-grossing movies of all time?","MATCH (m:Movie)
 WHERE m.revenue IS NOT NULL
 RETURN m.title, m.revenue
@@ -5090,7 +5090,7 @@ LIMIT 5","match $m isa movie, has title $t, has budget $b, has year $y; $y < 200
 "650","Which 3 genres contain the most movies?","MATCH (g:Genre)<-[:IN_GENRE]-(m:Movie)
 RETURN g.name AS genre, count(m) AS movieCount
 ORDER BY movieCount DESC
-LIMIT 3","match $g isa genre, has name $n; in_genre (genre: $g, film: $m); reduce $movieCount = count($m) groupby $n; sort $movieCount desc; limit 3; fetch { ""genre"": $n, ""movieCount"": $movieCount };"
+LIMIT 3","match $g isa genre, has name $n; in_genre (genre: $g, film: $m); reduce $movie_count = count($m) groupby $n; sort $movie_count desc; limit 3; fetch { ""genre"": $n, ""movie_count"": $movie_count };"
 "651","What are the top 5 movies with the most languages available?","MATCH (m:Movie)
 WHERE m.languages IS NOT NULL
 RETURN m.title, m.languages, size(m.languages) AS languageCount
@@ -5105,11 +5105,11 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "652","Which 3 users have rated the most number of movies?","MATCH (u:User)-[r:RATED]->(m:Movie)
 RETURN u.name AS user, count(r) AS numRatings
 ORDER BY numRatings DESC
-LIMIT 3","match $u isa user, has name $n; rated (user: $u, film: $m); reduce $numRatings = count($m) groupby $n; sort $numRatings desc; limit 3; fetch { ""user"": $n, ""numRatings"": $numRatings };"
+LIMIT 3","match $u isa user, has name $n; rated (user: $u, film: $m); reduce $num_ratings = count($m) groupby $n; sort $num_ratings desc; limit 3; fetch { ""user"": $n, ""num_ratings"": $num_ratings };"
 "653","List the top 5 movies with the highest number of imdbVotes.","MATCH (m:Movie)
 WHERE m.imdbVotes IS NOT NULL
 RETURN m.title, m.imdbVotes
@@ -5123,10 +5123,10 @@ ORDER BY numMovies DESC
 LIMIT 3","match
 $a isa person, has name $n;
 acted_in (actor: $a, film: $m);
-reduce $numMovies = count($m) groupby $n;
-sort $numMovies desc;
+reduce $num_movies = count($m) groupby $n;
+sort $num_movies desc;
 limit 3;
-fetch { ""actor"": $n, ""numMovies"": $numMovies };"
+fetch { ""actor"": $n, ""num_movies"": $num_movies };"
 "655","What are the top 5 movies released in the 1990s by revenue?","MATCH (m:Movie)
 WHERE m.released STARTS WITH '199' AND m.revenue IS NOT NULL
 RETURN m.title AS movie, m.revenue AS revenue
@@ -5136,7 +5136,7 @@ LIMIT 5","match $m isa movie, has title $t, has released $rel, has revenue $r; $
 WHERE m.imdbRating > 8.0
 RETURN d.name AS director, collect(m.title) AS movies
 ORDER BY size(movies) DESC
-LIMIT 3","match $d isa person, has name $n; directed (director: $d, film: $m); $m has imdb_rating $r, has title $t; $r > 8.0; reduce $numMovies = count($m) groupby $n; sort $numMovies desc; limit 3; fetch { ""director"": $n, ""numMovies"": $numMovies };"
+LIMIT 3","match $d isa person, has name $n; directed (director: $d, film: $m); $m has imdb_rating $r, has title $t; $r > 8.0; reduce $num_movies = count($m) groupby $n; sort $num_movies desc; limit 3; fetch { ""director"": $n, ""num_movies"": $num_movies };"
 "657","List the top 5 movies with the most countries available in their languages list.","MATCH (m:Movie)
 WHERE m.languages IS NOT NULL
 RETURN m.title, size(m.languages) AS languageCount
@@ -5151,7 +5151,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "658","Which 3 actors have acted in movies and also directed movies?","MATCH (p:Person)
 WHERE exists{ (p)-[:ACTED_IN]->(:Movie) } 
   AND exists{ (p)-[:DIRECTED]->(:Movie) }
@@ -5204,7 +5204,7 @@ WHERE m.imdbRating IS NOT NULL
 WITH a, avg(m.imdbRating) AS avgRating
 RETURN a.name, avgRating
 ORDER BY avgRating DESC
-LIMIT 3","match $a isa person, has name $n; acted_in (actor: $a, film: $m); $m has imdb_rating $r; reduce $avgRating = mean($r) groupby $n; sort $avgRating desc; limit 3; fetch { ""name"": $n, ""avgRating"": $avgRating };"
+LIMIT 3","match $a isa person, has name $n; acted_in (actor: $a, film: $m); $m has imdb_rating $r; reduce $avg_rating = mean($r) groupby $n; sort $avg_rating desc; limit 3; fetch { ""name"": $n, ""avg_rating"": $avg_rating };"
 "667","What are the top 5 movies with runtime less than 90 minutes and imdbRating above 8.0?","MATCH (m:Movie)
 WHERE m.runtime < 90 AND m.imdbRating > 8.0
 RETURN m.title, m.imdbRating, m.runtime
@@ -5214,11 +5214,11 @@ LIMIT 5","match $m isa movie, has title $t, has imdb_rating $r, has runtime $rt;
 WITH g, count(m) AS movieCount
 ORDER BY movieCount
 LIMIT 3
-RETURN g.name AS genre, movieCount","match $g isa genre, has name $n; in_genre (genre: $g, film: $m); reduce $movieCount = count($m) groupby $n; sort $movieCount asc; limit 3; fetch { ""genre"": $n, ""movieCount"": $movieCount };"
+RETURN g.name AS genre, movieCount","match $g isa genre, has name $n; in_genre (genre: $g, film: $m); reduce $movie_count = count($m) groupby $n; sort $movie_count asc; limit 3; fetch { ""genre"": $n, ""movie_count"": $movie_count };"
 "669","List the top 5 movies that have been rated by the highest number of different users.","MATCH (m:Movie)<-[r:RATED]-(u:User)
 RETURN m.title AS movie, count(DISTINCT u) AS numRaters
 ORDER BY numRaters DESC
-LIMIT 5","match $m isa movie, has title $t; rated (film: $m, user: $u); reduce $numRaters = count($u) groupby $t; sort $numRaters desc; limit 5; fetch { ""movie"": $t, ""numRaters"": $numRaters };"
+LIMIT 5","match $m isa movie, has title $t; rated (film: $m, user: $u); reduce $num_raters = count($u) groupby $t; sort $num_raters desc; limit 5; fetch { ""movie"": $t, ""num_raters"": $num_raters };"
 "670","Which 3 actors have a poster listed and acted in at least two movies?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE a.poster IS NOT NULL
 WITH a, count(m) AS numMovies
@@ -5227,10 +5227,10 @@ RETURN a.name, a.poster
 LIMIT 3","match
 $a isa person, has name $n;
 acted_in (actor: $a, film: $m);
-reduce $numMovies = count($m) groupby $n;
-sort $numMovies desc;
+reduce $num_movies = count($m) groupby $n;
+sort $num_movies desc;
 limit 3;
-fetch { ""actor"": $n, ""numMovies"": $numMovies };"
+fetch { ""actor"": $n, ""num_movies"": $num_movies };"
 "671","What are the top 5 movies directed by directors born in the USA?","MATCH (d:Director {bornIn: 'USA'})-[:DIRECTED]->(m:Movie)
 RETURN m.title, m.year, m.imdbRating
 ORDER BY m.imdbRating DESC
@@ -5239,7 +5239,7 @@ LIMIT 5","match $d isa person, has born_in ""USA""; directed (director: $d, film
 WITH m, count(distinct g) as genreCount
 ORDER BY genreCount DESC
 LIMIT 3
-RETURN m.title as movie, genreCount as numberOfGenres","match $m isa movie, has title $t; in_genre (film: $m, genre: $g); reduce $genreCount = count($g) groupby $t; sort $genreCount desc; limit 3; fetch { ""movie"": $t, ""numberOfGenres"": $genreCount };"
+RETURN m.title as movie, genreCount as numberOfGenres","match $m isa movie, has title $t; in_genre (film: $m, genre: $g); reduce $genre_count = count($g) groupby $t; sort $genre_count desc; limit 3; fetch { ""movie"": $t, ""number_of_genres"": $genre_count };"
 "673","List the top 5 movies that have generated revenue more than 500 million USD.","MATCH (m:Movie)
 WHERE m.revenue > 500000000
 RETURN m.title, m.revenue
@@ -5249,17 +5249,17 @@ LIMIT 5","match $m isa movie, has title $t, has revenue $r; $r > 500000000; sort
 WITH u, avg(r.rating) AS avgRating
 ORDER BY avgRating DESC
 LIMIT 3
-RETURN u.name AS user, avgRating","match $u isa user, has name $n; $r isa rated (user: $u), has rating $rating; reduce $avgRating = mean($rating) groupby $n; sort $avgRating desc; limit 3; fetch { ""user"": $n, ""avgRating"": $avgRating };"
+RETURN u.name AS user, avgRating","match $u isa user, has name $n; $r isa rated (user: $u), has rating $rating; reduce $avg_rating = mean($rating) groupby $n; sort $avg_rating desc; limit 3; fetch { ""user"": $n, ""avg_rating"": $avg_rating };"
 "675","What are the top 5 movies with the most actors involved?","MATCH (m:Movie)<-[:ACTED_IN]-(a:Actor)
 WITH m, count(a) AS numActors
 ORDER BY numActors DESC
 LIMIT 5
-RETURN m.title AS movie, numActors","match $m isa movie, has title $t; acted_in (film: $m, actor: $a); reduce $numActors = count($a) groupby $t; sort $numActors desc; limit 5; fetch { ""movie"": $t, ""numActors"": $numActors };"
+RETURN m.title AS movie, numActors","match $m isa movie, has title $t; acted_in (film: $m, actor: $a); reduce $num_actors = count($a) groupby $t; sort $num_actors desc; limit 5; fetch { ""movie"": $t, ""num_actors"": $num_actors };"
 "676","Which 3 directors have the longest total runtime for all their directed movies?","MATCH (d:Director)-[:DIRECTED]->(m:Movie)
 WITH d, sum(m.runtime) AS totalRuntime
 RETURN d.name AS director, totalRuntime
 ORDER BY totalRuntime DESC
-LIMIT 3","match $d isa person, has name $n; directed (director: $d, film: $m); $m has runtime $r; reduce $totalRuntime = sum($r) groupby $n; sort $totalRuntime desc; limit 3; fetch { ""director"": $n, ""totalRuntime"": $totalRuntime };"
+LIMIT 3","match $d isa person, has name $n; directed (director: $d, film: $m); $m has runtime $r; reduce $total_runtime = sum($r) groupby $n; sort $total_runtime desc; limit 3; fetch { ""director"": $n, ""total_runtime"": $total_runtime };"
 "677","List the top 5 movies that were released in languages other than English and have an imdbRating above 7.0.","MATCH (m:Movie)
 WHERE m.imdbRating > 7.0 AND NOT 'English' IN m.languages
 RETURN m.title, m.imdbRating, m.languages
@@ -5270,7 +5270,7 @@ $r > 7.0;
 not { $l like "".*English.*""; };
 sort $r desc;
 limit 5;
-fetch { ""title"": $t, ""imdbRating"": $r, ""languages"": $l };"
+fetch { ""title"": $t, ""imdb_rating"": $r, ""languages"": $l };"
 "678","Which 3 actors are born on or before 1900 and have acted in at least one movie?","MATCH (a:Actor)
 WHERE a.born <= date('1900-01-01') AND exists{ (a)-[:ACTED_IN]->(:Movie) }
 RETURN a.name, a.born
@@ -5290,10 +5290,10 @@ LIMIT 3","match
 $g isa genre, has name $n;
 in_genre (film: $m, genre: $g);
 $m has imdb_rating $r;
-reduce $avgRating = mean($r) groupby $n;
-sort $avgRating desc;
+reduce $avg_rating = mean($r) groupby $n;
+sort $avg_rating desc;
 limit 3;
-fetch { ""genre"": $n, ""avgRating"": $avgRating };"
+fetch { ""genre"": $n, ""avg_rating"": $avg_rating };"
 "682","Which 3 directors have directed movies in more than three different genres?","MATCH (d:Director)-[:DIRECTED]->(m:Movie)-[:IN_GENRE]->(g:Genre)
 WITH d, count(DISTINCT g) AS num_genres
 WHERE num_genres > 3
@@ -5322,7 +5322,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "684","Which 3 actors have the lowest average imdbRating for movies they acted in and acted in more than three movies?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE m.imdbRating IS NOT NULL
 WITH a, avg(m.imdbRating) AS avgRating, count(m) AS numMovies
@@ -5332,10 +5332,10 @@ ORDER BY avgRating
 LIMIT 3","match
 $a isa person, has name $n;
 acted_in (actor: $a, film: $m);
-reduce $numMovies = count($m) groupby $n;
-sort $numMovies desc;
+reduce $num_movies = count($m) groupby $n;
+sort $num_movies desc;
 limit 3;
-fetch { ""actor"": $n, ""numMovies"": $numMovies };"
+fetch { ""actor"": $n, ""num_movies"": $num_movies };"
 "685","List the top 5 movies with an imdbRating below 5.0 and a budget exceeding 50 million USD.","MATCH (m:Movie)
 WHERE m.imdbRating < 5.0 AND m.budget > 50000000
 RETURN m.title, m.imdbRating, m.budget
@@ -5356,12 +5356,12 @@ LIMIT 1","match $r1 isa rated (user: $u1, film: $m), has rating $rating1; $r2 is
 WITH m, count(g) AS genreCount
 ORDER BY genreCount DESC
 LIMIT 5
-RETURN m.title AS movie, genreCount AS numberOfGenres","match $m isa movie, has title $t; in_genre (film: $m, genre: $g); reduce $genreCount = count($g) groupby $t; sort $genreCount desc; limit 5; fetch { ""movie"": $t, ""numberOfGenres"": $genreCount };"
+RETURN m.title AS movie, genreCount AS numberOfGenres","match $m isa movie, has title $t; in_genre (film: $m, genre: $g); reduce $genre_count = count($g) groupby $t; sort $genre_count desc; limit 5; fetch { ""movie"": $t, ""number_of_genres"": $genre_count };"
 "688","Which 3 directors have the most distinct actors worked with across all movies directed?","MATCH (d:Director)-[:DIRECTED]->(m:Movie)<-[:ACTED_IN]-(a:Actor)
 WITH d, count(distinct a) AS numActors
 ORDER BY numActors DESC
 LIMIT 3
-RETURN d.name AS director, numActors","match $d isa person, has name $n; directed (director: $d, film: $m); acted_in (actor: $a, film: $m); reduce $numActors = count($a) groupby $n; sort $numActors desc; limit 3; fetch { ""director"": $n, ""numActors"": $numActors };"
+RETURN d.name AS director, numActors","match $d isa person, has name $n; directed (director: $d, film: $m); acted_in (actor: $a, film: $m); reduce $num_actors = count($a) groupby $n; sort $num_actors desc; limit 3; fetch { ""director"": $n, ""num_actors"": $num_actors };"
 "689","List the top 5 movies where actors also served as directors.","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
 RETURN m.title AS movie, collect(p.name) AS actor_directors
 ORDER BY size(collect(p.name)) DESC
@@ -5376,7 +5376,7 @@ $bud > 0;
 let $ratio = $rev / $bud;
 sort $ratio desc;
 limit 3;
-fetch { ""title"": $t, ""revenueToBudgetRatio"": $ratio };"
+fetch { ""title"": $t, ""revenue_to_budget_ratio"": $ratio };"
 "691","What are the top 5 movies by revenue that were released in languages other than English?","MATCH (m:Movie)
 WHERE NOT 'English' IN m.languages
 RETURN m.title, m.revenue
@@ -5391,12 +5391,12 @@ fetch { ""title"": $t, ""revenue"": $rev };"
 WITH a, count(distinct g) AS genreCount
 ORDER BY genreCount DESC
 LIMIT 3
-RETURN a.name AS actor, genreCount","match $a isa person, has name $n; acted_in (actor: $a, film: $m); in_genre (film: $m, genre: $g); reduce $genreCount = count($g) groupby $n; sort $genreCount desc; limit 3; fetch { ""actor"": $n, ""genreCount"": $genreCount };"
+RETURN a.name AS actor, genreCount","match $a isa person, has name $n; acted_in (actor: $a, film: $m); in_genre (film: $m, genre: $g); reduce $genre_count = count($g) groupby $n; sort $genre_count desc; limit 3; fetch { ""actor"": $n, ""genre_count"": $genre_count };"
 "693","List the top 5 oldest directors based on their birth year who have directed at least one movie.","MATCH (d:Director)-[:DIRECTED]->(:Movie)
 WHERE d.born IS NOT NULL
 RETURN d.name AS director, d.born AS birthDate
 ORDER BY d.born
-LIMIT 5","match $d isa person, has name $n, has born $b; directed (director: $d); sort $b asc; limit 5; fetch { ""director"": $n, ""birthDate"": $b };"
+LIMIT 5","match $d isa person, has name $n, has born $b; directed (director: $d); sort $b asc; limit 5; fetch { ""director"": $n, ""birth_date"": $b };"
 "694","Which 3 genres are most common in movies with a runtime over 120 minutes?","MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
 WHERE m.runtime > 120
 RETURN g.name AS genre, count(*) AS count
@@ -5417,7 +5417,7 @@ let $lang_count = language_count($m);
 $lang_count == 1;
 sort $r desc;
 limit 5;
-fetch { ""title"": $m.title, ""imdbRating"": $r };"
+fetch { ""title"": $m.title, ""imdb_rating"": $r };"
 "696","Which 3 actors have died and acted in more than two movies?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE a.died IS NOT NULL
 WITH a, count(m) AS movieCount
@@ -5427,14 +5427,14 @@ ORDER BY movieCount DESC
 LIMIT 3","match
 $a isa person, has name $n, has died $d;
 acted_in (actor: $a, film: $m);
-reduce $movieCount = count($m) groupby $n, $d;
-sort $movieCount desc;
+reduce $movie_count = count($m) groupby $n, $d;
+sort $movie_count desc;
 limit 3;
-fetch { ""name"": $n, ""died"": $d, ""movieCount"": $movieCount };"
+fetch { ""name"": $n, ""died"": $d, ""movie_count"": $movie_count };"
 "697","List the top 5 movies with the most distinct directors involved.","MATCH (m:Movie)<-[:DIRECTED]-(d:Director)
 RETURN m.title AS movie, count(distinct d) AS numDirectors
 ORDER BY numDirectors DESC
-LIMIT 5","match $m isa movie, has title $t; directed (director: $d, film: $m); reduce $numDirectors = count($d) groupby $t; sort $numDirectors desc; limit 5; fetch { ""movie"": $t, ""numDirectors"": $numDirectors };"
+LIMIT 5","match $m isa movie, has title $t; directed (director: $d, film: $m); reduce $num_directors = count($d) groupby $t; sort $num_directors desc; limit 5; fetch { ""movie"": $t, ""num_directors"": $num_directors };"
 "698","Which 3 movies released in the last 5 years of the database have the highest imdbVotes?","MATCH (m:Movie)
 WHERE m.year >= 2012 AND m.year <= 2016 AND m.imdbVotes IS NOT NULL
 RETURN m.title, m.year, m.imdbVotes
@@ -5445,7 +5445,7 @@ WHERE NOT exists{ (p)-[:ACTED_IN]->() }
 WITH m, count(*) AS directorCount
 ORDER BY directorCount DESC
 LIMIT 5
-RETURN m.title AS movie, directorCount AS timesDirected","match $p isa person; directed (director: $p, film: $m); not { acted_in (actor: $p); }; $m has title $t; reduce $count = count($m) groupby $t; sort $count desc; limit 5; fetch { ""movie"": $t, ""timesDirected"": $count };"
+RETURN m.title AS movie, directorCount AS timesDirected","match $p isa person; directed (director: $p, film: $m); not { acted_in (actor: $p); }; $m has title $t; reduce $count = count($m) groupby $t; sort $count desc; limit 5; fetch { ""movie"": $t, ""times_directed"": $count };"
 "700","Which 3 users have rated movies with an average rating below 3.0?","MATCH (u:User)-[r:RATED]->(m:Movie)
 WITH u, avg(r.rating) AS avgRating
 WHERE avgRating < 3.0
@@ -5454,10 +5454,10 @@ ORDER BY avgRating
 LIMIT 3","match
 $u isa user, has name $n;
 $r isa rated (user: $u, film: $m), has rating $rating;
-reduce $avgRating = mean($rating) groupby $n;
-sort $avgRating asc;
+reduce $avg_rating = mean($rating) groupby $n;
+sort $avg_rating asc;
 limit 3;
-fetch { ""user"": $n, ""avgRating"": $avgRating };"
+fetch { ""user"": $n, ""avg_rating"": $avg_rating };"
 "701","List the top 5 movies that have the word 'love' in their plot description.","MATCH (m:Movie)
 WHERE toLower(m.plot) CONTAINS 'love'
 RETURN m.title, m.plot
@@ -5490,7 +5490,7 @@ fetch { ""title"": $m.title };"
 WITH a, sum(m.imdbVotes) AS totalVotes
 ORDER BY totalVotes DESC
 LIMIT 3
-RETURN a.name AS actor, totalVotes","match $a isa person, has name $n; acted_in (actor: $a, film: $m); $m has imdb_votes $v; reduce $totalVotes = sum($v) groupby $n; sort $totalVotes desc; limit 3; fetch { ""actor"": $n, ""totalVotes"": $totalVotes };"
+RETURN a.name AS actor, totalVotes","match $a isa person, has name $n; acted_in (actor: $a, film: $m); $m has imdb_votes $v; reduce $total_votes = sum($v) groupby $n; sort $total_votes desc; limit 3; fetch { ""actor"": $n, ""total_votes"": $total_votes };"
 "705","List the top 5 shortest movies with an imdbRating above 6.0.","MATCH (m:Movie)
 WHERE m.imdbRating > 6.0
 RETURN m.title, m.runtime
@@ -5501,7 +5501,7 @@ WHERE m.imdbRating < 5.0
 WITH u, count(r) AS numRatings
 ORDER BY numRatings DESC
 LIMIT 3
-RETURN u.name AS user, numRatings","match $u isa user, has name $n; rated (user: $u, film: $m); $m has imdb_rating $r; $r < 5.0; reduce $numRatings = count($m) groupby $n; sort $numRatings desc; limit 3; fetch { ""user"": $n, ""numRatings"": $numRatings };"
+RETURN u.name AS user, numRatings","match $u isa user, has name $n; rated (user: $u, film: $m); $m has imdb_rating $r; $r < 5.0; reduce $num_ratings = count($m) groupby $n; sort $num_ratings desc; limit 3; fetch { ""user"": $n, ""num_ratings"": $num_ratings };"
 "707","Which top 5 movies have a runtime longer than 150 minutes?","MATCH (m:Movie)
 WHERE m.runtime > 150
 RETURN m.title, m.runtime
@@ -5510,7 +5510,7 @@ LIMIT 5","match $m isa movie, has title $t, has runtime $r; $r > 150; sort $r de
 "708","List the top 3 directors born in the USA.","MATCH (d:Director {bornIn: 'USA'})
 RETURN d.name AS director, d.born AS birthDate
 ORDER BY d.born DESC
-LIMIT 3","match $d isa person, has name $n, has born $b, has born_in ""USA""; directed (director: $d); sort $b desc; limit 3; fetch { ""director"": $n, ""birthDate"": $b };"
+LIMIT 3","match $d isa person, has name $n, has born $b, has born_in ""USA""; directed (director: $d); sort $b desc; limit 3; fetch { ""director"": $n, ""birth_date"": $b };"
 "709","What are the first 3 movies released after 2010 with a budget over 100 million USD?","MATCH (m:Movie)
 WHERE m.released > '2010' AND m.budget > 100000000
 RETURN m.title, m.released, m.budget
@@ -5525,7 +5525,7 @@ LIMIT 5","match $m isa movie, has title $t, has revenue $r; sort $r desc; limit 
 WITH u, count(r) AS numRatings
 ORDER BY numRatings DESC
 LIMIT 3
-RETURN u.name AS user, numRatings","match $u isa user, has name $n; rated (user: $u, film: $m); reduce $numRatings = count($m) groupby $n; sort $numRatings desc; limit 3; fetch { ""user"": $n, ""numRatings"": $numRatings };"
+RETURN u.name AS user, numRatings","match $u isa user, has name $n; rated (user: $u, film: $m); reduce $num_ratings = count($m) groupby $n; sort $num_ratings desc; limit 3; fetch { ""user"": $n, ""num_ratings"": $num_ratings };"
 "712","List the top 5 actors who have acted in more than 10 movies.","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WITH a, count(m) AS numMovies
 WHERE numMovies > 10
@@ -5534,14 +5534,14 @@ ORDER BY numMovies DESC
 LIMIT 5","match
 $a isa person, has name $n;
 acted_in (actor: $a, film: $m);
-reduce $numMovies = count($m) groupby $n;
-sort $numMovies desc;
+reduce $num_movies = count($m) groupby $n;
+sort $num_movies desc;
 limit 5;
-fetch { ""actor"": $n, ""numMovies"": $numMovies };"
+fetch { ""actor"": $n, ""num_movies"": $num_movies };"
 "713","What are the top 3 genres by the number of movies?","MATCH (g:Genre)<-[:IN_GENRE]-(m:Movie)
 RETURN g.name AS genre, count(m) AS movieCount
 ORDER BY movieCount DESC
-LIMIT 3","match $g isa genre, has name $n; in_genre (genre: $g, film: $m); reduce $movieCount = count($m) groupby $n; sort $movieCount desc; limit 3; fetch { ""genre"": $n, ""movieCount"": $movieCount };"
+LIMIT 3","match $g isa genre, has name $n; in_genre (genre: $g, film: $m); reduce $movie_count = count($m) groupby $n; sort $movie_count desc; limit 3; fetch { ""genre"": $n, ""movie_count"": $movie_count };"
 "714","Which top 5 movies have been rated by more than 500,000 users?","MATCH (m:Movie)
 WHERE m.imdbVotes > 500000
 RETURN m.title, m.imdbVotes
@@ -5574,7 +5574,7 @@ fetch { ""title"": $t };"
 WITH d, count(m) AS numDirected
 ORDER BY numDirected DESC
 LIMIT 5
-RETURN d.name AS director, numDirected AS numberOfMovies","match $d isa person, has name $n; directed (director: $d, film: $m); reduce $numDirected = count($m) groupby $n; sort $numDirected desc; limit 5; fetch { ""director"": $n, ""numberOfMovies"": $numDirected };"
+RETURN d.name AS director, numDirected AS numberOfMovies","match $d isa person, has name $n; directed (director: $d, film: $m); reduce $num_directed = count($m) groupby $n; sort $num_directed desc; limit 5; fetch { ""director"": $n, ""number_of_movies"": $num_directed };"
 "720","What are the first 3 movies with a revenue to budget ratio greater than 5?","MATCH (m:Movie)
 WHERE m.revenue IS NOT NULL AND m.budget IS NOT NULL AND m.revenue / m.budget > 5
 RETURN m.title, m.revenue, m.budget, m.revenue / m.budget AS ratio
@@ -5601,10 +5601,10 @@ ORDER BY numMovies DESC
 LIMIT 3","match
 $a isa person, has name $n;
 acted_in (actor: $a, film: $m);
-reduce $numMovies = count($m) groupby $n;
-sort $numMovies desc;
+reduce $num_movies = count($m) groupby $n;
+sort $num_movies desc;
 limit 3;
-fetch { ""actor"": $n, ""numMovies"": $numMovies };"
+fetch { ""actor"": $n, ""num_movies"": $num_movies };"
 "723","List the first 3 users who have an average rating less than 3.","MATCH (u:User)-[r:RATED]->(m:Movie)
 WITH u, avg(r.rating) AS avgRating
 WHERE avgRating < 3
@@ -5613,16 +5613,16 @@ ORDER BY avgRating
 LIMIT 3","match
 $u isa user, has name $n;
 $r isa rated (user: $u, film: $m), has rating $rating;
-reduce $avgRating = mean($rating) groupby $n;
-sort $avgRating asc;
+reduce $avg_rating = mean($rating) groupby $n;
+sort $avg_rating asc;
 limit 3;
-fetch { ""user"": $n, ""avgRating"": $avgRating };"
+fetch { ""user"": $n, ""avg_rating"": $avg_rating };"
 "724","What are the top 5 genres in which movies have the highest average IMDb rating?","MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
 WHERE m.imdbRating IS NOT NULL
 WITH g.name AS genre, avg(m.imdbRating) AS avgRating
 ORDER BY avgRating DESC
 LIMIT 5
-RETURN genre, avgRating","match $g isa genre, has name $n; in_genre (genre: $g, film: $m); $m has imdb_rating $r; reduce $avgRating = mean($r) groupby $n; sort $avgRating desc; limit 5; fetch { ""genre"": $n, ""avgRating"": $avgRating };"
+RETURN genre, avgRating","match $g isa genre, has name $n; in_genre (genre: $g, film: $m); $m has imdb_rating $r; reduce $avg_rating = mean($r) groupby $n; sort $avg_rating desc; limit 5; fetch { ""genre"": $n, ""avg_rating"": $avg_rating };"
 "725","Which top 5 movies have the most diverse range of spoken languages?","MATCH (m:Movie)
 WHERE m.languages IS NOT NULL
 RETURN m.title, size(m.languages) AS languageCount
@@ -5637,7 +5637,7 @@ let $lang_count = language_count($m);
 $lang_count > 0;
 sort $lang_count desc;
 limit 5;
-fetch { ""title"": $m.title, ""languageCount"": $lang_count };"
+fetch { ""title"": $m.title, ""language_count"": $lang_count };"
 "726","List the first 3 directors who have also acted in a movie.","MATCH (p:Person)
 WHERE exists{ (p)-[:DIRECTED]->(:Movie) } 
   AND exists{ (p)-[:ACTED_IN]->(:Movie) }
@@ -5656,10 +5656,10 @@ ORDER BY avgRating DESC
 LIMIT 3","match
 $u isa user, has name $n;
 $r isa rated (user: $u, film: $m);
-reduce $numRatings = count($r) groupby $n;
-sort $numRatings desc;
+reduce $num_ratings = count($r) groupby $n;
+sort $num_ratings desc;
 limit 3;
-fetch { ""name"": $n, ""numRatings"": $numRatings };"
+fetch { ""name"": $n, ""num_ratings"": $num_ratings };"
 "729","What are the top 5 longest movies that have been released after 2000?","MATCH (m:Movie)
 WHERE m.released >= '2000-01-01' AND m.runtime IS NOT NULL
 RETURN m.title, m.runtime
@@ -5690,7 +5690,7 @@ LIMIT 5","match $d isa person, has born_in ""Nebraska, USA""; directed (director
 "733","Which 3 movies have the highest number of actors involved?","MATCH (m:Movie)<-[:ACTED_IN]-(a:Actor)
 RETURN m.title AS movie, count(a) AS numActors
 ORDER BY numActors DESC
-LIMIT 3","match $m isa movie, has title $t; acted_in (film: $m, actor: $a); reduce $numActors = count($a) groupby $t; sort $numActors desc; limit 3; fetch { ""movie"": $t, ""numActors"": $numActors };"
+LIMIT 3","match $m isa movie, has title $t; acted_in (film: $m, actor: $a); reduce $num_actors = count($a) groupby $t; sort $num_actors desc; limit 3; fetch { ""movie"": $t, ""num_actors"": $num_actors };"
 "734","List the first 3 genres that have more than 50 movies associated with them.","MATCH (g:Genre)<-[:IN_GENRE]-(m:Movie)
 WITH g, count(m) AS movieCount
 WHERE movieCount > 50
@@ -5699,10 +5699,10 @@ ORDER BY movieCount DESC
 LIMIT 3","match
 $g isa genre, has name $n;
 in_genre (film: $m, genre: $g);
-reduce $movieCount = count($m) groupby $n;
-sort $movieCount desc;
+reduce $movie_count = count($m) groupby $n;
+sort $movie_count desc;
 limit 3;
-fetch { ""genre"": $n, ""movieCount"": $movieCount };"
+fetch { ""genre"": $n, ""movie_count"": $movie_count };"
 "735","What are the top 5 movies with the lowest IMDb rating but highest revenue?","MATCH (m:Movie)
 WHERE m.imdbRating IS NOT NULL AND m.revenue IS NOT NULL
 RETURN m.title, m.imdbRating, m.revenue
@@ -5752,7 +5752,7 @@ WHERE m.runtime > 180
 WITH d, count(m) AS numLongMovies
 ORDER BY numLongMovies DESC
 LIMIT 3
-RETURN d.name AS director, numLongMovies","match $d isa person, has name $n; directed (director: $d, film: $m); $m has runtime $r; $r > 180; reduce $numLongMovies = count($m) groupby $n; sort $numLongMovies desc; limit 3; fetch { ""director"": $n, ""numLongMovies"": $numLongMovies };"
+RETURN d.name AS director, numLongMovies","match $d isa person, has name $n; directed (director: $d, film: $m); $m has runtime $r; $r > 180; reduce $num_long_movies = count($m) groupby $n; sort $num_long_movies desc; limit 3; fetch { ""director"": $n, ""num_long_movies"": $num_long_movies };"
 "740","List the first 3 movies with the most diverse country production origins.","MATCH (m:Movie)
 WHERE m.countries IS NOT NULL
 RETURN m.title, m.countries, size(m.countries) AS numCountries
@@ -5767,7 +5767,7 @@ let $ctry_count = country_count($m);
 $ctry_count > 0;
 sort $ctry_count desc;
 limit 3;
-fetch { ""title"": $m.title, ""numCountries"": $ctry_count };"
+fetch { ""title"": $m.title, ""num_countries"": $ctry_count };"
 "741","What are the top 5 movies with a budget less than 10 million USD but revenue over 100 million USD?","MATCH (m:Movie)
 WHERE m.budget < 10000000 AND m.revenue > 100000000
 RETURN m.title, m.budget, m.revenue
@@ -5791,7 +5791,7 @@ $rev > 0;
 let $ratio = $bud / $rev;
 sort $ratio desc;
 limit 3;
-fetch { ""title"": $t, ""budgetRevenueRatio"": $ratio };"
+fetch { ""title"": $t, ""budget_revenue_ratio"": $ratio };"
 "745","List the first 3 directors who have directed both a comedy and a drama.","MATCH (d:Director)-[:DIRECTED]->(m1:Movie)-[:IN_GENRE]->(g1:Genre {name: 'Comedy'}),
       (d)-[:DIRECTED]->(m2:Movie)-[:IN_GENRE]->(g2:Genre {name: 'Drama'})
 RETURN d.name AS director
@@ -5800,7 +5800,7 @@ LIMIT 3","match $d isa person, has name $n; directed (director: $d, film: $m1); 
 WITH m, count(g) AS genreCount
 ORDER BY genreCount DESC
 LIMIT 5
-RETURN m.title AS movie, genreCount AS numberOfGenres","match $m isa movie, has title $t; in_genre (film: $m, genre: $g); reduce $genreCount = count($g) groupby $t; sort $genreCount desc; limit 5; fetch { ""movie"": $t, ""numberOfGenres"": $genreCount };"
+RETURN m.title AS movie, genreCount AS numberOfGenres","match $m isa movie, has title $t; in_genre (film: $m, genre: $g); reduce $genre_count = count($g) groupby $t; sort $genre_count desc; limit 5; fetch { ""movie"": $t, ""number_of_genres"": $genre_count };"
 "747","List the first 3 actors who have acted in a movie without a poster link.","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE m.poster IS NULL
 RETURN a.name
@@ -5825,7 +5825,7 @@ WHERE m.runtime < 90
 WITH d, count(m) AS numMovies
 ORDER BY numMovies DESC
 LIMIT 5
-RETURN d.name AS director, numMovies","match $d isa person, has name $n; directed (director: $d, film: $m); $m has runtime $r; $r < 90; reduce $numMovies = count($m) groupby $n; sort $numMovies desc; limit 5; fetch { ""director"": $n, ""numMovies"": $numMovies };"
+RETURN d.name AS director, numMovies","match $d isa person, has name $n; directed (director: $d, film: $m); $m has runtime $r; $r < 90; reduce $num_movies = count($m) groupby $n; sort $num_movies desc; limit 5; fetch { ""director"": $n, ""num_movies"": $num_movies };"
 "751","Which 3 actors have a bio longer than 1000 characters and have acted in more than 5 movies?","MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
 WHERE size(a.bio) > 1000
 WITH a, count(m) AS numMovies
@@ -5854,7 +5854,7 @@ LIMIT 3","match
 $g isa genre, has name $n;
 in_genre (film: $m, genre: $g);
 $m has imdb_rating $r;
-reduce $avgRating = mean($r) groupby $n;
-sort $avgRating asc;
+reduce $avg_rating = mean($r) groupby $n;
+sort $avg_rating asc;
 limit 3;
-fetch { ""genre"": $n, ""avgRating"": $avgRating };"
+fetch { ""genre"": $n, ""avg_rating"": $avg_rating };"

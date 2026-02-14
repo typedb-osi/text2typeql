@@ -394,7 +394,7 @@ LIMIT 3","match
   $ca < 2015-01-01T00:00:00;
 sort $ca asc;
 limit 3;
-fetch { ""moderator"": $mn, ""modSince"": $ca };"
+fetch { ""moderator"": $mn, ""mod_since"": $ca };"
 "synthetic-1","twitch","287","high","cypher_wrong_label_property","Cypher accesses u.createdAt but ""createdAt"" is not on :User (exists on other types)","Who are the first 5 users who have been moderators in streams with a language other than 'en'?","MATCH (u:User)-[:MODERATOR]->(s:Stream)-[:HAS_LANGUAGE]->(l:Language)
 WHERE l.name <> 'en'
 RETURN u.name AS user, u.createdAt AS created_at
@@ -560,7 +560,7 @@ $rev has rating $rat;
 $rat < 60;
 limit 5;
 fetch {
-  ""MovieTitle"": $m.title
+  ""movie_title"": $m.title
 };"
 "synthetic-2","movies","9","medium","cypher_wrong_label_property","Cypher accesses r.rating but ""rating"" is not on :Person (exists on other types)","List the first 5 movies that have been acted in by someone with the role 'Captain' and reviewed with a rating below 60.","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
 WHERE 'Captain' IN p.roles
@@ -577,7 +577,7 @@ $rev has rating $rat;
 $rat < 60;
 limit 5;
 fetch {
-  ""MovieTitle"": $m.title
+  ""movie_title"": $m.title
 };"
 "synthetic-2","movies","29","medium","cypher_wrong_label_property","Cypher accesses r.rating but ""rating"" is not on :Person (exists on other types)","List the first 5 people who wrote a movie with a rating of at least 80 in a review.","MATCH (p:Person)-[:WROTE]->(m:Movie)<-[:REVIEWED]-(r:Person)
 WHERE r.rating >= 80
@@ -608,7 +608,7 @@ $rev has summary ""Pretty funny at times"";
 reduce $count = count($m) groupby $p;
 sort $count desc;
 limit 3;
-fetch { ""Director"": $p.name, ""MovieCount"": $count };"
+fetch { ""Director"": $p.name, ""movie_count"": $count };"
 "synthetic-2","movies","48","medium","cypher_wrong_label_property","Cypher accesses p.summary but ""summary"" is not on :Person (exists on other types)","Which movies have been reviewed with the summary 'Dark, but compelling'?","MATCH (m:Movie)<-[:REVIEWED]-(p:Person)
 WHERE p.summary = 'Dark, but compelling'
 RETURN m.title","match
@@ -646,13 +646,13 @@ $m isa movie;
 produced (producer: $p, film: $m);
 $rev isa reviewed (reviewer: $r, film: $m);
 $rev has rating $rating;
-reduce $maxRating = max($rating) groupby $p, $m;
-sort $maxRating desc;
+reduce $max_rating = max($rating) groupby $p, $m;
+sort $max_rating desc;
 limit 1;
 fetch {
   ""producer"": $p.name,
   ""movie"": $m.title,
-  ""rating"": $maxRating
+  ""rating"": $max_rating
 };"
 "synthetic-2","movies","120","medium","cypher_wrong_label_property","Cypher accesses m.roles but ""roles"" is not on :Movie (exists on other types)","What are the roles of Keanu Reeves in the movies he acted in?","MATCH (p:Person {name: ""Keanu Reeves""})-[:ACTED_IN]->(m:Movie)
 RETURN m.title AS movie, p.name AS actor, m.roles AS roles","match
@@ -761,7 +761,7 @@ $r < 50;
 sort $r asc;
 limit 3;
 fetch {
-  ""MovieTitle"": $m.title,
+  ""movie_title"": $m.title,
   ""Rating"": $r
 };"
 "synthetic-2","movies","254","medium","cypher_wrong_label_property","Cypher accesses r.rating but ""rating"" is not on :Person (exists on other types)","What are the top 5 movies with the highest average review rating?","MATCH (m:Movie)<-[:REVIEWED]-(r:Person)
@@ -777,7 +777,7 @@ sort $avg desc;
 limit 5;
 fetch {
   ""title"": $m.title,
-  ""avgRating"": $avg
+  ""avg_rating"": $avg
 };"
 "synthetic-2","movies","256","medium","cypher_wrong_label_property","Cypher accesses p.summary but ""summary"" is not on :Person (exists on other types)","What are the names of the movies that received a review summary 'Dark, but compelling'?","MATCH (m:Movie)<-[:REVIEWED]-(p:Person)
 WHERE p.summary = 'Dark, but compelling'
@@ -786,7 +786,7 @@ $m isa movie;
 $rev isa reviewed (reviewer: $p, film: $m), has summary ""Dark, but compelling"";
 $p isa person;
 fetch {
-  ""movieTitle"": $m.title
+  ""movie_title"": $m.title
 };"
 "synthetic-2","movies","305","medium","cypher_wrong_label_property","Cypher accesses p.rating but ""rating"" is not on :Person (exists on other types)","Retrieve the top five movies released before 1985 that were reviewed with a rating above 85.","MATCH (m:Movie)<-[:REVIEWED]-(p:Person)
 WHERE m.released < 1985 AND p.rating > 85
@@ -853,7 +853,7 @@ sort $r asc;
 limit 3;
 fetch {
   ""Director"": $dn,
-  ""MovieTitle"": $t
+  ""movie_title"": $t
 };"
 "synthetic-2","movies","426","medium","cypher_wrong_label_property","Cypher accesses m.roles but ""roles"" is not on :Movie (exists on other types)","List the first 3 movies with at least one role listed as 'Villain' and their actors.","MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
 WHERE 'Villain' IN m.roles
@@ -865,7 +865,7 @@ $p isa person;
 $rel isa acted_in (actor: $p, film: $m), has roles ""Villain"";
 limit 3;
 fetch {
-  ""MovieTitle"": $m.title,
+  ""movie_title"": $m.title,
   ""Actor"": $p.name
 };"
 "synthetic-2","movies","430","medium","cypher_wrong_label_property","Cypher accesses p.roles but ""roles"" is not on :Person (exists on other types)","List the top 5 movies with roles including 'Doctor' and the actors who played them.","MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
@@ -881,8 +881,8 @@ $roles like "".*Doctor.*"";
 sort $v desc;
 limit 5;
 fetch {
-  ""MovieTitle"": $m.title,
-  ""ActorName"": $p.name,
+  ""movie_title"": $m.title,
+  ""actor_name"": $p.name,
   ""Roles"": $roles
 };"
 "synthetic-2","movies","453","medium","cypher_wrong_label_property","Cypher accesses m.roles but ""roles"" is not on :Movie (exists on other types)","List the first 3 movies with roles that include 'Captain' and their actors.","MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
@@ -924,8 +924,8 @@ LIMIT 3","match
 sort $rel asc;
 limit 3;
 fetch {
-  ""MovieTitle"": $m.title,
-  ""ReleaseYear"": $rel
+  ""movie_title"": $m.title,
+  ""release_year"": $rel
 };"
 "synthetic-2","movies","518","medium","cypher_wrong_label_property","Cypher accesses review.rating but ""rating"" is not on :Person (exists on other types)","Which 3 directors have the highest average movie rating for movies they directed?","MATCH (director:Person)-[:DIRECTED]->(movie:Movie)<-[:REVIEWED]-(review:Person)
 WITH director, avg(review.rating) AS avgRating
@@ -941,7 +941,7 @@ sort $avg_rating desc;
 limit 3;
 fetch {
   ""Director"": $director.name,
-  ""AverageRating"": $avg_rating
+  ""average_rating"": $avg_rating
 };"
 "synthetic-2","movies","535","medium","cypher_wrong_label_property","Cypher accesses m.summary but ""summary"" is not on :Movie (exists on other types)","List the first 3 movies to have been reviewed with a summary containing 'slapstick'.","MATCH (m:Movie)<-[:REVIEWED]-(p:Person)
 WHERE toLower(m.summary) CONTAINS 'slapstick'
@@ -955,7 +955,7 @@ $s like "".*slapstick.*"";
 sort $r;
 limit 3;
 fetch {
-  ""MovieTitle"": $m.title
+  ""movie_title"": $m.title
 };"
 "synthetic-2","movies","576","medium","cypher_wrong_label_property","Cypher accesses r1.summary but ""summary"" is not on :Person (exists on other types)","List 3 movies with at least 2 reviews with a summary mentioning 'compelling'.","MATCH (m:Movie)<-[:REVIEWED]-(r1:Person), (m)<-[:REVIEWED]-(r2:Person)
 WHERE r1.summary CONTAINS 'compelling' AND r2.summary CONTAINS 'compelling' AND r1 <> r2
@@ -969,7 +969,7 @@ $s like "".*compelling.*"";
 reduce $count = count($rev) groupby $m;
 match $count >= 2;
 limit 3;
-fetch { ""movieTitle"": $m.title };"
+fetch { ""movie_title"": $m.title };"
 "synthetic-2","movies","576","medium","cypher_wrong_label_property","Cypher accesses r2.summary but ""summary"" is not on :Person (exists on other types)","List 3 movies with at least 2 reviews with a summary mentioning 'compelling'.","MATCH (m:Movie)<-[:REVIEWED]-(r1:Person), (m)<-[:REVIEWED]-(r2:Person)
 WHERE r1.summary CONTAINS 'compelling' AND r2.summary CONTAINS 'compelling' AND r1 <> r2
 WITH m, COUNT(DISTINCT r1) AS reviewCount
@@ -982,7 +982,7 @@ $s like "".*compelling.*"";
 reduce $count = count($rev) groupby $m;
 match $count >= 2;
 limit 3;
-fetch { ""movieTitle"": $m.title };"
+fetch { ""movie_title"": $m.title };"
 "synthetic-2","movies","600","medium","cypher_wrong_label_property","Cypher accesses m.summary but ""summary"" is not on :Movie (exists on other types)","What are the top 3 reviewed movies with summaries mentioning 'fun'?","MATCH (m:Movie)<-[:REVIEWED]-(p:Person)
 WHERE toLower(m.summary) CONTAINS 'fun'
 RETURN m.title, COUNT(*) AS review_count
@@ -1170,7 +1170,7 @@ $rel isa crew_for (crew_member: $p, film: $m), has department ""Production"";
 reduce $count = count($p) groupby $m;
 sort $count desc;
 limit 5;
-fetch { ""MovieTitle"": $m.title, ""CrewCount"": $count };"
+fetch { ""movie_title"": $m.title, ""crew_count"": $count };"
 "synthetic-2","neoflix","137","medium","cypher_wrong_label_property","Cypher accesses p.character but ""character"" is not on :Person (exists on other types)","Show the first 5 movies that have a character named 'Charlie Wilson' in their cast.","MATCH (m:Movie)<-[:CAST_FOR]-(p:Person)
 WHERE p.character = 'Charlie Wilson'
 RETURN m.title AS MovieTitle
@@ -1179,7 +1179,7 @@ $m isa movie, has title $t;
 $rel isa cast_for (actor: $p, film: $m), has character ""Charlie Wilson"";
 $p isa person;
 limit 5;
-fetch { ""MovieTitle"": $t };"
+fetch { ""movie_title"": $t };"
 "synthetic-2","neoflix","177","high","cypher_wrong_label_property","Cypher accesses p.department but ""department"" is not on :Person (exists on other types)","Name the top 5 videos with the most crew members in the 'Production' department.","MATCH (v:Video)-[:CREW_FOR]->(p:Person)
 WHERE p.department = 'Production'
 WITH v, COUNT(p) AS crew_count
@@ -1217,8 +1217,8 @@ $m has release_date $rd;
 sort $rd asc;
 limit 3;
 fetch {
-  ""MovieTitle"": $m.title,
-  ""userCount"": $user_count
+  ""movie_title"": $m.title,
+  ""user_count"": $user_count
 };"
 "synthetic-2","neoflix","442","medium","cypher_wrong_label_property","Cypher accesses u.rating but ""rating"" is not on :User (exists on other types)","List the top 5 movies that have been rated over 8.0.","MATCH (m:Movie)<-[:RATED]-(u:User)
 WHERE u.rating > 8.0
@@ -1281,7 +1281,7 @@ reduce $avg = mean($rat) groupby $m, $t;
 match $avg < 4.0;
 sort $avg asc;
 limit 5;
-fetch { ""MovieTitle"": $t, ""AverageRating"": $avg };"
+fetch { ""movie_title"": $t, ""average_rating"": $avg };"
 "synthetic-2","neoflix","733","high","cypher_wrong_label_property","Cypher accesses p.job but ""job"" is not on :Person (exists on other types)","Which 3 directors have worked on the highest-grossing movies?","MATCH (m:Movie)-[:CREW_FOR]->(p:Person)
 WHERE p.job = ""Director""
 RETURN p.name AS Director, SUM(m.revenue) AS TotalRevenue
@@ -1293,7 +1293,7 @@ $rel isa crew_for (crew_member: $p, film: $m), has job ""Director"";
 reduce $total_revenue = sum($rev) groupby $p;
 sort $total_revenue desc;
 limit 3;
-fetch { ""Director"": $p.person_name, ""TotalRevenue"": $total_revenue };"
+fetch { ""Director"": $p.person_name, ""total_revenue"": $total_revenue };"
 "synthetic-2","neoflix","745","medium","cypher_wrong_label_property","Cypher accesses r.rating but ""rating"" is not on :User (exists on other types)","List the first 3 genres that have the highest average rating across all movies.","MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)<-[:RATED]-(r:User)
 WITH g, avg(r.rating) AS avg_rating
 ORDER BY avg_rating DESC
@@ -1328,7 +1328,7 @@ reduce $count = count($c) groupby $p, $name;
 match $count > 1;
 sort $name;
 limit 3;
-fetch { ""DirectorName"": $name };"
+fetch { ""director_name"": $name };"
 "synthetic-2","neoflix","869","medium","cypher_wrong_label_property","Cypher accesses p.cast_id but ""cast_id"" is not on :Person (exists on other types)","Who are the first 3 actors in the cast list of 'Toy Story'?","MATCH (m:Movie {title: 'Toy Story'})&lt;-[:CAST_FOR]-(p:Person)
 RETURN p.name, p.id, p.profile_path
 ORDER BY p.cast_id
@@ -1382,7 +1382,7 @@ RETURN interface.name AS interfaceName, interface.ip AS interfaceIP","match
   routes (routing_device: $network, routed_interface: $interface);
   $interface isa interface;
 fetch {
-  ""interfaceIP"": $interface.ip
+  ""interface_ip"": $interface.ip
 };"
 "synthetic-2","network","563","medium","cypher_wrong_label_property","Cypher accesses s.name but ""name"" is not on :Switch (exists on other types)","What are the names and IPs of all switches in zone 4?","MATCH (s:Switch)-[:ROUTES]->(i:Interface)
 MATCH (r:Rack)-[:HOLDS]->(s)
@@ -1394,8 +1394,8 @@ $s isa switch;
 routes (routing_device: $s, routed_interface: $i);
 $i isa interface;
 fetch {
-  ""switchIP"": $s.ip,
-  ""interfaceIP"": $i.ip
+  ""switch_ip"": $s.ip,
+  ""interface_ip"": $i.ip
 };"
 "synthetic-2","northwind","102","medium","cypher_wrong_label_property","Cypher accesses o.unitPrice but ""unitPrice"" is not on :Order (exists on other types)","Which products have a discounted price of less than $15 in any of their orders?","MATCH (p:Product)<-[:ORDERS]-(o:Order)
 WHERE toFloat(o.unitPrice) < 15 AND toFloat(o.discount) > 0
@@ -1407,7 +1407,7 @@ $disc > 0.0;
 select $p;
 distinct;
 fetch {
-  ""productName"": $p.product_name
+  ""product_name"": $p.product_name
 };"
 "synthetic-2","northwind","102","medium","cypher_wrong_label_property","Cypher accesses o.discount but ""discount"" is not on :Order (exists on other types)","Which products have a discounted price of less than $15 in any of their orders?","MATCH (p:Product)<-[:ORDERS]-(o:Order)
 WHERE toFloat(o.unitPrice) < 15 AND toFloat(o.discount) > 0
@@ -1419,7 +1419,7 @@ $disc > 0.0;
 select $p;
 distinct;
 fetch {
-  ""productName"": $p.product_name
+  ""product_name"": $p.product_name
 };"
 "synthetic-2","northwind","106","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","Which products from 'Exotic Liquids' have been ordered in quantities of less than 10?","MATCH (s:Supplier {companyName: 'Exotic Liquids'})-[:SUPPLIES]->(p:Product)<-[:ORDERS]-(o:Order)
 WHERE o.quantity < 10
@@ -1429,7 +1429,7 @@ supplies (supplier: $s, product: $p);
 $o isa orders (order: $ord, product: $p), has quantity $q;
 $q < 10;
 fetch {
-  ""productName"": $p.product_name,
+  ""product_name"": $p.product_name,
   ""quantity"": $q
 };"
 "synthetic-2","northwind","154","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","Which products have been ordered in quantities larger than 50 and have a unit price over $20?","MATCH (p:Product)<-[:ORDERS]-(o:Order)
@@ -1440,8 +1440,8 @@ $price > 20;
 $rel isa orders (order: $o, product: $p), has quantity $qty;
 $qty > 50;
 fetch {
-  ""productName"": $name,
-  ""unitPrice"": $price,
+  ""product_name"": $name,
+  ""unit_price"": $price,
   ""quantity"": $qty
 };"
 "synthetic-2","northwind","172","medium","cypher_wrong_label_property","Cypher accesses o.unitPrice but ""unitPrice"" is not on :Order (exists on other types)","What are the top 5 orders in terms of quantity for the product 'Chai'?","MATCH (p:Product {productName: 'Chai'})<-[:ORDERS]-(o:Order)
@@ -1452,17 +1452,17 @@ purchased (customer: $c, order: $o);
 sort $qty desc;
 limit 5;
 fetch {
-  ""orderID"": $o.order_id,
-  ""orderDate"": $o.order_date,
-  ""shipName"": $o.ship_name,
-  ""shipCity"": $o.ship_city,
-  ""shipCountry"": $o.ship_country,
-  ""shipPostalCode"": $o.ship_postal_code,
-  ""shipAddress"": $o.ship_address,
-  ""shipVia"": $o.ship_via,
-  ""shipRegion"": $o.ship_region,
+  ""order_id"": $o.order_id,
+  ""order_date"": $o.order_date,
+  ""ship_name"": $o.ship_name,
+  ""ship_city"": $o.ship_city,
+  ""ship_country"": $o.ship_country,
+  ""ship_postal_code"": $o.ship_postal_code,
+  ""ship_address"": $o.ship_address,
+  ""ship_via"": $o.ship_via,
+  ""ship_region"": $o.ship_region,
   ""freight"": $o.freight,
-  ""requiredDate"": "
+  ""required_date"": "
 "synthetic-2","northwind","172","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","What are the top 5 orders in terms of quantity for the product 'Chai'?","MATCH (p:Product {productName: 'Chai'})<-[:ORDERS]-(o:Order)
 RETURN o.orderID AS orderID, o.orderDate AS orderDate, o.shipName AS shipName, o.shipCity AS shipCity, o.shipCountry AS shipCountry, o.shipPostalCode AS shipPostalCode, o.shipAddress AS shipAddress, o.shipVia AS shipVia, o.shipRegion AS shipRegion, o.freight AS freight, o.requiredDate AS requiredDate, o.shippedDate AS shippedDate, o.customerID AS customerID, o.employeeID AS employeeID, o.unitPrice AS unitPrice, o.quantity AS quantity, ","match
 $p isa product, has product_name ""Chai"";
@@ -1471,17 +1471,17 @@ purchased (customer: $c, order: $o);
 sort $qty desc;
 limit 5;
 fetch {
-  ""orderID"": $o.order_id,
-  ""orderDate"": $o.order_date,
-  ""shipName"": $o.ship_name,
-  ""shipCity"": $o.ship_city,
-  ""shipCountry"": $o.ship_country,
-  ""shipPostalCode"": $o.ship_postal_code,
-  ""shipAddress"": $o.ship_address,
-  ""shipVia"": $o.ship_via,
-  ""shipRegion"": $o.ship_region,
+  ""order_id"": $o.order_id,
+  ""order_date"": $o.order_date,
+  ""ship_name"": $o.ship_name,
+  ""ship_city"": $o.ship_city,
+  ""ship_country"": $o.ship_country,
+  ""ship_postal_code"": $o.ship_postal_code,
+  ""ship_address"": $o.ship_address,
+  ""ship_via"": $o.ship_via,
+  ""ship_region"": $o.ship_region,
   ""freight"": $o.freight,
-  ""requiredDate"": "
+  ""required_date"": "
 "synthetic-2","northwind","172","medium","cypher_wrong_label_property","Cypher accesses o.discount but ""discount"" is not on :Order (exists on other types)","What are the top 5 orders in terms of quantity for the product 'Chai'?","MATCH (p:Product {productName: 'Chai'})<-[:ORDERS]-(o:Order)
 RETURN o.orderID AS orderID, o.orderDate AS orderDate, o.shipName AS shipName, o.shipCity AS shipCity, o.shipCountry AS shipCountry, o.shipPostalCode AS shipPostalCode, o.shipAddress AS shipAddress, o.shipVia AS shipVia, o.shipRegion AS shipRegion, o.freight AS freight, o.requiredDate AS requiredDate, o.shippedDate AS shippedDate, o.customerID AS customerID, o.employeeID AS employeeID, o.unitPrice AS unitPrice, o.quantity AS quantity, ","match
 $p isa product, has product_name ""Chai"";
@@ -1490,17 +1490,17 @@ purchased (customer: $c, order: $o);
 sort $qty desc;
 limit 5;
 fetch {
-  ""orderID"": $o.order_id,
-  ""orderDate"": $o.order_date,
-  ""shipName"": $o.ship_name,
-  ""shipCity"": $o.ship_city,
-  ""shipCountry"": $o.ship_country,
-  ""shipPostalCode"": $o.ship_postal_code,
-  ""shipAddress"": $o.ship_address,
-  ""shipVia"": $o.ship_via,
-  ""shipRegion"": $o.ship_region,
+  ""order_id"": $o.order_id,
+  ""order_date"": $o.order_date,
+  ""ship_name"": $o.ship_name,
+  ""ship_city"": $o.ship_city,
+  ""ship_country"": $o.ship_country,
+  ""ship_postal_code"": $o.ship_postal_code,
+  ""ship_address"": $o.ship_address,
+  ""ship_via"": $o.ship_via,
+  ""ship_region"": $o.ship_region,
   ""freight"": $o.freight,
-  ""requiredDate"": "
+  ""required_date"": "
 "synthetic-2","northwind","183","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","What are the top 3 most ordered products in the 'Grains/Cereals' category?","MATCH (c:Category {categoryName: 'Grains/Cereals'})<-[:PART_OF]-(p:Product)<-[:ORDERS]-(o:Order)
 WITH p, SUM(o.quantity) AS totalQuantity
 ORDER BY totalQuantity DESC
@@ -1514,7 +1514,7 @@ $rel has quantity $q;
 reduce $total = sum($q) groupby $p;
 sort $total desc;
 limit 3;
-fetch { ""productName"": $p.product_name, ""totalQuantity"": $total };"
+fetch { ""product_name"": $p.product_name, ""total_quantity"": $total };"
 "synthetic-2","northwind","185","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","Which 3 customers have ordered the most products from the 'Dairy Products' category?","MATCH (c:Customer)-[:PURCHASED]->(o:Order)-[:ORDERS]->(p:Product)-[:PART_OF]->(cat:Category {categoryName: 'Dairy Products'})
 WITH c, SUM(o.quantity) AS totalQuantity
 RETURN c.companyName, totalQuantity
@@ -1531,8 +1531,8 @@ reduce $total = sum($q) groupby $c;
 sort $total desc;
 limit 3;
 fetch {
-  ""companyName"": $c.company_name,
-  ""totalQuantity"": $total
+  ""company_name"": $c.company_name,
+  ""total_quantity"": $total
 };"
 "synthetic-2","northwind","194","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","Which 3 products have the highest average quantity ordered?","MATCH (p:Product)<-[:ORDERS]-(o:Order)
 WITH p, avg(o.quantity) AS avgQuantity
@@ -1546,8 +1546,8 @@ reduce $avg = mean($q) groupby $p;
 sort $avg desc;
 limit 3;
 fetch {
-  ""productName"": $p.product_name,
-  ""avgQuantity"": $avg
+  ""product_name"": $p.product_name,
+  ""avg_quantity"": $avg
 };"
 "synthetic-2","northwind","196","high","cypher_wrong_label_property","Cypher accesses o.discount but ""discount"" is not on :Order (exists on other types)","List the top 5 products with the highest average discount in orders.","MATCH (p:Product)<-[:ORDERS]-(o:Order)
 WITH p, o.discount AS discount
@@ -1562,8 +1562,8 @@ reduce $avg_discount = mean($d) groupby $p;
 sort $avg_discount desc;
 limit 5;
 fetch {
-  ""productName"": $p.product_name,
-  ""avgDiscount"": $avg_discount
+  ""product_name"": $p.product_name,
+  ""avg_discount"": $avg_discount
 };"
 "synthetic-2","northwind","199","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","Which products have been ordered with a quantity greater than 100?","MATCH (p:Product)<-[:ORDERS]-(o:Order)
 WHERE o.quantity > 100
@@ -1572,7 +1572,7 @@ $p isa product;
 $rel isa orders (product: $p), has quantity $q;
 $q > 100;
 fetch {
-  ""ProductName"": $p.product_name,
+  ""product_name"": $p.product_name,
   ""Quantity"": $q
 };"
 "synthetic-2","northwind","203","medium","cypher_wrong_label_property","Cypher accesses o.discount but ""discount"" is not on :Order (exists on other types)","Show all products that have a discount applied in any order.","MATCH (p:Product)<-[:ORDERS]-(o:Order)
@@ -1585,8 +1585,8 @@ $d != 0.0;
 select $p;
 distinct;
 fetch {
-  ""ProductName"": $p.product_name,
-  ""ProductID"": $p.product_id
+  ""product_name"": $p.product_name,
+  ""product_id"": $p.product_id
 };"
 "synthetic-2","northwind","235","high","cypher_wrong_label_property","Cypher accesses o.discount but ""discount"" is not on :Order (exists on other types)","Which 3 products have the highest average discount applied in their orders?","MATCH (p:Product)<-[:ORDERS]-(o:Order)
 WITH p, o.discount AS discount
@@ -1600,8 +1600,8 @@ reduce $avg_discount = mean($d) groupby $p;
 sort $avg_discount desc;
 limit 3;
 fetch {
-  ""productName"": $p.product_name,
-  ""avgDiscount"": $avg_discount
+  ""product_name"": $p.product_name,
+  ""avg_discount"": $avg_discount
 };"
 "synthetic-2","northwind","241","medium","cypher_wrong_label_property","Cypher accesses o.discount but ""discount"" is not on :Order (exists on other types)","Which 3 products have the highest discount in orders?","MATCH (p:Product)<-[:ORDERS]-(o:Order)
 WITH p, o
@@ -1614,7 +1614,7 @@ $rel has discount $d;
 sort $d desc;
 limit 3;
 fetch {
-  ""productName"": $p.product_name,
+  ""product_name"": $p.product_name,
   ""discount"": $d
 };"
 "synthetic-2","northwind","302","medium","cypher_wrong_label_property","Cypher accesses o.discount but ""discount"" is not on :Order (exists on other types)","What are the names of products that have a discount of 0?","MATCH (p:Product)<-[:ORDERS]-(o:Order)
@@ -1624,7 +1624,7 @@ $p isa product;
 $o isa order;
 $rel isa orders (order: $o, product: $p);
 $rel has discount 0.0;
-fetch { ""productName"": $p.product_name };"
+fetch { ""product_name"": $p.product_name };"
 "synthetic-2","northwind","410","medium","cypher_wrong_label_property","Cypher accesses o.discount but ""discount"" is not on :Order (exists on other types)","Which products have a discount of 0 in their orders?","MATCH (p:Product)<-[:ORDERS]-(o:Order)
 WHERE o.discount = ""0""
 RETURN DISTINCT p.productName","match
@@ -1635,7 +1635,7 @@ $d == 0.0;
 select $p;
 distinct;
 fetch {
-  ""productName"": $p.product_name
+  ""product_name"": $p.product_name
 };"
 "synthetic-2","northwind","423","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","What are the top 5 products by quantity ordered in the most recent orders?","// First, find the most recent order date
 MATCH (o:Order)
@@ -1655,7 +1655,7 @@ $rel isa orders (order: $o2, product: $p), has quantity $q;
 reduce $total = sum($q) groupby $p;
 sort $total desc;
 limit 5;
-fetch { ""productName"": $p.product_name, ""totalQuantityOrdered"": $total };"
+fetch { ""product_name"": $p.product_name, ""total_quantity_ordered"": $total };"
 "synthetic-2","northwind","438","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","What are the names of products that have been ordered with a quantity greater than 50?","MATCH (p:Product)<-[:ORDERS]-(o:Order)
 WHERE o.quantity > 50
 RETURN p.productName AS productName","match
@@ -1664,7 +1664,7 @@ $rel isa orders (order: $o, product: $p);
 $rel has quantity $q;
 $q > 50;
 fetch {
-  ""productName"": $p.product_name
+  ""product_name"": $p.product_name
 };"
 "synthetic-2","northwind","447","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","What is the total number of units ordered for products by 'Vins et alcools Chevalier'?","MATCH (c:Customer)-[:PURCHASED]->(o:Order)-[:ORDERS]->(p:Product)
 WHERE o.shipName = 'Vins et alcools Chevalier'
@@ -1675,7 +1675,7 @@ $p isa product;
 purchased (customer: $c, order: $o);
 $rel isa orders (order: $o, product: $p), has quantity $q;
 reduce $total = sum($q);
-fetch { ""totalUnitsOrdered"": $total };"
+fetch { ""total_units_ordered"": $total };"
 "synthetic-2","northwind","476","medium","cypher_wrong_label_property","Cypher accesses o.discount but ""discount"" is not on :Order (exists on other types)","Which products have a discount greater than 0 in their orders?","MATCH (p:Product)<-[:ORDERS]-(o:Order)
 WHERE toFloat(o.discount) > 0
 RETURN DISTINCT p.productName","match
@@ -1685,7 +1685,7 @@ $rel has discount $d;
 $d > 0;
 select $p;
 distinct;
-fetch { ""productName"": $p.product_name };"
+fetch { ""product_name"": $p.product_name };"
 "synthetic-2","northwind","480","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","What are the top 5 products by quantity ordered in the 'Condiments' category?","MATCH (c:Category {categoryName: 'Condiments'})<-[:PART_OF]-(p:Product)<-[:ORDERS]-(o:Order)
 RETURN p.productName, SUM(o.quantity) AS totalQuantity
 ORDER BY totalQuantity DESC
@@ -1696,7 +1696,7 @@ $rel isa orders (order: $o, product: $p), has quantity $q;
 reduce $total = sum($q) groupby $p;
 sort $total desc;
 limit 5;
-fetch { ""productName"": $p.product_name, ""totalQuantity"": $total };"
+fetch { ""product_name"": $p.product_name, ""total_quantity"": $total };"
 "synthetic-2","northwind","497","high","cypher_wrong_label_property","Cypher accesses o.discount but ""discount"" is not on :Order (exists on other types)","Which 3 products have the highest average discount in orders?","MATCH (p:Product)<-[:ORDERS]-(o:Order)
 WITH p, o.discount AS discount
 WHERE discount IS NOT NULL
@@ -1708,7 +1708,7 @@ $rel isa orders (product: $p), has discount $d;
 reduce $avg = mean($d) groupby $p;
 sort $avg desc;
 limit 3;
-fetch { ""productName"": $p.product_name };"
+fetch { ""product_name"": $p.product_name };"
 "synthetic-2","northwind","530","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","Which 3 customers have ordered the most products in the 'Seafood' category?","MATCH (c:Customer)-[:PURCHASED]->(o:Order)-[:ORDERS]->(p:Product)-[:PART_OF]->(cat:Category {categoryName: 'Seafood'})
 WITH c, SUM(o.quantity) AS totalProductsOrdered
 ORDER BY totalProductsOrdered DESC
@@ -1725,8 +1725,8 @@ reduce $total = sum($q) groupby $c;
 sort $total desc;
 limit 3;
 fetch {
-  ""companyName"": $c.company_name,
-  ""totalProductsOrdered"": $total
+  ""company_name"": $c.company_name,
+  ""total_products_ordered"": $total
 };"
 "synthetic-2","northwind","655","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","Which products have been ordered with a quantity of 100 or more in a single order?","MATCH (p:Product)<-[:ORDERS]-(o:Order)
 WHERE o.quantity >= 100
@@ -1737,7 +1737,7 @@ $rel isa orders (order: $o, product: $p);
 $rel has quantity $q;
 $q >= 100;
 fetch {
-  ""ProductName"": $p.product_name,
+  ""product_name"": $p.product_name,
   ""Quantity"": $q
 };"
 "synthetic-2","northwind","667","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","List the top 5 orders in terms of quantity for the 'Dairy Products' category.","MATCH (c:Category {categoryName: 'Dairy Products'})<-[:PART_OF]-(p:Product)<-[:ORDERS]-(o:Order)
@@ -1750,7 +1750,7 @@ $ol isa orders (order: $o, product: $p), has quantity $q;
 reduce $total_quantity = sum($q) groupby $o;
 sort $total_quantity desc;
 limit 5;
-fetch { ""orderID"": $o.order_id, ""totalQuantity"": $total_quantity };"
+fetch { ""order_id"": $o.order_id, ""total_quantity"": $total_quantity };"
 "synthetic-2","northwind","751","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","List the top 5 products with the highest total sales quantity.","MATCH (p:Product)<-[:ORDERS]-(o:Order)
 WITH p, SUM(o.quantity) AS totalSalesQuantity
 ORDER BY totalSalesQuantity DESC
@@ -1763,8 +1763,8 @@ reduce $total = sum($q) groupby $p;
 sort $total desc;
 limit 5;
 fetch {
-  ""productName"": $p.product_name,
-  ""totalSalesQuantity"": $total
+  ""product_name"": $p.product_name,
+  ""total_sales_quantity"": $total
 };"
 "synthetic-2","northwind","756","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","Which 3 products from 'Exotic Liquids' have been ordered the most in terms of quantity?","MATCH (s:Supplier {companyName: 'Exotic Liquids'})-[:SUPPLIES]->(p:Product)<-[:ORDERS]-(o:Order)
 RETURN p.productName, SUM(o.quantity) AS totalQuantity
@@ -1776,7 +1776,7 @@ $o isa orders (order: $ord, product: $p), has quantity $q;
 reduce $total = sum($q) groupby $p;
 sort $total desc;
 limit 3;
-fetch { ""productName"": $p.product_name, ""totalQuantity"": $total };"
+fetch { ""product_name"": $p.product_name, ""total_quantity"": $total };"
 "synthetic-2","northwind","792","medium","cypher_wrong_label_property","Cypher accesses o.quantity but ""quantity"" is not on :Order (exists on other types)","Which 3 customers have purchased the most products from the 'Seafood' category?","MATCH (c:Customer)-[:PURCHASED]->(o:Order)-[:ORDERS]->(p:Product)-[:PART_OF]->(cat:Category {categoryName: 'Seafood'})
 WITH c, SUM(o.quantity) AS totalProducts
 ORDER BY totalProducts DESC
@@ -1792,7 +1792,7 @@ RETURN c.companyName AS customerName, totalProducts","match
 reduce $total = sum($q) groupby $c;
 sort $total desc;
 limit 3;
-fetch { ""customerName"": $c.company_name, ""totalProducts"": $total };"
+fetch { ""customer_name"": $c.company_name, ""total_products"": $total };"
 "synthetic-2","offshoreleaks","133","medium","cypher_wrong_label_property","Cypher accesses o.start_date but ""start_date"" is not on :Officer (exists on other types)","Identify entities and their corresponding officers that have been connected since 1999.","MATCH (e:Entity)<-[:officer_of]-(o:Officer)
 WHERE date(o.start_date) >= date('1999-01-01')
 RETURN e.name AS EntityName, o.name AS OfficerName, o.start_date AS ConnectionStartDate","match
@@ -1801,9 +1801,9 @@ $o isa officer, has name $on;
 $rel isa officer_of (officer: $o, offshore_entity: $e), has start_date $sd;
 $sd >= 1999-01-01;
 fetch {
-  ""EntityName"": $en,
-  ""OfficerName"": $on,
-  ""ConnectionStartDate"": $sd
+  ""entity_name"": $en,
+  ""officer_name"": $on,
+  ""connection_start_date"": $sd
 };"
 "synthetic-2","offshoreleaks","394","medium","cypher_wrong_label_property","Cypher accesses i.start_date but ""start_date"" is not on :Intermediary (exists on other types)","List officers who have been linked to entities through the 'intermediary_of' relationship with a start date before 2015.","MATCH (o:Officer)-[:officer_of]->(e:Entity)<-[:intermediary_of]-(i:Intermediary)
 WHERE i.start_date < ""2015""
@@ -1817,7 +1817,7 @@ $rel has start_date $sd;
 $sd < 2015-01-01;
 select $o;
 distinct;
-fetch { ""OfficerName"": $o.name };"
+fetch { ""officer_name"": $o.name };"
 "synthetic-2","offshoreleaks","438","medium","cypher_wrong_label_property","Cypher accesses o.status but ""status"" is not on :Officer (exists on other types)","Which officers have a status of 'ACTIVE' in the Panama Papers database?","MATCH (o:Officer)-[:officer_of]->(e:Entity)
 WHERE o.status = 'ACTIVE' AND o.sourceID = 'Panama Papers'
 RETURN o.name","match
@@ -1850,7 +1850,7 @@ sort $avg_rating desc;
 limit 5;
 fetch {
   ""title"": $m.title,
-  ""avgRating"": $avg_rating
+  ""avg_rating"": $avg_rating
 };"
 "synthetic-2","recommendations","30","medium","cypher_wrong_label_property","Cypher accesses u.timestamp but ""timestamp"" is not on :User (exists on other types)","Which 3 movies have been rated by the oldest users in terms of account creation date?","MATCH (u:User)-[r:RATED]->(m:Movie)
 WITH u, r, m
@@ -1867,8 +1867,8 @@ $r has timestamp $t;
 sort $t asc;
 limit 3;
 fetch {
-  ""MovieTitle"": $m.title,
-  ""ReleaseDate"": $m.released
+  ""movie_title"": $m.title,
+  ""release_date"": $m.released
 };"
 "synthetic-2","recommendations","105","medium","cypher_wrong_label_property","Cypher accesses u.rating but ""rating"" is not on :User (exists on other types)","What are the top 3 highest rated movies by users?","MATCH (m:Movie)<-[:RATED]-(u:User)
 WITH m, avg(u.rating) AS avgRating
@@ -1881,7 +1881,7 @@ $rel has rating $r;
 reduce $avg_rating = mean($r) groupby $m;
 sort $avg_rating desc;
 limit 3;
-fetch { ""title"": $m.title, ""avgRating"": $avg_rating };"
+fetch { ""title"": $m.title, ""avg_rating"": $avg_rating };"
 "synthetic-2","recommendations","222","medium","cypher_wrong_label_property","Cypher accesses u.rating but ""rating"" is not on :User (exists on other types)","Which movies have been rated by user '1' and have a rating greater than 8?","MATCH (u:User {userId: '1'})-[:RATED]->(m:Movie)
 WHERE u.rating > 8
 RETURN m.title AS MovieTitle, u.rating AS Rating","match
@@ -1891,7 +1891,7 @@ $m isa movie;
 $rel has rating $r;
 $r > 8.0;
 fetch {
-  ""MovieTitle"": $m.title,
+  ""movie_title"": $m.title,
   ""Rating"": $r
 };"
 "synthetic-2","recommendations","340","medium","cypher_wrong_label_property","Cypher accesses a.role but ""role"" is not on :Actor (exists on other types)","What are the different roles played by actors in the movie with the IMDb ID '0829150'?","MATCH (m:Movie {imdbId: '0829150'})\u003c-[:ACTED_IN]-(a:Actor)
@@ -1901,15 +1901,15 @@ RETURN a.name AS actorName, a.tmdbId AS actorTmdbId, a.imdbId AS actorImdbId, a.
   $a isa person;
   $rel has character_role $role;
 fetch {
-  ""actorName"": $a.name,
-  ""actorTmdbId"": $a.tmdb_id,
-  ""actorImdbId"": $a.imdb_id,
-  ""actorUrl"": $a.url,
-  ""actorPoster"": $a.poster,
-  ""actorBorn"": $a.born,
-  ""actorBornIn"": $a.born_in,
-  ""actorDied"": $a.died,
-  ""actorBio"": $a.bio,
+  ""actor_name"": $a.name,
+  ""actor_tmdb_id"": $a.tmdb_id,
+  ""actor_imdb_id"": $a.imdb_id,
+  ""actor_url"": $a.url,
+  ""actor_poster"": $a.poster,
+  ""actor_born"": $a.born,
+  ""actor_born_in"": $a.born_in,
+  ""actor_died"": $a.died,
+  ""actor_bio"": $a.bio,
   ""role"": $role
 };"
 "synthetic-2","recommendations","677","medium","cypher_wrong_label_property","Cypher accesses u.rating but ""rating"" is not on :User (exists on other types)","Which three movies have the smallest difference between IMDb rating and user rating?","MATCH (m:Movie)<-[:RATED]-(u:User)
@@ -1928,8 +1928,8 @@ let $diff = abs($imdb - $avg_rating);
 sort $diff asc;
 limit 3;
 fetch {
-  ""movieTitle"": $m.title,
-  ""ratingDifference"": $diff
+  ""movie_title"": $m.title,
+  ""rating_difference"": $diff
 };"
 "synthetic-2","recommendations","763","medium","cypher_wrong_label_property","Cypher accesses u.rating but ""rating"" is not on :User (exists on other types)","Which directors have directed a movie that has been rated below 3.0?","MATCH (d:Director)-[:DIRECTED]->(m:Movie)<-[:RATED]-(u:User)
 WHERE u.rating < 3.0
@@ -2046,9 +2046,9 @@ LIMIT 3","match
 sort $f asc;
 limit 3;
 fetch {
-  ""StreamName"": $sn,
+  ""stream_name"": $sn,
   ""Followers"": $f,
-  ""GameName"": $gn
+  ""game_name"": $gn
 };"
 "synthetic-2","twitch","422","medium","cypher_wrong_label_property","Cypher accesses u.followers but ""followers"" is not on :User (exists on other types)","Which 3 streams have the most VIP users who also have more than 5000 followers?","MATCH (s:Stream)-[:VIP]->(u:User)
 WHERE u.followers > 5000

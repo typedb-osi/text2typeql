@@ -1,5 +1,5 @@
-original_index,question,cypher,typeql
-0,Find the top 3 users interacted with by 'sarahp.bsky.social'.,"MATCH (u1:User {label: 'sarahp.bsky.social'})-[:INTERACTED]->(u2:User)
+"original_index","question","cypher","typeql"
+"0","Find the top 3 users interacted with by 'sarahp.bsky.social'.","MATCH (u1:User {label: 'sarahp.bsky.social'})-[:INTERACTED]->(u2:User)
 RETURN u2.label AS interactedUser, COUNT(*) AS interactionCount
 ORDER BY interactionCount DESC
 LIMIT 3","match
@@ -8,8 +8,8 @@ $rel isa interacted (source_user: $u1, target_user: $u2);
 reduce $count = count($rel) groupby $u2;
 sort $count desc;
 limit 3;
-fetch { ""interactedUser"": $u2.handle, ""interactionCount"": $count };"
-1,Find 3 users located at x-coordinate values greater than 10000.,"MATCH (u:User)
+fetch { ""interacted_user"": $u2.handle, ""interaction_count"": $count };"
+"1","Find 3 users located at x-coordinate values greater than 10000.","MATCH (u:User)
 WHERE u.x > 10000
 RETURN u.label, u.x
 LIMIT 3","match
@@ -21,7 +21,7 @@ fetch {
   ""handle"": $u.handle,
   ""x_coordinate"": $x
 };"
-2,List the top 5 users having the most interactions with a specific key in 'INTERACTED' relationship.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"2","List the top 5 users having the most interactions with a specific key in 'INTERACTED' relationship.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE r.key = 'specific_key'
 WITH u1, COUNT(r) AS interactions
 ORDER BY interactions DESC
@@ -37,7 +37,7 @@ fetch {
   ""User"": $u1.handle,
   ""interactions"": $interactions
 };"
-3,Which 3 users have the largest size and a color of '#3CB371'?,"MATCH (u:User)
+"3","Which 3 users have the largest size and a color of '#3CB371'?","MATCH (u:User)
 WHERE u.color = '#3CB371'
 RETURN u.label, u.size
 ORDER BY u.size DESC
@@ -49,7 +49,7 @@ fetch {
   ""label"": $u.handle,
   ""size"": $s
 };"
-4,Show the top 5 users who have interacted with users having a color of '#FF4500'.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"4","Show the top 5 users who have interacted with users having a color of '#FF4500'.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE u2.color = '#FF4500'
 RETURN u1.label, COUNT(r) AS interactions
 ORDER BY interactions DESC
@@ -64,7 +64,7 @@ fetch {
   ""label"": $u1.handle,
   ""interactions"": $count
 };"
-5,What are the top 5 user interactions based on the interaction weight in descending order?,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"5","What are the top 5 user interactions based on the interaction weight in descending order?","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 RETURN u1.label AS User1, u2.label AS User2, r.weight AS InteractionWeight
 ORDER BY r.weight DESC
 LIMIT 5","match
@@ -76,9 +76,9 @@ limit 5;
 fetch {
   ""User1"": $u1.handle,
   ""User2"": $u2.handle,
-  ""InteractionWeight"": $w
+  ""interaction_weight"": $w
 };"
-6,Who are the top 5 users with the most interactions having a weight greater than 5?,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"6","Who are the top 5 users with the most interactions having a weight greater than 5?","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE r.weight > 5
 WITH u1, COUNT(r) AS interactionCount
 ORDER BY interactionCount DESC
@@ -93,9 +93,9 @@ sort $count desc;
 limit 5;
 fetch {
   ""User"": $u1.handle,
-  ""interactionCount"": $count
+  ""interaction_count"": $count
 };"
-7,List the top 5 users with the smallest area attribute.,"MATCH (u:User)
+"7","List the top 5 users with the smallest area attribute.","MATCH (u:User)
 RETURN u.label, u.area
 ORDER BY u.area ASC
 LIMIT 5","match
@@ -106,7 +106,7 @@ fetch {
   ""label"": $h,
   ""area"": $a
 };"
-8,Show 3 users who have interacted with users located at y-coordinate values greater than 10000.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"8","Show 3 users who have interacted with users located at y-coordinate values greater than 10000.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u2.y > 10000
 RETURN DISTINCT u1.label
 LIMIT 3","match
@@ -120,7 +120,7 @@ limit 3;
 fetch {
   ""label"": $u1.handle
 };"
-9,Which 5 users have interacted with the most users with a size over 2?,"MATCH (u:User)-[r:INTERACTED]->(v:User)
+"9","Which 5 users have interacted with the most users with a size over 2?","MATCH (u:User)-[r:INTERACTED]->(v:User)
 WHERE v.size > 2
 WITH u, COUNT(DISTINCT v) AS interactionCount
 RETURN u.label AS user, interactionCount
@@ -137,9 +137,9 @@ sort $count desc;
 limit 5;
 fetch {
   ""user"": $u.handle,
-  ""interactionCount"": $count
+  ""interaction_count"": $count
 };"
-10,Find the top 3 users who have a label containing 'bsky.social'.,"MATCH (u:User)
+"10","Find the top 3 users who have a label containing 'bsky.social'.","MATCH (u:User)
 WHERE u.label CONTAINS 'bsky.social'
 RETURN u
 ORDER BY u.size DESC
@@ -153,7 +153,7 @@ fetch {
   ""user_key"": $u.user_key,
   ""size"": $u.size
 };"
-11,List the top 5 users who have a color attribute of '#4A708B' and size greater than 2.5.,"MATCH (u:User)
+"11","List the top 5 users who have a color attribute of '#4A708B' and size greater than 2.5.","MATCH (u:User)
 WHERE u.color = '#4A708B' AND u.size > 2.5
 RETURN u.label, u.size
 ORDER BY u.size DESC
@@ -166,7 +166,7 @@ fetch {
   ""handle"": $u.handle,
   ""size"": $s
 };"
-12,Which 3 users have interacted with those having a 'color' attribute of '#FF4500'?,"MATCH (u1:User)-[:INTERACTED]->(u2:User {color: '#FF4500'})
+"12","Which 3 users have interacted with those having a 'color' attribute of '#FF4500'?","MATCH (u1:User)-[:INTERACTED]->(u2:User {color: '#FF4500'})
 RETURN u1.label AS User, COUNT(*) AS Interactions
 ORDER BY Interactions DESC
 LIMIT 3","match
@@ -180,7 +180,7 @@ fetch {
   ""User"": $u1.handle,
   ""Interactions"": $count
 };"
-13,Show the top 5 users with the most negative y-coordinate values.,"MATCH (u:User)
+"13","Show the top 5 users with the most negative y-coordinate values.","MATCH (u:User)
 RETURN u.label, u.y
 ORDER BY u.y ASC
 LIMIT 5","match
@@ -191,7 +191,7 @@ fetch {
   ""handle"": $u.handle,
   ""y_coordinate"": $y
 };"
-14,Who are the top 5 users with x-coordinate values less than -5000?,"MATCH (u:User)
+"14","Who are the top 5 users with x-coordinate values less than -5000?","MATCH (u:User)
 WHERE u.x < -5000
 RETURN u.label, u.x
 ORDER BY u.x ASC
@@ -204,7 +204,7 @@ fetch {
   ""handle"": $u.handle,
   ""x"": $x
 };"
-15,Which top 5 users have interacted with those having a 'color' attribute of '#87CEFA'?,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"15","Which top 5 users have interacted with those having a 'color' attribute of '#87CEFA'?","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE u2.color = '#87CEFA'
 WITH u1, COUNT(r) AS interactions
 RETURN u1.label AS user, interactions
@@ -217,7 +217,7 @@ reduce $interactions = count($r) groupby $u1, $h;
 sort $interactions desc;
 limit 5;
 fetch { ""user"": $h, ""interactions"": $interactions };"
-16,List the top 3 users who have interacted with others but have a size less than 2.,"MATCH (u:User)-[r:INTERACTED]->(:User)
+"16","List the top 3 users who have interacted with others but have a size less than 2.","MATCH (u:User)-[r:INTERACTED]->(:User)
 WHERE u.size < 2
 RETURN u.label AS user, COUNT(r) AS interactions
 ORDER BY interactions DESC
@@ -233,7 +233,7 @@ fetch {
   ""user"": $u.handle,
   ""interactions"": $count
 };"
-17,Find 3 users who have interacted with users having an area greater than 5.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"17","Find 3 users who have interacted with users having an area greater than 5.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u2.area > 5
 RETURN DISTINCT u1.label
 LIMIT 3","match
@@ -245,7 +245,7 @@ select $h;
 distinct;
 limit 3;
 fetch { ""label"": $h };"
-18,Who are the top 5 users based on their area and size combined?,"MATCH (u:User)
+"18","Who are the top 5 users based on their area and size combined?","MATCH (u:User)
 WITH u, (u.area + u.size) AS combinedScore
 RETURN u.label AS user, combinedScore
 ORDER BY combinedScore DESC
@@ -256,9 +256,9 @@ sort $combined desc;
 limit 5;
 fetch {
   ""user"": $u.handle,
-  ""combinedScore"": $combined
+  ""combined_score"": $combined
 };"
-19,Show 3 users who have a size greater than 2 and a color of '#FF7F50'.,"MATCH (u:User)
+"19","Show 3 users who have a size greater than 2 and a color of '#FF7F50'.","MATCH (u:User)
 WHERE u.size > 2 AND u.color = '#FF7F50'
 RETURN u.label, u.key, u.size, u.color
 LIMIT 3","match
@@ -271,7 +271,7 @@ fetch {
   ""size"": $s,
   ""color"": $u.color
 };"
-20,Which top 5 users have the most interactions?,"MATCH (u:User)-[r:INTERACTED]->(u2:User)
+"20","Which top 5 users have the most interactions?","MATCH (u:User)-[r:INTERACTED]->(u2:User)
 WITH u, COUNT(r) AS interactions
 ORDER BY interactions DESC
 LIMIT 5
@@ -285,7 +285,7 @@ fetch {
   ""User"": $u.handle,
   ""interactions"": $interactions
 };"
-21,List the 3 users who have interacted most frequently based on the 'weight' attribute of INTERACTED.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"21","List the 3 users who have interacted most frequently based on the 'weight' attribute of INTERACTED.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 RETURN u1.label AS user, SUM(r.weight) AS total_interactions
 ORDER BY total_interactions DESC
 LIMIT 3","match
@@ -299,7 +299,7 @@ fetch {
   ""user"": $u1.handle,
   ""total_interactions"": $total
 };"
-22,What are the top 3 users by the smallest x-coordinate values?,"MATCH (u:User)
+"22","What are the top 3 users by the smallest x-coordinate values?","MATCH (u:User)
 RETURN u.label, u.x
 ORDER BY u.x ASC
 LIMIT 3","match
@@ -310,7 +310,7 @@ fetch {
   ""handle"": $u.handle,
   ""x_coordinate"": $x
 };"
-23,Find the top 5 users with 'color' attribute set to '#3CB371'.,"MATCH (u:User)
+"23","Find the top 5 users with 'color' attribute set to '#3CB371'.","MATCH (u:User)
 WHERE u.color = '#3CB371'
 RETURN u
 ORDER BY u.size DESC
@@ -321,7 +321,7 @@ limit 5;
 fetch {
   ""user"": { $u.* }
 };"
-24,Who are the 3 users with the highest y-coordinate values?,"MATCH (u:User)
+"24","Who are the 3 users with the highest y-coordinate values?","MATCH (u:User)
 RETURN u.label, u.y
 ORDER BY u.y DESC
 LIMIT 3","match
@@ -332,7 +332,7 @@ fetch {
   ""handle"": $u.handle,
   ""y_coordinate"": $y
 };"
-25,List the top 5 users who have interacted with 'louisgray.com'.,"MATCH (u:User {label: ""louisgray.com""})<-[:INTERACTED]-(interactingUser:User)
+"25","List the top 5 users who have interacted with 'louisgray.com'.","MATCH (u:User {label: ""louisgray.com""})<-[:INTERACTED]-(interactingUser:User)
 RETURN interactingUser.label AS user, COUNT(*) AS interactions
 ORDER BY interactions DESC
 LIMIT 5","match
@@ -343,7 +343,7 @@ reduce $count = count($rel) groupby $interacting;
 sort $count desc;
 limit 5;
 fetch { ""user"": $interacting.handle, ""interactions"": $count };"
-26,Which 3 users have the smallest size attribute?,"MATCH (u:User)
+"26","Which 3 users have the smallest size attribute?","MATCH (u:User)
 RETURN u.label, u.size
 ORDER BY u.size ASC
 LIMIT 3","match
@@ -354,7 +354,7 @@ fetch {
   ""handle"": $u.handle,
   ""size"": $s
 };"
-27,What are the top 5 users with the largest area?,"MATCH (u:User)
+"27","What are the top 5 users with the largest area?","MATCH (u:User)
 RETURN u.label, u.area
 ORDER BY u.area DESC
 LIMIT 5","match
@@ -365,7 +365,7 @@ fetch {
   ""handle"": $u.handle,
   ""area"": $a
 };"
-28,List the top 5 users with y-coordinates within the range of 5000 to 6000.,"MATCH (u:User)
+"28","List the top 5 users with y-coordinates within the range of 5000 to 6000.","MATCH (u:User)
 WHERE u.y >= 5000 AND u.y <= 6000
 RETURN u.label, u.y
 ORDER BY u.y DESC
@@ -379,7 +379,7 @@ fetch {
   ""handle"": $u.handle,
   ""y_coordinate"": $y
 };"
-29,Which 3 users have the closest x-coordinate to 0?,"MATCH (u:User)
+"29","Which 3 users have the closest x-coordinate to 0?","MATCH (u:User)
 RETURN u.label, u.x
 ORDER BY abs(u.x) ASC
 LIMIT 3","match
@@ -391,7 +391,7 @@ fetch {
   ""handle"": $h,
   ""x_coordinate"": $x
 };"
-30,What are the areas of the top 3 users with a size greater than 3.0?,"MATCH (u:User)
+"30","What are the areas of the top 3 users with a size greater than 3.0?","MATCH (u:User)
 WHERE u.size > 3.0
 RETURN u.label, u.area
 ORDER BY u.area DESC
@@ -404,7 +404,7 @@ fetch {
   ""handle"": $u.handle,
   ""area"": $a
 };"
-31,Which 5 users have the least number of interactions?,"MATCH (u:User)-[r:INTERACTED]->()
+"31","Which 5 users have the least number of interactions?","MATCH (u:User)-[r:INTERACTED]->()
 WITH u, COUNT(r) AS interactions
 ORDER BY interactions ASC
 LIMIT 5
@@ -418,7 +418,7 @@ fetch {
   ""User"": $u.handle,
   ""interactions"": $count
 };"
-32,Show the top 3 users who have a label containing the word 'com'.,"MATCH (u:User)
+"32","Show the top 3 users who have a label containing the word 'com'.","MATCH (u:User)
 WHERE u.label CONTAINS 'com'
 RETURN u.label, u.key, u.y, u.color, u.x, u.area, u.size
 ORDER BY u.size DESC
@@ -436,7 +436,7 @@ fetch {
   ""area"": $u.area,
   ""size"": $u.size
 };"
-33,Who are the top 5 users based on the sum of their area and size attributes?,"MATCH (u:User)
+"33","Who are the top 5 users based on the sum of their area and size attributes?","MATCH (u:User)
 RETURN u.label AS user, (u.area + u.size) AS total
 ORDER BY total DESC
 LIMIT 5","match
@@ -448,7 +448,7 @@ fetch {
   ""user"": $h,
   ""total"": $total
 };"
-34,What are the top 5 users by the size property?,"MATCH (u:User)
+"34","What are the top 5 users by the size property?","MATCH (u:User)
 RETURN u.label, u.size
 ORDER BY u.size DESC
 LIMIT 5","match
@@ -459,7 +459,7 @@ fetch {
   ""handle"": $u.handle,
   ""size"": $s
 };"
-35,Which users have interacted with users having a color '#3CB371'?,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"35","Which users have interacted with users having a color '#3CB371'?","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u2.color = '#3CB371'
 RETURN DISTINCT u1.label","match
 $u1 isa user;
@@ -470,7 +470,7 @@ distinct;
 fetch {
   ""label"": $u1.handle
 };"
-36,What are the labels of the top 5 users with the largest interaction size in their relationships?,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"36","What are the labels of the top 5 users with the largest interaction size in their relationships?","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 RETURN u1.label AS userLabel, SUM(r.size) AS totalInteractionSize
 ORDER BY totalInteractionSize DESC
 LIMIT 5","match
@@ -481,10 +481,10 @@ reduce $total = sum($s) groupby $u1;
 sort $total desc;
 limit 5;
 fetch {
-  ""userLabel"": $u1.handle,
-  ""totalInteractionSize"": $total
+  ""user_label"": $u1.handle,
+  ""total_interaction_size"": $total
 };"
-37,Show the interaction relationships of 'vtcodes.dev' where the interaction size is greater than 0.5.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"37","Show the interaction relationships of 'vtcodes.dev' where the interaction size is greater than 0.5.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE u1.label = 'vtcodes.dev' AND r.size > 0.5
 RETURN u1.label AS SourceUser, u2.label AS TargetUser, r.size AS InteractionSize","match
 $u1 isa user, has handle ""vtcodes.dev"";
@@ -492,11 +492,11 @@ $u2 isa user, has handle $target_handle;
 $rel isa interacted (source_user: $u1, target_user: $u2), has size $s;
 $s > 0.5;
 fetch {
-  ""SourceUser"": $u1.handle,
-  ""TargetUser"": $target_handle,
-  ""InteractionSize"": $s
+  ""source_user"": $u1.handle,
+  ""target_user"": $target_handle,
+  ""interaction_size"": $s
 };"
-38,What are the x and y coordinates of the first 3 users who interacted with 'dwither.bsky.social'?,"MATCH (target:User {label: 'dwither.bsky.social'})<-[:INTERACTED]-(user:User)
+"38","What are the x and y coordinates of the first 3 users who interacted with 'dwither.bsky.social'?","MATCH (target:User {label: 'dwither.bsky.social'})<-[:INTERACTED]-(user:User)
 RETURN user.x, user.y
 LIMIT 3","match
 $target isa user, has handle ""dwither.bsky.social"";
@@ -507,7 +507,7 @@ fetch {
   ""x"": $x,
   ""y"": $y
 };"
-39,List all interactions with a size less than 2 between users.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"39","List all interactions with a size less than 2 between users.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE r.size < 2
 RETURN u1.label AS User1, u2.label AS User2, r.size AS InteractionSize","match
 $u1 isa user, has handle $h1;
@@ -517,9 +517,9 @@ $s < 2.0;
 fetch {
   ""User1"": $h1,
   ""User2"": $h2,
-  ""InteractionSize"": $s
+  ""interaction_size"": $s
 };"
-40,Which users have an area less than 3 and have interacted with 'inchristbl.bsky.social'?,"MATCH (u1:User {label: ""inchristbl.bsky.social""})-[:INTERACTED]->(u2:User)
+"40","Which users have an area less than 3 and have interacted with 'inchristbl.bsky.social'?","MATCH (u1:User {label: ""inchristbl.bsky.social""})-[:INTERACTED]->(u2:User)
 WHERE u2.area < 3
 RETURN u2.label","match
 $u1 isa user, has handle ""inchristbl.bsky.social"";
@@ -529,7 +529,7 @@ interacted (source_user: $u1, target_user: $u2);
 fetch {
   ""handle"": $u2.handle
 };"
-41,Show the users with an x-coordinate less than -5000 who have interacted with any user.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"41","Show the users with an x-coordinate less than -5000 who have interacted with any user.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u1.x < -5000
 RETURN DISTINCT u1.label","match
 $u1 isa user, has handle $h, has x_coordinate $x;
@@ -538,7 +538,7 @@ interacted (source_user: $u1, target_user: $u2);
 select $h;
 distinct;
 fetch { ""label"": $h };"
-42,Find the users who have a size greater than 2 and have interacted with 'sarahgerrard.me'.,"MATCH (u1:User {label: 'sarahgerrard.me'})<-[:INTERACTED]-(u2:User)
+"42","Find the users who have a size greater than 2 and have interacted with 'sarahgerrard.me'.","MATCH (u1:User {label: 'sarahgerrard.me'})<-[:INTERACTED]-(u2:User)
 WHERE u2.size > 2
 RETURN u2.label","match
 $u1 isa user, has handle ""sarahgerrard.me"";
@@ -548,7 +548,7 @@ interacted (source_user: $u2, target_user: $u1);
 fetch {
   ""label"": $u2.handle
 };"
-43,Which users have an interaction weight of 1 with 'tagomoris.bsky.social'?,"MATCH (u1:User {label: 'tagomoris.bsky.social'})-[:INTERACTED {weight: 1}]->(u2:User)
+"43","Which users have an interaction weight of 1 with 'tagomoris.bsky.social'?","MATCH (u1:User {label: 'tagomoris.bsky.social'})-[:INTERACTED {weight: 1}]->(u2:User)
 RETURN u2.label","match
 $u1 isa user, has handle ""tagomoris.bsky.social"";
 $u2 isa user;
@@ -558,7 +558,7 @@ $w == 1.0;
 fetch {
   ""label"": $u2.handle
 };"
-44,What are the first 3 colors of users interacted by 'r0yart.bsky.social'?,"MATCH (u1:User {label: 'r0yart.bsky.social'})-[:INTERACTED]->(u2:User)
+"44","What are the first 3 colors of users interacted by 'r0yart.bsky.social'?","MATCH (u1:User {label: 'r0yart.bsky.social'})-[:INTERACTED]->(u2:User)
 RETURN u2.color
 LIMIT 3","match
 $u1 isa user, has handle ""r0yart.bsky.social"";
@@ -568,7 +568,7 @@ limit 3;
 fetch {
   ""color"": $c
 };"
-45,List the top 5 users by area size who have relations with 'vtcodes.dev'.,"MATCH (u1:User {label: 'vtcodes.dev'})-[:INTERACTED]->(u2:User)
+"45","List the top 5 users by area size who have relations with 'vtcodes.dev'.","MATCH (u1:User {label: 'vtcodes.dev'})-[:INTERACTED]->(u2:User)
 RETURN u2.label, u2.area
 ORDER BY u2.area DESC
 LIMIT 5","match
@@ -581,7 +581,7 @@ fetch {
   ""handle"": $u2.handle,
   ""area"": $a
 };"
-46,Which users have interacted with 'curvylliptic.bsky.social'?,"MATCH (u:User {label: 'curvylliptic.bsky.social'})<-[:INTERACTED]-(interactingUser:User)
+"46","Which users have interacted with 'curvylliptic.bsky.social'?","MATCH (u:User {label: 'curvylliptic.bsky.social'})<-[:INTERACTED]-(interactingUser:User)
 RETURN interactingUser.label","match
 $u isa user, has handle ""curvylliptic.bsky.social"";
 interacted (source_user: $interacting, target_user: $u);
@@ -589,7 +589,7 @@ $interacting has handle $h;
 fetch {
   ""interacting_user"": $h
 };"
-47,List the first 3 users who have an area greater than 4 and have interacted with users with an area less than 3.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"47","List the first 3 users who have an area greater than 4 and have interacted with users with an area less than 3.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u1.area > 4 AND u2.area < 3
 RETURN u1.label AS User, u1.area AS Area
 LIMIT 3","match
@@ -603,7 +603,7 @@ fetch {
   ""User"": $h,
   ""Area"": $a1
 };"
-48,Identify the top 5 users based on the interaction weight who have a color of '#4A708B'.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"48","Identify the top 5 users based on the interaction weight who have a color of '#4A708B'.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE u1.color = '#4A708B'
 RETURN u1.label AS user, SUM(r.weight) AS totalWeight
 ORDER BY totalWeight DESC
@@ -616,9 +616,9 @@ sort $total_weight desc;
 limit 5;
 fetch {
   ""user"": $u1.handle,
-  ""totalWeight"": $total_weight
+  ""total_weight"": $total_weight
 };"
-49,Display 5 users who have a y-coordinate greater than 5000 and have interacted with users with a y-coordinate less than -5000.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"49","Display 5 users who have a y-coordinate greater than 5000 and have interacted with users with a y-coordinate less than -5000.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u1.y > 5000 AND u2.y < -5000
 RETURN u1.label AS User, u1.y AS Y_Coordinate
 LIMIT 5","match
@@ -632,7 +632,7 @@ fetch {
   ""user"": $u1.handle,
   ""y_coordinate"": $y1
 };"
-50,List the 3 users who have the highest interaction size and are colored '#FF4500'.,"MATCH (u:User)-[r:INTERACTED]->(:User)
+"50","List the 3 users who have the highest interaction size and are colored '#FF4500'.","MATCH (u:User)-[r:INTERACTED]->(:User)
 WHERE u.color = '#FF4500'
 RETURN u.label, SUM(r.size) AS totalInteractionSize
 ORDER BY totalInteractionSize DESC
@@ -643,8 +643,8 @@ $r has size $s;
 reduce $total = sum($s) groupby $u;
 sort $total desc;
 limit 3;
-fetch { ""label"": $u.handle, ""totalInteractionSize"": $total };"
-51,Who are the top 3 users by y-coordinate that have interacted with users with a y-coordinate more than 10000?,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+fetch { ""label"": $u.handle, ""total_interaction_size"": $total };"
+"51","Who are the top 3 users by y-coordinate that have interacted with users with a y-coordinate more than 10000?","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u2.y > 10000
 RETURN u1.label, u1.y
 ORDER BY u1.y DESC
@@ -659,7 +659,7 @@ fetch {
   ""handle"": $h,
   ""y_coordinate"": $y1
 };"
-52,Which 3 users have an area greater than 5?,"MATCH (u:User)
+"52","Which 3 users have an area greater than 5?","MATCH (u:User)
 WHERE u.area > 5
 RETURN u.label AS user, u.area
 ORDER BY u.area DESC
@@ -672,14 +672,14 @@ fetch {
   ""user"": $u.handle,
   ""area"": $a
 };"
-53,List 3 users who have interacted with 'chromevoid.bsky.social'.,"MATCH (u1:User {label: 'chromevoid.bsky.social'})-[:INTERACTED]->(u2:User)
+"53","List 3 users who have interacted with 'chromevoid.bsky.social'.","MATCH (u1:User {label: 'chromevoid.bsky.social'})-[:INTERACTED]->(u2:User)
 RETURN u2.label
 LIMIT 3","match
 $u1 isa user, has handle ""chromevoid.bsky.social"";
 interacted (source_user: $u1, target_user: $u2);
 limit 3;
 fetch { ""handle"": $u2.handle };"
-54,Who are the top 5 users sorted by the x-coordinate in ascending order?,"MATCH (u:User)
+"54","Who are the top 5 users sorted by the x-coordinate in ascending order?","MATCH (u:User)
 RETURN u.label AS user, u.x AS x_coordinate
 ORDER BY u.x ASC
 LIMIT 5","match
@@ -690,7 +690,7 @@ fetch {
   ""user"": $h,
   ""x_coordinate"": $x
 };"
-55,Identify the top 3 users with the smallest y-coordinate values.,"MATCH (u:User)
+"55","Identify the top 3 users with the smallest y-coordinate values.","MATCH (u:User)
 RETURN u.label, u.y
 ORDER BY u.y ASC
 LIMIT 3","match
@@ -701,7 +701,7 @@ fetch {
   ""label"": $u.handle,
   ""y"": $y
 };"
-56,Which users have a color of '#3CB371' and an area less than 3? Limit to 5 results.,"MATCH (u:User)
+"56","Which users have a color of '#3CB371' and an area less than 3? Limit to 5 results.","MATCH (u:User)
 WHERE u.color = '#3CB371' AND u.area < 3
 RETURN u.label, u.key, u.y, u.color, u.x, u.area, u.size
 LIMIT 5","match
@@ -717,7 +717,7 @@ fetch {
   ""area"": $u.area,
   ""size"": $u.size
 };"
-57,Find 3 users who have interacted with users having a color of '#FF4500'.,"MATCH (u1:User)-[:INTERACTED]->(u2:User {color: '#FF4500'})
+"57","Find 3 users who have interacted with users having a color of '#FF4500'.","MATCH (u1:User)-[:INTERACTED]->(u2:User {color: '#FF4500'})
 RETURN DISTINCT u1.label
 LIMIT 3","match
 $u1 isa user;
@@ -729,7 +729,7 @@ limit 3;
 fetch {
   ""label"": $u1.handle
 };"
-58,Identify the top 5 users by the color property '#FF4500'.,"MATCH (u:User)
+"58","Identify the top 5 users by the color property '#FF4500'.","MATCH (u:User)
 WHERE u.color = '#FF4500'
 RETURN u.label, u.key, u.y, u.x, u.area, u.size
 ORDER BY u.size DESC
@@ -747,7 +747,7 @@ fetch {
     ""area"": $u.area,
     ""size"": $s
 };"
-59,What are the top 5 users in terms of size who have been interacted with the most?,"MATCH (u:User)<-[:INTERACTED]-(other:User)
+"59","What are the top 5 users in terms of size who have been interacted with the most?","MATCH (u:User)<-[:INTERACTED]-(other:User)
 WITH u, COUNT(other) AS interactions
 ORDER BY interactions DESC, u.size DESC
 LIMIT 5
@@ -759,7 +759,7 @@ reduce $interactions = count($other) groupby $u, $s;
 sort $interactions desc, $s desc;
 limit 5;
 fetch { ""user"": $u.handle, ""size"": $s, ""interactions"": $interactions };"
-60,Show 3 users who have interacted with users located at x-coordinates greater than -500.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"60","Show 3 users who have interacted with users located at x-coordinates greater than -500.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u2.x > -500
 RETURN DISTINCT u1.label
 LIMIT 3","match
@@ -773,7 +773,7 @@ limit 3;
 fetch {
   ""handle"": $u1.handle
 };"
-61,What are the top 5 users who have interacted with others at y-coordinates less than 0?,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"61","What are the top 5 users who have interacted with others at y-coordinates less than 0?","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE u2.y < 0
 RETURN u1.label AS user, COUNT(r) AS interactions
 ORDER BY interactions DESC
@@ -786,7 +786,7 @@ reduce $count = count($r) groupby $u1;
 sort $count desc;
 limit 5;
 fetch { ""user"": $u1.handle, ""interactions"": $count };"
-62,Display the first 3 users with x-coordinates less than -5000.,"MATCH (u:User)
+"62","Display the first 3 users with x-coordinates less than -5000.","MATCH (u:User)
 WHERE u.x < -5000
 RETURN u.label, u.x
 ORDER BY u.x
@@ -799,7 +799,7 @@ fetch {
   ""label"": $u.handle,
   ""x"": $x
 };"
-63,Who are the top 3 users with a size greater than 2 and have interacted with users with a size greater than 2?,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"63","Who are the top 3 users with a size greater than 2 and have interacted with users with a size greater than 2?","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u1.size > 2 AND u2.size > 2
 RETURN u1.label AS User, u1.size AS Size
 ORDER BY u1.size DESC
@@ -815,7 +815,7 @@ fetch {
   ""user"": $u1.handle,
   ""size"": $s1
 };"
-64,List 5 users who have the color '#1E90FF' and have interacted with users with a color of '#3CB371'.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"64","List 5 users who have the color '#1E90FF' and have interacted with users with a color of '#3CB371'.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u1.color = '#1E90FF' AND u2.color = '#3CB371'
 RETURN DISTINCT u1.label
 LIMIT 5","match
@@ -828,7 +828,7 @@ limit 5;
 fetch {
   ""handle"": $u1.handle
 };"
-65,Find 3 users with an x-coordinate greater than -1000 and who have interacted with users with an x-coordinate less than -5000.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"65","Find 3 users with an x-coordinate greater than -1000 and who have interacted with users with an x-coordinate less than -5000.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u1.x > -1000 AND u2.x < -5000
 RETURN DISTINCT u1.label
 LIMIT 3","match
@@ -843,7 +843,7 @@ limit 3;
 fetch {
   ""label"": $u1.handle
 };"
-66,List the top 3 users with the largest area who have an interaction weight of 1.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"66","List the top 3 users with the largest area who have an interaction weight of 1.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE r.weight = 1
 WITH u1, u2
 ORDER BY u1.area DESC
@@ -859,7 +859,7 @@ fetch {
   ""User"": $h,
   ""Area"": $a
 };"
-67,List all interactions where the original weight (ogWeight) is greater than the current weight.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"67","List all interactions where the original weight (ogWeight) is greater than the current weight.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE r.ogWeight > r.weight
 RETURN u1.label AS User1, u2.label AS User2, r.ogWeight, r.weight","match
 $u1 isa user;
@@ -870,10 +870,10 @@ $ow > $w;
 fetch {
   ""User1"": $u1.handle,
   ""User2"": $u2.handle,
-  ""ogWeight"": $ow,
+  ""og_weight"": $ow,
   ""weight"": $w
 };"
-68,List the labels of users who have an INTERACTED relationship with a weight of 1. Limit to the first 3.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"68","List the labels of users who have an INTERACTED relationship with a weight of 1. Limit to the first 3.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE r.weight = 1
 RETURN u2.label
 LIMIT 3","match
@@ -886,7 +886,7 @@ limit 3;
 fetch {
   ""label"": $u2.handle
 };"
-69,Find the keys of the top 5 users who have an INTERACTED relationship with a size greater than 0.1.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"69","Find the keys of the top 5 users who have an INTERACTED relationship with a size greater than 0.1.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE r.size > 0.1
 RETURN u1.key AS userKey, COUNT(r) AS interactionCount
 ORDER BY interactionCount DESC
@@ -899,10 +899,10 @@ reduce $count = count($rel) groupby $u1;
 sort $count desc;
 limit 5;
 fetch {
-  ""userKey"": $u1.user_key,
-  ""interactionCount"": $count
+  ""user_key"": $u1.user_key,
+  ""interaction_count"": $count
 };"
-70,Display the top 5 users with the highest ogWeight in their interactions.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"70","Display the top 5 users with the highest ogWeight in their interactions.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 RETURN u1.label AS user, SUM(r.ogWeight) AS totalOgWeight
 ORDER BY totalOgWeight DESC
 LIMIT 5","match
@@ -914,9 +914,9 @@ sort $total desc;
 limit 5;
 fetch {
   ""user"": $u1.handle,
-  ""totalOgWeight"": $total
+  ""total_og_weight"": $total
 };"
-71,Retrieve the first 3 users with the smallest x-coordinate values who have interacted with others.,"MATCH (u:User)-[:INTERACTED]->(:User)
+"71","Retrieve the first 3 users with the smallest x-coordinate values who have interacted with others.","MATCH (u:User)-[:INTERACTED]->(:User)
 RETURN u
 ORDER BY u.x ASC
 LIMIT 3","match
@@ -928,7 +928,7 @@ limit 3;
 fetch {
   ""user"": $u
 };"
-72,Who are the users with the top 5 highest y-coordinate values and have at least one interaction?,"MATCH (u:User)-[:INTERACTED]->(:User)
+"72","Who are the users with the top 5 highest y-coordinate values and have at least one interaction?","MATCH (u:User)-[:INTERACTED]->(:User)
 WITH u, MAX(u.y) AS maxY
 ORDER BY maxY DESC
 LIMIT 5
@@ -939,7 +939,7 @@ reduce $max_y = max($y) groupby $u;
 sort $max_y desc;
 limit 5;
 fetch { ""User"": $u.handle, ""Y_Coordinate"": $max_y };"
-73,List the users who have interacted and have a color code of '#FF4500'.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"73","List the users who have interacted and have a color code of '#FF4500'.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u1.color = '#FF4500' OR u2.color = '#FF4500'
 RETURN DISTINCT u1.label AS User1, u2.label AS User2","match
 $u1 isa user, has handle $h1;
@@ -949,7 +949,7 @@ interacted (source_user: $u1, target_user: $u2);
 select $h1, $h2;
 distinct;
 fetch { ""User1"": $h1, ""User2"": $h2 };"
-74,What are the most common interaction weights among users who have interacted with more than two different users?,"MATCH (u:User)-[r:INTERACTED]->(u2:User)
+"74","What are the most common interaction weights among users who have interacted with more than two different users?","MATCH (u:User)-[r:INTERACTED]->(u2:User)
 WITH u, COUNT(DISTINCT u2) AS interactionCount
 WHERE interactionCount > 2
 MATCH (u)-[r:INTERACTED]->(u2)
@@ -968,9 +968,9 @@ sort $weight_count desc;
 limit 10;
 fetch {
   ""weight"": $w,
-  ""weightCount"": $weight_count
+  ""weight_count"": $weight_count
 };"
-75,Find the top 3 users with the greatest number of interactions.,"MATCH (u:User)-[r:INTERACTED]->(:User)
+"75","Find the top 3 users with the greatest number of interactions.","MATCH (u:User)-[r:INTERACTED]->(:User)
 WITH u, COUNT(r) AS interactions
 ORDER BY interactions DESC
 LIMIT 3
@@ -984,7 +984,7 @@ fetch {
   ""user"": $u.handle,
   ""interactions"": $interactions
 };"
-76,Identify users who have interacted with someone and have an area size of exactly 2.6.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"76","Identify users who have interacted with someone and have an area size of exactly 2.6.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u1.area = 2.6
 RETURN DISTINCT u1.label","match
 $u1 isa user, has area 2.6;
@@ -993,7 +993,7 @@ $u2 isa user;
 select $u1;
 distinct;
 fetch { ""handle"": $u1.handle };"
-77,Show the ogWeight and weight properties for interactions involving users with a label containing 'social'.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"77","Show the ogWeight and weight properties for interactions involving users with a label containing 'social'.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE u1.label CONTAINS 'social' OR u2.label CONTAINS 'social'
 RETURN u1.label AS User1, u2.label AS User2, r.ogWeight, r.weight","match
 $u1 isa user, has handle $h1;
@@ -1003,10 +1003,10 @@ $r isa interacted (source_user: $u1, target_user: $u2), has og_weight $ow, has w
 fetch {
   ""User1"": $h1,
   ""User2"": $h2,
-  ""ogWeight"": $ow,
+  ""og_weight"": $ow,
   ""weight"": $w
 };"
-78,List the interactions among the first 5 users with the largest size values.,"MATCH (u:User)
+"78","List the interactions among the first 5 users with the largest size values.","MATCH (u:User)
 WITH u
 ORDER BY u.size DESC
 LIMIT 5
@@ -1021,10 +1021,10 @@ fetch {
     match
     $rel isa interacted (source_user: $u, target_user: $v);
     $rel has weight $w;
-    fetch { ""User2"": $v.handle, ""InteractionWeight"": $w };
+    fetch { ""User2"": $v.handle, ""interaction_weight"": $w };
   ]
 };"
-79,"Which users have a color property of ""#3CB371""? Please list the top 5.","MATCH (u:User)
+"79","Which users have a color property of ""#3CB371""? Please list the top 5.","MATCH (u:User)
 WHERE u.color = ""#3CB371""
 RETURN u.label
 LIMIT 5","match
@@ -1033,7 +1033,7 @@ limit 5;
 fetch {
   ""handle"": $u.handle
 };"
-80,Identify the top 5 users with an area property greater than 4.0.,"MATCH (u:User)
+"80","Identify the top 5 users with an area property greater than 4.0.","MATCH (u:User)
 WHERE u.area > 4.0
 RETURN u.label, u.area
 ORDER BY u.area DESC
@@ -1046,7 +1046,7 @@ fetch {
   ""handle"": $u.handle,
   ""area"": $a
 };"
-81,What are the first 3 users with a size property less than 2.0?,"MATCH (u:User)
+"81","What are the first 3 users with a size property less than 2.0?","MATCH (u:User)
 WHERE u.size < 2.0
 RETURN u
 ORDER BY u.size
@@ -1064,7 +1064,7 @@ fetch {
   ""area"": $u.area,
   ""size"": $u.size
 };"
-82,"List the top 5 users who interacted with a user whose color property is ""#1E90FF"".","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"82","List the top 5 users who interacted with a user whose color property is ""#1E90FF"".","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE u1.color = ""#1E90FF""
 RETURN u2.label AS user, COUNT(r) AS interactions
 ORDER BY interactions DESC
@@ -1075,7 +1075,7 @@ reduce $count = count($r) groupby $u2;
 sort $count desc;
 limit 5;
 fetch { ""user"": $u2.handle, ""interactions"": $count };"
-83,Can you find 5 users who have interacted with others more than once?,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"83","Can you find 5 users who have interacted with others more than once?","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WITH u1, COUNT(r) AS interactions
 WHERE interactions > 1
 RETURN u1.label AS user, interactions
@@ -1091,7 +1091,7 @@ fetch {
   ""user"": $u1.handle,
   ""interactions"": $interactions
 };"
-84,Provide the labels of the top 5 users with an x property value between -5000 and 0.,"MATCH (u:User)
+"84","Provide the labels of the top 5 users with an x property value between -5000 and 0.","MATCH (u:User)
 WHERE u.x >= -5000 AND u.x <= 0
 RETURN u.label
 ORDER BY u.x DESC
@@ -1104,7 +1104,7 @@ limit 5;
 fetch {
   ""label"": $h
 };"
-85,What are the first 3 users with a y property value greater than 10000?,"MATCH (u:User)
+"85","What are the first 3 users with a y property value greater than 10000?","MATCH (u:User)
 WHERE u.y > 10000
 RETURN u
 ORDER BY u.y
@@ -1122,7 +1122,7 @@ fetch {
   ""area"": $u.area,
   ""size"": $u.size
 };"
-86,List the top 5 users who have an interaction weight greater than 5.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"86","List the top 5 users who have an interaction weight greater than 5.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE r.weight > 5
 RETURN u1.label AS User, SUM(r.weight) AS TotalWeight
 ORDER BY TotalWeight DESC
@@ -1133,8 +1133,8 @@ $w > 5.0;
 reduce $total_weight = sum($w) groupby $u1;
 sort $total_weight desc;
 limit 5;
-fetch { ""User"": $u1.handle, ""TotalWeight"": $total_weight };"
-87,Find all users who have interacted with 'vtcodes.dev'. List the top 5.,"MATCH (u1:User {label: 'vtcodes.dev'})-[:INTERACTED]->(u2:User)
+fetch { ""User"": $u1.handle, ""total_weight"": $total_weight };"
+"87","Find all users who have interacted with 'vtcodes.dev'. List the top 5.","MATCH (u1:User {label: 'vtcodes.dev'})-[:INTERACTED]->(u2:User)
 RETURN u2.label AS interactedUser
 LIMIT 5","match
 $u1 isa user, has handle ""vtcodes.dev"";
@@ -1142,9 +1142,9 @@ interacted (source_user: $u1, target_user: $u2);
 $u2 has handle $h;
 limit 5;
 fetch {
-  ""interactedUser"": $h
+  ""interacted_user"": $h
 };"
-88,Who are the top 5 users that have interacted with someone with an area larger than 3.0?,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"88","Who are the top 5 users that have interacted with someone with an area larger than 3.0?","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE u2.area > 3.0
 RETURN u1.label AS User, COUNT(r) AS Interactions
 ORDER BY Interactions DESC
@@ -1157,7 +1157,7 @@ reduce $count = count($rel) groupby $u1;
 sort $count desc;
 limit 5;
 fetch { ""user"": $u1.handle, ""interactions"": $count };"
-89,Which users have interacted with 'sarahgerrard.me'? Present the first 5.,"MATCH (u:User)-[:INTERACTED]->(target:User {label: ""sarahgerrard.me""})
+"89","Which users have interacted with 'sarahgerrard.me'? Present the first 5.","MATCH (u:User)-[:INTERACTED]->(target:User {label: ""sarahgerrard.me""})
 RETURN u.label
 LIMIT 5","match
 $target isa user, has handle ""sarahgerrard.me"";
@@ -1165,7 +1165,7 @@ interacted (source_user: $u, target_user: $target);
 $u isa user;
 limit 5;
 fetch { ""label"": $u.handle };"
-90,Display the labels of 5 users who have an interaction size of 0.2.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"90","Display the labels of 5 users who have an interaction size of 0.2.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE r.size = 0.2
 RETURN u1.label, u2.label
 LIMIT 5","match
@@ -1179,7 +1179,7 @@ fetch {
   ""u1_handle"": $u1.handle,
   ""u2_handle"": $u2.handle
 };"
-91,Identify the first 5 users who have interacted with a user labeled 'dwither.bsky.social'.,"MATCH (u:User {label: 'dwither.bsky.social'})-[:INTERACTED]->(interactedUser:User)
+"91","Identify the first 5 users who have interacted with a user labeled 'dwither.bsky.social'.","MATCH (u:User {label: 'dwither.bsky.social'})-[:INTERACTED]->(interactedUser:User)
 RETURN interactedUser
 LIMIT 5","match
 $u isa user, has handle ""dwither.bsky.social"";
@@ -1189,7 +1189,7 @@ limit 5;
 fetch {
   ""user"": $other.handle
 };"
-92,List the top 5 users based on their size property in descending order.,"MATCH (u:User)
+"92","List the top 5 users based on their size property in descending order.","MATCH (u:User)
 RETURN u.label, u.size
 ORDER BY u.size DESC
 LIMIT 5","match
@@ -1200,7 +1200,7 @@ fetch {
   ""handle"": $h,
   ""size"": $s
 };"
-93,What are the top 5 users with the smallest y property value?,"MATCH (u:User)
+"93","What are the top 5 users with the smallest y property value?","MATCH (u:User)
 RETURN u.label, u.y
 ORDER BY u.y ASC
 LIMIT 5","match
@@ -1211,7 +1211,7 @@ fetch {
   ""label"": $u.handle,
   ""y"": $y
 };"
-94,Which users have a label including 'social' and an area more than 2.0? List the top 5.,"MATCH (u:User)
+"94","Which users have a label including 'social' and an area more than 2.0? List the top 5.","MATCH (u:User)
 WHERE u.label CONTAINS 'social' AND u.area > 2.0
 RETURN u.label, u.area
 ORDER BY u.area DESC
@@ -1225,7 +1225,7 @@ fetch {
   ""label"": $h,
   ""area"": $a
 };"
-95,Display the first 3 users who have interacted with someone located at y values less than -5000.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"95","Display the first 3 users who have interacted with someone located at y values less than -5000.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u2.y < -5000
 RETURN u1.label
 LIMIT 3","match
@@ -1237,7 +1237,7 @@ limit 3;
 fetch {
   ""label"": $u1.handle
 };"
-96,Identify the first 5 users with an interaction ogWeight of 1.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"96","Identify the first 5 users with an interaction ogWeight of 1.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE r.ogWeight = 1
 RETURN u1.label AS User1, u2.label AS User2, r.ogWeight
 LIMIT 5","match
@@ -1250,9 +1250,9 @@ limit 5;
 fetch {
   ""User1"": $h1,
   ""User2"": $h2,
-  ""ogWeight"": $w
+  ""og_weight"": $w
 };"
-97,What are the top 5 users who interacted with others having a color '#FF4500'?,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"97","What are the top 5 users who interacted with others having a color '#FF4500'?","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE u2.color = '#FF4500'
 RETURN u1.label, COUNT(r) AS interactions
 ORDER BY interactions DESC
@@ -1264,7 +1264,7 @@ reduce $count = count($rel) groupby $u1;
 sort $count desc;
 limit 5;
 fetch { ""handle"": $u1.handle, ""interactions"": $count };"
-98,List the first 3 users with the largest area property.,"MATCH (u:User)
+"98","List the first 3 users with the largest area property.","MATCH (u:User)
 RETURN u.label, u.area
 ORDER BY u.area DESC
 LIMIT 3","match
@@ -1275,7 +1275,7 @@ fetch {
   ""handle"": $u.handle,
   ""area"": $a
 };"
-99,What are the average x and y coordinates of users who have interacted with users with a size smaller than 2?,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"99","What are the average x and y coordinates of users who have interacted with users with a size smaller than 2?","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u2.size < 2
 RETURN avg(u1.x) AS avg_x, avg(u1.y) AS avg_y","match
 $u1 isa user, has x_coordinate $x, has y_coordinate $y;
@@ -1283,7 +1283,7 @@ $u2 isa user, has size $s;
 $s < 2.0;
 interacted (source_user: $u1, target_user: $u2);
 reduce $avg_x = mean($x), $avg_y = mean($y);"
-100,Who are the 3 users that have interacted the most frequently with others?,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"100","Who are the 3 users that have interacted the most frequently with others?","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WITH u1, COUNT(r) AS interactions
 ORDER BY interactions DESC
 LIMIT 3
@@ -1294,7 +1294,7 @@ reduce $interactions = count($rel) groupby $u1;
 sort $interactions desc;
 limit 3;
 fetch { ""User"": $u1.handle, ""interactions"": $interactions };"
-101,Show the relationship properties for interactions between users with an area greater than 3.0.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"101","Show the relationship properties for interactions between users with an area greater than 3.0.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE u1.area > 3.0 AND u2.area > 3.0
 RETURN u1.label AS User1, u2.label AS User2, r.weight, r.ogWeight, r.size, r.key","match
 $u1 isa user, has area $a1;
@@ -1306,11 +1306,11 @@ fetch {
   ""User1"": $u1.handle,
   ""User2"": $u2.handle,
   ""weight"": $r.weight,
-  ""ogWeight"": $r.og_weight,
+  ""og_weight"": $r.og_weight,
   ""size"": $r.size,
   ""key"": $r.interaction_key
 };"
-102,Find users who have interacted with more than three different users.,"MATCH (u:User)-[:INTERACTED]->(other:User)
+"102","Find users who have interacted with more than three different users.","MATCH (u:User)-[:INTERACTED]->(other:User)
 WITH u, COUNT(DISTINCT other) AS interactionCount
 WHERE interactionCount > 3
 RETURN u.label AS userLabel, interactionCount","match
@@ -1324,10 +1324,10 @@ match
 $count > 3;
 $u has handle $h;
 fetch {
-  ""userLabel"": $h,
-  ""interactionCount"": $count
+  ""user_label"": $h,
+  ""interaction_count"": $count
 };"
-103,What are the top 3 heaviest INTERACTED relationships by ogWeight?,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"103","What are the top 3 heaviest INTERACTED relationships by ogWeight?","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 RETURN u1.label AS User1, u2.label AS User2, r.ogWeight AS ogWeight
 ORDER BY r.ogWeight DESC
 LIMIT 3","match
@@ -1339,9 +1339,9 @@ limit 3;
 fetch {
   ""User1"": $h1,
   ""User2"": $h2,
-  ""ogWeight"": $w
+  ""og_weight"": $w
 };"
-104,List the 3 users with the most interactions based on the weight of the INTERACTED relationship.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"104","List the 3 users with the most interactions based on the weight of the INTERACTED relationship.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WITH u1, SUM(r.weight) AS totalInteractions
 ORDER BY totalInteractions DESC
 LIMIT 3
@@ -1353,7 +1353,7 @@ reduce $total = sum($w) groupby $u1;
 sort $total desc;
 limit 3;
 fetch { ""user"": $u1.handle, ""total_interactions"": $total };"
-105,What are the labels of 3 users who have interacted with the user labeled 'chromevoid.bsky.social'?,"MATCH (u:User {label: 'chromevoid.bsky.social'})-[:INTERACTED]->(interactedUser:User)
+"105","What are the labels of 3 users who have interacted with the user labeled 'chromevoid.bsky.social'?","MATCH (u:User {label: 'chromevoid.bsky.social'})-[:INTERACTED]->(interactedUser:User)
 RETURN interactedUser.label
 LIMIT 3","match
   $u isa user, has handle ""chromevoid.bsky.social"";
@@ -1363,7 +1363,7 @@ limit 3;
 fetch {
   ""label"": $other.handle
 };"
-106,Who are the top 5 users with a size less than 2.0?,"MATCH (u:User)
+"106","Who are the top 5 users with a size less than 2.0?","MATCH (u:User)
 WHERE u.size < 2.0
 RETURN u.label, u.size
 ORDER BY u.size DESC
@@ -1376,7 +1376,7 @@ fetch {
   ""handle"": $u.handle,
   ""size"": $s
 };"
-107,Find 3 users whose y-coordinate is less than -5000.,"MATCH (u:User)
+"107","Find 3 users whose y-coordinate is less than -5000.","MATCH (u:User)
 WHERE u.y < -5000
 RETURN u.label, u.y
 LIMIT 3","match
@@ -1388,7 +1388,7 @@ fetch {
   ""label"": $u.handle,
   ""y"": $y
 };"
-108,Which users have an area greater than 5.0? Limit the results to the first 3.,"MATCH (u:User)
+"108","Which users have an area greater than 5.0? Limit the results to the first 3.","MATCH (u:User)
 WHERE u.area > 5.0
 RETURN u.label, u.area
 LIMIT 3","match
@@ -1399,7 +1399,7 @@ fetch {
   ""label"": $h,
   ""area"": $a
 };"
-109,What are the keys of the top 3 users with the largest x values?,"MATCH (u:User)
+"109","What are the keys of the top 3 users with the largest x values?","MATCH (u:User)
 RETURN u.key
 ORDER BY u.x DESC
 LIMIT 3","match
@@ -1409,7 +1409,7 @@ limit 3;
 fetch {
   ""key"": $u.user_key
 };"
-110,List the top 5 users with the smallest area values.,"MATCH (u:User)
+"110","List the top 5 users with the smallest area values.","MATCH (u:User)
 RETURN u.label, u.area
 ORDER BY u.area ASC
 LIMIT 5","match
@@ -1420,7 +1420,7 @@ fetch {
   ""handle"": $u.handle,
   ""area"": $a
 };"
-111,Which 3 users have a color property of '#3CB371'?,"MATCH (u:User)
+"111","Which 3 users have a color property of '#3CB371'?","MATCH (u:User)
 WHERE u.color = '#3CB371'
 RETURN u.label
 LIMIT 3","match
@@ -1429,7 +1429,7 @@ limit 3;
 fetch {
   ""label"": $u.handle
 };"
-112,Identify the 3 users with the highest size values.,"MATCH (u:User)
+"112","Identify the 3 users with the highest size values.","MATCH (u:User)
 RETURN u.label, u.size
 ORDER BY u.size DESC
 LIMIT 3","match
@@ -1440,7 +1440,7 @@ fetch {
   ""handle"": $u.handle,
   ""size"": $s
 };"
-113,List the top 5 users by y-coordinate in ascending order.,"MATCH (u:User)
+"113","List the top 5 users by y-coordinate in ascending order.","MATCH (u:User)
 RETURN u.label, u.y
 ORDER BY u.y ASC
 LIMIT 5","match
@@ -1451,7 +1451,7 @@ fetch {
   ""label"": $u.handle,
   ""y"": $y
 };"
-114,Which 3 users have the smallest x values?,"MATCH (u:User)
+"114","Which 3 users have the smallest x values?","MATCH (u:User)
 RETURN u.label, u.x
 ORDER BY u.x ASC
 LIMIT 3","match
@@ -1462,7 +1462,7 @@ fetch {
   ""label"": $h,
   ""x"": $x
 };"
-115,What are the labels of the top 5 users with the largest area?,"MATCH (u:User)
+"115","What are the labels of the top 5 users with the largest area?","MATCH (u:User)
 RETURN u.label
 ORDER BY u.area DESC
 LIMIT 5","match
@@ -1472,17 +1472,17 @@ limit 5;
 fetch {
   ""label"": $u.handle
 };"
-116,List users who have a green color code and have interacted with users having a red color code.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"116","List users who have a green color code and have interacted with users having a red color code.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u1.color = '#3CB371' AND u2.color = '#FF0000'
 RETURN u1.label AS GreenUser, u2.label AS RedUser","match
 $u1 isa user, has color ""#3CB371"", has handle $h1;
 $u2 isa user, has color ""#FF0000"", has handle $h2;
 interacted (source_user: $u1, target_user: $u2);
 fetch {
-  ""GreenUser"": $h1,
-  ""RedUser"": $h2
+  ""green_user"": $h1,
+  ""red_user"": $h2
 };"
-117,List the users who have interacted with users having an area exactly 4.94.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"117","List the users who have interacted with users having an area exactly 4.94.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u2.area = 4.94
 RETURN DISTINCT u1.label AS InteractingUsers","match
 $u1 isa user;
@@ -1491,9 +1491,9 @@ interacted (source_user: $u1, target_user: $u2);
 select $u1;
 distinct;
 fetch {
-  ""InteractingUsers"": $u1.handle
+  ""interacting_users"": $u1.handle
 };"
-118,Which users have interacted with a user located at x-coordinate less than -10000?,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"118","Which users have interacted with a user located at x-coordinate less than -10000?","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u2.x < -10000
 RETURN u1.label AS InteractingUser","match
 $u1 isa user;
@@ -1501,9 +1501,9 @@ $u2 isa user, has x_coordinate $x;
 $x < -10000.0;
 interacted (source_user: $u1, target_user: $u2);
 fetch {
-  ""InteractingUser"": $u1.handle
+  ""interacting_user"": $u1.handle
 };"
-119,What are the first 3 user labels who have interacted with 'sarahgerrard.me' and have a color '#7EC0EE'?,"MATCH (u1:User {label: 'sarahgerrard.me'})-[:INTERACTED]->(u2:User {color: '#7EC0EE'})
+"119","What are the first 3 user labels who have interacted with 'sarahgerrard.me' and have a color '#7EC0EE'?","MATCH (u1:User {label: 'sarahgerrard.me'})-[:INTERACTED]->(u2:User {color: '#7EC0EE'})
 RETURN u2.label
 LIMIT 3","match
   $u1 isa user, has handle ""sarahgerrard.me"";
@@ -1513,7 +1513,7 @@ limit 3;
 fetch {
   ""label"": $u2.handle
 };"
-120,What is the average weight of interactions for users who have interacted more than 5 times?,"MATCH (u:User)-[r:INTERACTED]->(u2:User)
+"120","What is the average weight of interactions for users who have interacted more than 5 times?","MATCH (u:User)-[r:INTERACTED]->(u2:User)
 WITH u, COUNT(r) AS interactionCount, AVG(r.weight) AS avgWeight
 WHERE interactionCount > 5
 RETURN avgWeight","match
@@ -1525,8 +1525,8 @@ match
 $rel2 isa interacted (source_user: $u, target_user: $u3);
 $rel2 has weight $w;
 reduce $avg_weight = mean($w) groupby $u;
-fetch { ""avgWeight"": $avg_weight };"
-121,Which users have interacted with users located at a y-coordinate greater than 10000?,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+fetch { ""avg_weight"": $avg_weight };"
+"121","Which users have interacted with users located at a y-coordinate greater than 10000?","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u2.y > 10000
 RETURN DISTINCT u1.label","match
 $u1 isa user;
@@ -1538,7 +1538,7 @@ distinct;
 fetch {
   ""handle"": $u1.handle
 };"
-122,Identify users who have a label containing 'bsky' and have interacted with users with a label containing 'dev'.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"122","Identify users who have a label containing 'bsky' and have interacted with users with a label containing 'dev'.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u1.label CONTAINS 'bsky' AND u2.label CONTAINS 'dev'
 RETURN u1","match
 $u1 isa user, has handle $h1;
@@ -1550,14 +1550,14 @@ fetch {
   ""handle"": $u1.handle,
   ""user_key"": $u1.user_key
 };"
-123,What are the unique color codes used by users who have interacted with at least one other user?,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"123","What are the unique color codes used by users who have interacted with at least one other user?","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 RETURN DISTINCT u1.color AS unique_colors","match
 $u1 isa user, has color $c;
 interacted (source_user: $u1, target_user: $u2);
 select $c;
 distinct;
 fetch { ""unique_colors"": $c };"
-124,List the first 3 users by size who have not interacted with any other user.,"MATCH (u:User)
+"124","List the first 3 users by size who have not interacted with any other user.","MATCH (u:User)
 WHERE NOT (u)-[:INTERACTED]->(:User)
 RETURN u.label, u.size
 ORDER BY u.size DESC
@@ -1570,7 +1570,7 @@ fetch {
   ""handle"": $u.handle,
   ""size"": $s
 };"
-125,Show the interaction details of users with a label containing 'social' and have a size greater than 1.5.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"125","Show the interaction details of users with a label containing 'social' and have a size greater than 1.5.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE u1.label CONTAINS 'social' AND u1.size > 1.5 AND u2.label CONTAINS 'social' AND u2.size > 1.5
 RETURN u1.label AS User1, u2.label AS User2, r.weight AS InteractionWeight, r.ogWeight AS OriginalWeight, r.size AS InteractionSize, r.key AS InteractionKey","match
 $u1 isa user, has handle $h1, has size $s1;
@@ -1584,12 +1584,12 @@ $r has weight $w, has og_weight $ow, has size $rs, has interaction_key $ik;
 fetch {
   ""User1"": $h1,
   ""User2"": $h2,
-  ""InteractionWeight"": $w,
-  ""OriginalWeight"": $ow,
-  ""InteractionSize"": $rs,
-  ""InteractionKey"": $ik
+  ""interaction_weight"": $w,
+  ""original_weight"": $ow,
+  ""interaction_size"": $rs,
+  ""interaction_key"": $ik
 };"
-126,Find the top 5 users with the largest area who have interacted with others.,"MATCH (u:User)-[:INTERACTED]->(:User)
+"126","Find the top 5 users with the largest area who have interacted with others.","MATCH (u:User)-[:INTERACTED]->(:User)
 WITH u, MAX(u.area) AS maxArea
 ORDER BY maxArea DESC
 LIMIT 5
@@ -1601,10 +1601,10 @@ distinct;
 sort $a desc;
 limit 5;
 fetch {
-  ""UserLabel"": $h,
+  ""user_label"": $h,
   ""Area"": $a
 };"
-127,What are the top 5 interactions with the largest area difference between interacting users?,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"127","What are the top 5 interactions with the largest area difference between interacting users?","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WITH u1, u2, r, abs(u1.area - u2.area) AS areaDifference
 ORDER BY areaDifference DESC
 LIMIT 5
@@ -1618,9 +1618,9 @@ limit 5;
 fetch {
   ""User1"": $h1,
   ""User2"": $h2,
-  ""areaDifference"": $diff
+  ""area_difference"": $diff
 };"
-128,Show the first 3 users based on the descending order of their x-coordinate who have interacted at least once.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"128","Show the first 3 users based on the descending order of their x-coordinate who have interacted at least once.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WITH DISTINCT u1
 ORDER BY u1.x DESC
 LIMIT 3
@@ -1632,7 +1632,7 @@ distinct;
 sort $x desc;
 limit 3;
 fetch { ""User"": $u1.handle, ""X_Coordinate"": $x };"
-129,List the interactions of users whose labels start with 'r' and have interacted with users of size greater than 2.,"MATCH (u1:User)-[r:INTERACTED]->(u2:User)
+"129","List the interactions of users whose labels start with 'r' and have interacted with users of size greater than 2.","MATCH (u1:User)-[r:INTERACTED]->(u2:User)
 WHERE u1.label STARTS WITH 'r' AND u2.size > 2
 RETURN u1.label AS User1, u2.label AS User2, r.weight AS InteractionWeight","match
 $u1 isa user, has handle $h1;
@@ -1644,9 +1644,9 @@ $u2 has handle $h2;
 fetch {
   ""User1"": $h1,
   ""User2"": $h2,
-  ""InteractionWeight"": $w
+  ""interaction_weight"": $w
 };"
-130,Find all users who have interacted with 'dwither.bsky.social' and have a size of 3.25.,"MATCH (u1:User {label: 'dwither.bsky.social'})-[:INTERACTED]->(u2:User)
+"130","Find all users who have interacted with 'dwither.bsky.social' and have a size of 3.25.","MATCH (u1:User {label: 'dwither.bsky.social'})-[:INTERACTED]->(u2:User)
 WHERE u2.size = 3.25
 RETURN u2","match
 $u1 isa user, has handle ""dwither.bsky.social"";
@@ -1655,7 +1655,7 @@ $u2 has size 3.25;
 fetch {
   ""user"": { $u2.* }
 };"
-131,Identify the users who have interacted with users located at y-coordinate less than -5000.,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"131","Identify the users who have interacted with users located at y-coordinate less than -5000.","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u2.y < -5000
 RETURN DISTINCT u1.label AS InteractingUsers","match
 $u1 isa user, has handle $h;
@@ -1665,9 +1665,9 @@ interacted (source_user: $u1, target_user: $u2);
 select $h;
 distinct;
 fetch {
-  ""InteractingUsers"": $h
+  ""interacting_users"": $h
 };"
-132,Which users have an interaction key 'geid_68_0' and have interacted with 'vtcodes.dev'?,"MATCH (u1:User)-[r:INTERACTED]->(u2:User {label: 'vtcodes.dev'})
+"132","Which users have an interaction key 'geid_68_0' and have interacted with 'vtcodes.dev'?","MATCH (u1:User)-[r:INTERACTED]->(u2:User {label: 'vtcodes.dev'})
 WHERE r.key = 'geid_68_0'
 RETURN u1.label AS interacting_users","match
 $u1 isa user, has handle $h1;
@@ -1676,7 +1676,7 @@ $rel isa interacted (source_user: $u1, target_user: $u2), has interaction_key ""
 fetch {
   ""interacting_users"": $h1
 };"
-133,Which users have interacted with users having a blue color code?,"MATCH (u1:User)-[:INTERACTED]->(u2:User)
+"133","Which users have interacted with users having a blue color code?","MATCH (u1:User)-[:INTERACTED]->(u2:User)
 WHERE u2.color = ""#0000FF""
 RETURN DISTINCT u1.label","match
 $u1 isa user;
@@ -1687,7 +1687,7 @@ distinct;
 fetch {
   ""label"": $u1.handle
 };"
-134,Find the users with a y-coordinate greater than 5000 and have interacted with at least two other users.,"MATCH (u:User)-[:INTERACTED]->(other:User)
+"134","Find the users with a y-coordinate greater than 5000 and have interacted with at least two other users.","MATCH (u:User)-[:INTERACTED]->(other:User)
 WHERE u.y > 5000
 WITH u, COUNT(other) AS interactions
 WHERE interactions >= 2

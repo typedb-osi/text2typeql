@@ -1409,7 +1409,7 @@ LIMIT 1","match
   $c_community == 759;
 sort $c_book45_page_rank desc;
 limit 1;
-fetch { ""name"": $c.name, ""pageRank"": $c.book45_page_rank };"
+fetch { ""name"": $c.name, ""page_rank"": $c.book45_page_rank };"
 "173","List characters with the lowest 5 book1PageRanks.","MATCH (c:Character)
 WHERE c.book1PageRank IS NOT NULL
 RETURN c.name AS character, c.book1PageRank AS pageRank
@@ -1418,7 +1418,7 @@ LIMIT 5","match
   $c isa character, has name $n, has book1_page_rank $pr;
 sort $pr asc;
 limit 5;
-fetch { ""character"": $n, ""pageRank"": $pr };"
+fetch { ""character"": $n, ""page_rank"": $pr };"
 "174","Which characters interact in book 1 with a weight greater than 100?","MATCH (c1:Character)-[i:INTERACTS1]->(c2:Character)
 WHERE i.weight > 100
 RETURN c1.name AS character1, c2.name AS character2, i.weight AS weight","match
@@ -2781,7 +2781,7 @@ LIMIT 5","match
   $c has book1_page_rank $c_book1_page_rank;
 sort $c_book1_page_rank desc;
 limit 5;
-fetch { ""character"": $c.name, ""pageRank"": $c.book1_page_rank };"
+fetch { ""character"": $c.name, ""page_rank"": $c.book1_page_rank };"
 "331","List the top 3 characters with the highest degree of centrality.","MATCH (c:Character)
 RETURN c.name, c.centrality
 ORDER BY c.centrality DESC
@@ -2929,7 +2929,7 @@ RETURN c.name AS character, c.book45PageRank AS book45PageRank, c.book1PageRank 
   $c has book1_page_rank $c_book1_page_rank;
   $c_book45_page_rank < 1;
   $c_book1_page_rank > 2;
-fetch { ""character"": $c.name, ""book45PageRank"": $c.book45_page_rank, ""book1PageRank"": $c.book1_page_rank };"
+fetch { ""character"": $c.name, ""book45_page_rank"": $c.book45_page_rank, ""book1_page_rank"": $c.book1_page_rank };"
 "347","Name the 3 characters with the highest INTERACTS3 relationship weight.","MATCH (c:Character)-[i:INTERACTS3]->(other:Character)
 RETURN c.name, other.name, i.weight AS weight
 ORDER BY i.weight DESC
@@ -2959,7 +2959,7 @@ let $w2 = interacts2_weight_sum($c);
 let $total = $w1 + $w2;
 sort $total desc;
 limit 5;
-fetch { ""character"": $c.name, ""totalWeight"": $total };"
+fetch { ""character"": $c.name, ""total_weight"": $total };"
 "350","Who has the highest book1BetweennessCentrality and is from community 759?","MATCH (c:Character)
 WHERE c.community = 759
 RETURN c.name AS name, c.book1BetweennessCentrality AS centrality
@@ -3063,7 +3063,7 @@ $c isa character, has centrality $cent, has book45_page_rank $b45pr,
 let $total = $cent + $b45pr + $b1bc + $b1pr + $pr;
 sort $total desc;
 limit 3;
-fetch { ""character"": $c.name, ""totalCentrality"": $total };"
+fetch { ""character"": $c.name, ""total_centrality"": $total };"
 "360","List the characters with the highest sum of INTERACTS weights across all books. Limit to top 5.","MATCH (c:Character)-[i:INTERACTS|INTERACTS1|INTERACTS2|INTERACTS3|INTERACTS45]->(other)
 WITH c, sum(i.weight) AS totalWeight
 ORDER BY totalWeight DESC
@@ -3075,7 +3075,7 @@ RETURN c.name AS character, totalWeight","match
 reduce $total = sum($w) groupby $c, $n;
 sort $total desc;
 limit 5;
-fetch { ""character"": $n, ""totalWeight"": $total };"
+fetch { ""character"": $n, ""total_weight"": $total };"
 "361","Who are the top 3 characters based on the combination of book1PageRank and book45PageRank?","MATCH (c:Character)
 WHERE c.book1PageRank IS NOT NULL AND c.book45PageRank IS NOT NULL
 RETURN c.name AS character, c.book1PageRank + c.book45PageRank AS combinedPageRank
@@ -3085,7 +3085,7 @@ $c isa character, has book1_page_rank $b1pr, has book45_page_rank $b45pr;
 let $combined = $b1pr + $b45pr;
 sort $combined desc;
 limit 3;
-fetch { ""character"": $c.name, ""combinedPageRank"": $combined };"
+fetch { ""character"": $c.name, ""combined_page_rank"": $combined };"
 "362","Find the characters with a community number less than 600 and a centrality of 1.","MATCH (c:Character)
 WHERE c.community < 600 AND c.centrality = 1.0
 RETURN c","match
@@ -3213,7 +3213,7 @@ let $w2 = interacts3_weight_sum($c);
 let $total = $w1 + $w2;
 sort $total desc;
 limit 3;
-fetch { ""character"": $c.name, ""totalWeight"": $total };"
+fetch { ""character"": $c.name, ""total_weight"": $total };"
 "375","List the characters who are part of community 504 and have a degree greater than 20.","MATCH (c:Character)
 WHERE c.community = 504 AND c.degree > 20
 RETURN c","match
@@ -3244,7 +3244,7 @@ LIMIT 5","match
 let $avg_centrality = ($b1pr + $b45pr + $pr) / 3;
 sort $avg_centrality desc;
 limit 5;
-fetch { ""character"": $n, ""avgCentrality"": $avg_centrality };
+fetch { ""character"": $n, ""avg_centrality"": $avg_centrality };
 "
 "377","Which characters have the highest sum of pagerank values across all books? Limit to top 5.","MATCH (c:Character)
 RETURN c.name AS character,
@@ -3258,7 +3258,7 @@ LIMIT 5","match
 let $total = $pr + $b1pr + $b45pr;
 sort $total desc;
 limit 5;
-fetch { ""character"": $c.name, ""totalPageRank"": $total };
+fetch { ""character"": $c.name, ""total_page_rank"": $total };
 "
 "378","Name the characters with a louvain value of 6 and a pagerank greater than 0.3.","MATCH (c:Character)
 WHERE c.louvain = 6 AND c.pagerank > 0.3
@@ -3353,7 +3353,7 @@ let $w2 = interacts2_weight_sum($c);
 let $total = $w1 + $w2;
 sort $total desc;
 limit 5;
-fetch { ""character"": $c.name, ""totalWeight"": $total };"
+fetch { ""character"": $c.name, ""total_weight"": $total };"
 "386","Name the top 3 characters based on the sum of their book1PageRank and book45PageRank.","MATCH (c:Character)
 WHERE c.book1PageRank IS NOT NULL AND c.book45PageRank IS NOT NULL
 RETURN c.name, c.book1PageRank + c.book45PageRank AS totalPageRank
@@ -3363,7 +3363,7 @@ $c isa character, has book1_page_rank $b1pr, has book45_page_rank $b45pr;
 let $total = $b1pr + $b45pr;
 sort $total desc;
 limit 3;
-fetch { ""name"": $c.name, ""totalPageRank"": $total };"
+fetch { ""name"": $c.name, ""total_page_rank"": $total };"
 "387","List the characters with a community number less than 600 and a pagerank greater than 0.4.","MATCH (c:Character)
 WHERE c.community < 600 AND c.pagerank > 0.4
 RETURN c.name, c.community, c.pagerank","match

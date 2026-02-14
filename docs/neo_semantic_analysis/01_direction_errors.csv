@@ -50,7 +50,7 @@ WHERE duration.between(r.startDate, coalesce(r.endDate, date())).years > 10
 RETURN p.name AS ceoName, o.name AS orgName, duration.between(r.startDate, coalesce(r.endDate, date())).years AS yearsAsCEO","match
   $p isa person;
   $o isa organization;
-ceo_of (organization: $o, ceo: $p); fetch { ""ceoName"": $p.name, ""orgName"": $o.name };"
+ceo_of (organization: $o, ceo: $p); fetch { ""ceo_name"": $p.name, ""org_name"": $o.name };"
 "synthetic-1","companies","134","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_INVESTOR]->(Organization) but schema says Organization->Person","What are the names of the first 3 people who are investors in organizations based in 'Seattle'?","MATCH (p:Person)-[:HAS_INVESTOR]->(o:Organization)-[:IN_CITY]->(:City {name: 'Seattle'})
 RETURN p.name
 LIMIT 3","match
@@ -163,7 +163,7 @@ RETURN p.name as person_name, num_orgs as number_of_organizations","match
   $o has revenue $o_revenue;
   $o_revenue > 100000000;
 fetch { ""investor"": $investor.name, ""organization"": $o.name, ""revenue"": $o.revenue };"
-"synthetic-1","companies","450","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_INVESTOR]->(Organization) but schema says Organization->Person","Which organizations have a CEO who is also an investor in other organizations?","MATCH (ceo:Person)<-[:HAS_CEO]-(org:Organization)-[:HAS_INVESTOR]->(investedOrg:Organization) WHERE (ceo)-[:HAS_INVESTOR]->(investedOrg) RETURN org.name AS organization, ceo.name AS ceo, investedOrg.name AS investedOrganization","match $ceo isa person; $org isa organization; $investedOrg isa organization; ceo_of (organization: $org, ceo: $ceo); invested_in (organization: $org, investor: $ceo); fetch { ""organization"": $org.name, ""ceo"": $ceo.name, ""investedOrganization"": $investedOrg.name };"
+"synthetic-1","companies","450","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_INVESTOR]->(Organization) but schema says Organization->Person","Which organizations have a CEO who is also an investor in other organizations?","MATCH (ceo:Person)<-[:HAS_CEO]-(org:Organization)-[:HAS_INVESTOR]->(investedOrg:Organization) WHERE (ceo)-[:HAS_INVESTOR]->(investedOrg) RETURN org.name AS organization, ceo.name AS ceo, investedOrg.name AS investedOrganization","match $ceo isa person; $org isa organization; $invested_org isa organization; ceo_of (organization: $org, ceo: $ceo); invested_in (organization: $org, investor: $ceo); fetch { ""organization"": $org.name, ""ceo"": $ceo.name, ""invested_organization"": $invested_org.name };"
 "synthetic-1","companies","453","high","cypher_wrong_direction","Cypher has (Organization)-[:HAS_BOARD_MEMBER]->(Person) but schema says Person->Organization","Name the organizations with the most board members who are also CEOs of other organizations.","MATCH (o:Organization)<-[:HAS_BOARD_MEMBER]-(boardMember:Person)
 WHERE EXISTS {
   (boardMember)-[:HAS_CEO]->(:Organization)
@@ -181,7 +181,7 @@ LIMIT 10","match
 reduce $count = count($bm) groupby $o;
 sort $count desc;
 limit 10;
-fetch { ""organization"": $o.name, ""boardMemberCEOCount"": $count };"
+fetch { ""organization"": $o.name, ""board_member_ceo_count"": $count };"
 "synthetic-1","companies","483","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_INVESTOR]->(Organization) but schema says Organization->Person","Who are the top 3 investors in the tech industry?","MATCH (i:Person)-[:HAS_INVESTOR]->(o:Organization)-[:HAS_CATEGORY]->(c:IndustryCategory)
 WHERE c.name CONTAINS 'Tech'
 WITH i, count(o) as investments
@@ -669,11 +669,11 @@ fetch { ""user"": $un, ""stream"": $sn };"
 RETURN s.name AS stream, m.name AS moderator, otherStream.name AS vipInStream","match
   $s isa stream, has name $sn;
   $m isa user, has name $mn;
-  $otherStream isa stream, has name $osn;
+  $other_stream isa stream, has name $osn;
   moderation (moderated_channel: $s, moderating_user: $m);
-  vip_status (channel_with_vips: $otherStream, vip_user: $m);
-  not { $s is $otherStream; };
-fetch { ""stream"": $sn, ""moderator"": $mn, ""vipInStream"": $osn };"
+  vip_status (channel_with_vips: $other_stream, vip_user: $m);
+  not { $s is $other_stream; };
+fetch { ""stream"": $sn, ""moderator"": $mn, ""vip_in_stream"": $osn };"
 "synthetic-1","twitch","438","high","cypher_wrong_direction","Cypher has (Stream)-[:VIP]->(User) but schema says User->Stream","Which users are VIPs for the stream with the highest follower count?","MATCH (s:Stream)
 WITH s
 ORDER BY s.followers DESC
@@ -868,7 +868,7 @@ fetch {
   ""title"": $q.title,
   ""favorites"": $f,
   ""link"": $q.link,
-  ""createdAt"": $ca
+  ""created_at"": $ca
 };"
 "synthetic-2","companies","15","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_CEO]->(Organization) but schema says Organization->Person","Find the top 3 organizations that have a CEO with a summary mentioning 'Accenture' and a revenue greater than 50 million.","MATCH (ceo:Person)-[:HAS_CEO]->(org:Organization)
 WHERE ceo.summary CONTAINS 'Accenture' AND org.revenue > 50000000
@@ -897,7 +897,7 @@ board_member_of (member: $ceo, organization: $org2);
 fetch {
   ""Organization"": $org1.name,
   ""CEO"": $ceo.name,
-  ""BoardMemberOf"": $org2.name
+  ""board_member_of"": $org2.name
 };"
 "synthetic-2","companies","124","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_BOARD_MEMBER]->(Organization) but schema says Organization->Person","Which organizations have CEOs that are also board members of other organizations?","MATCH (ceo:Person)-[:HAS_CEO]->(org1:Organization),
       (ceo)-[:HAS_BOARD_MEMBER]->(org2:Organization)
@@ -910,7 +910,7 @@ board_member_of (member: $ceo, organization: $org2);
 fetch {
   ""Organization"": $org1.name,
   ""CEO"": $ceo.name,
-  ""BoardMemberOf"": $org2.name
+  ""board_member_of"": $org2.name
 };"
 "synthetic-2","companies","207","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_INVESTOR]->(Organization) but schema says Organization->Person","List the first 5 people who are investors in more than one organization.","MATCH (p:Person)-[:HAS_INVESTOR]->(o:Organization)
 WITH p, COUNT(DISTINCT o) AS orgCount
@@ -920,15 +920,15 @@ ORDER BY orgCount DESC
 LIMIT 5","match
 $p isa person;
 invested_in (investor: $p, organization: $o);
-reduce $orgCount = count($o) groupby $p;
+reduce $org_count = count($o) groupby $p;
 match
-$orgCount > 1;
+$org_count > 1;
 $p has name $name;
-sort $orgCount desc;
+sort $org_count desc;
 limit 5;
 fetch {
-  ""investorName"": $name,
-  ""orgCount"": $orgCount
+  ""investor_name"": $name,
+  ""org_count"": $org_count
 };"
 "synthetic-2","companies","213","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_BOARD_MEMBER]->(Organization) but schema says Organization->Person","What are the names of the people who are board members of at least two different organizations?","MATCH (p:Person)-[:HAS_BOARD_MEMBER]->(o1:Organization),
       (p)-[:HAS_BOARD_MEMBER]->(o2:Organization)
@@ -955,7 +955,7 @@ reduce $count = count($p) groupby $o;
 match $count > 1;
 sort $count desc;
 limit 3;
-fetch { ""organizationName"": $o.name, ""investorCount"": $count };"
+fetch { ""organization_name"": $o.name, ""investor_count"": $count };"
 "synthetic-2","companies","235","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_CEO]->(Organization) but schema says Organization->Person","Name the first 3 organizations that have a CEO with a name containing 'Julie'.","MATCH (ceo:Person)-[:HAS_CEO]->(org:Organization)
 WHERE ceo.name CONTAINS 'Julie'
 RETURN org.name
@@ -1003,8 +1003,8 @@ $o isa organization;
 invested_in (investor: $p, organization: $o);
 limit 3;
 fetch {
-  ""investorName"": $p.name,
-  ""organizationName"": $o.name
+  ""investor_name"": $p.name,
+  ""organization_name"": $o.name
 };"
 "synthetic-2","companies","414","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_BOARD_MEMBER]->(Organization) but schema says Organization->Person","Which organizations have a CEO who is also a board member of another organization?","MATCH (ceo:Person)<-[:HAS_CEO]-(org1:Organization),
       (ceo)-[:HAS_BOARD_MEMBER]->(org2:Organization)
@@ -1017,33 +1017,33 @@ RETURN org1.name AS Organization, ceo.name AS CEO, org2.name AS BoardMemberOf","
 fetch {
   ""Organization"": $org1.name,
   ""CEO"": $ceo.name,
-  ""BoardMemberOf"": $org2.name
+  ""board_member_of"": $org2.name
 };"
 "synthetic-2","companies","434","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_CEO]->(Organization) but schema says Organization->Person","Identify the organizations that have CEOs who are also investors in other companies.","MATCH (ceo:Person)-[:HAS_CEO]->(org:Organization)
 MATCH (ceo)-[:HAS_INVESTOR]->(otherOrg:Organization)
 RETURN org.name AS Organization, ceo.name AS CEO, otherOrg.name AS InvestedOrganization","match
 $ceo isa person, has name $ceo_name;
 $org isa organization, has name $org_name;
-$otherOrg isa organization, has name $other_org_name;
+$other_org isa organization, has name $other_org_name;
 ceo_of (ceo: $ceo, organization: $org);
-invested_in (investor: $ceo, organization: $otherOrg);
+invested_in (investor: $ceo, organization: $other_org);
 fetch {
   ""Organization"": $org_name,
   ""CEO"": $ceo_name,
-  ""InvestedOrganization"": $other_org_name
+  ""invested_organization"": $other_org_name
 };"
 "synthetic-2","companies","434","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_INVESTOR]->(Organization) but schema says Organization->Person","Identify the organizations that have CEOs who are also investors in other companies.","MATCH (ceo:Person)-[:HAS_CEO]->(org:Organization)
 MATCH (ceo)-[:HAS_INVESTOR]->(otherOrg:Organization)
 RETURN org.name AS Organization, ceo.name AS CEO, otherOrg.name AS InvestedOrganization","match
 $ceo isa person, has name $ceo_name;
 $org isa organization, has name $org_name;
-$otherOrg isa organization, has name $other_org_name;
+$other_org isa organization, has name $other_org_name;
 ceo_of (ceo: $ceo, organization: $org);
-invested_in (investor: $ceo, organization: $otherOrg);
+invested_in (investor: $ceo, organization: $other_org);
 fetch {
   ""Organization"": $org_name,
   ""CEO"": $ceo_name,
-  ""InvestedOrganization"": $other_org_name
+  ""invested_organization"": $other_org_name
 };"
 "synthetic-2","companies","466","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_CEO]->(Organization) but schema says Organization->Person","Which organizations have a CEO who is also a board member in another organization?","MATCH (ceo:Person)-[:HAS_CEO]->(org1:Organization),
       (ceo)-[:HAS_BOARD_MEMBER]->(org2:Organization)
@@ -1056,8 +1056,8 @@ ceo_of (ceo: $ceo, organization: $org1);
 board_member_of (member: $ceo, organization: $org2);
 not { $org1 is $org2; };
 fetch {
-  ""OrganizationWithCEO"": $org1_name,
-  ""OrganizationWithBoardMember"": $org2_name
+  ""organization_with_ceo"": $org1_name,
+  ""organization_with_board_member"": $org2_name
 };"
 "synthetic-2","companies","466","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_BOARD_MEMBER]->(Organization) but schema says Organization->Person","Which organizations have a CEO who is also a board member in another organization?","MATCH (ceo:Person)-[:HAS_CEO]->(org1:Organization),
       (ceo)-[:HAS_BOARD_MEMBER]->(org2:Organization)
@@ -1070,8 +1070,8 @@ ceo_of (ceo: $ceo, organization: $org1);
 board_member_of (member: $ceo, organization: $org2);
 not { $org1 is $org2; };
 fetch {
-  ""OrganizationWithCEO"": $org1_name,
-  ""OrganizationWithBoardMember"": $org2_name
+  ""organization_with_ceo"": $org1_name,
+  ""organization_with_board_member"": $org2_name
 };"
 "synthetic-2","companies","482","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_INVESTOR]->(Organization) but schema says Organization->Person","Which 3 people are mentioned as investors in multiple organizations?","MATCH (p:Person)-[:HAS_INVESTOR]->(o:Organization)
 WITH p, COUNT(DISTINCT o) AS orgCount
@@ -1086,7 +1086,7 @@ reduce $count = count($o) groupby $p, $n;
 match $count > 1;
 sort $count desc;
 limit 3;
-fetch { ""personName"": $n, ""orgCount"": $count };"
+fetch { ""person_name"": $n, ""org_count"": $count };"
 "synthetic-2","companies","515","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_INVESTOR]->(Organization) but schema says Organization->Person","List three persons who are both investors and board members in any organization.","MATCH (p:Person)-[:HAS_INVESTOR]->(o:Organization), (p)-[:HAS_BOARD_MEMBER]->(o)
 RETURN p.name AS personName
 LIMIT 3","match
@@ -1095,7 +1095,7 @@ $o isa organization;
 invested_in (investor: $p, organization: $o);
 board_member_of (member: $p, organization: $o);
 limit 3;
-fetch { ""personName"": $p.name };"
+fetch { ""person_name"": $p.name };"
 "synthetic-2","companies","515","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_BOARD_MEMBER]->(Organization) but schema says Organization->Person","List three persons who are both investors and board members in any organization.","MATCH (p:Person)-[:HAS_INVESTOR]->(o:Organization), (p)-[:HAS_BOARD_MEMBER]->(o)
 RETURN p.name AS personName
 LIMIT 3","match
@@ -1104,7 +1104,7 @@ $o isa organization;
 invested_in (investor: $p, organization: $o);
 board_member_of (member: $p, organization: $o);
 limit 3;
-fetch { ""personName"": $p.name };"
+fetch { ""person_name"": $p.name };"
 "synthetic-2","companies","533","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_INVESTOR]->(Organization) but schema says Organization->Person","Who are the top 3 investors in terms of the number of organizations they invest in?","MATCH (p:Person)-[:HAS_INVESTOR]->(o:Organization)
 WITH p, count(o) as numInvestments
 ORDER BY numInvestments DESC
@@ -1116,8 +1116,8 @@ reduce $count = count($o) groupby $p;
 sort $count desc;
 limit 3;
 fetch {
-  ""InvestorName"": $p.name,
-  ""numInvestments"": $count
+  ""investor_name"": $p.name,
+  ""num_investments"": $count
 };"
 "synthetic-2","companies","541","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_CEO]->(Organization) but schema says Organization->Person","Who are the children of CEOs who are also board members of other organizations?","MATCH (ceo:Person)-[:HAS_CEO]->(org:Organization)
 MATCH (ceo)-[:HAS_CHILD]->(child:Person)
@@ -1126,14 +1126,14 @@ RETURN ceo.name AS CEO, child.name AS Child, otherOrg.name AS BoardMemberOf","ma
 $ceo isa person, has name $ceo_name;
 $child isa person, has name $child_name;
 $org isa organization;
-$otherOrg isa organization, has name $other_org_name;
+$other_org isa organization, has name $other_org_name;
 ceo_of (ceo: $ceo, organization: $org);
 parent_of (parent: $ceo, child: $child);
-board_member_of (member: $child, organization: $otherOrg);
+board_member_of (member: $child, organization: $other_org);
 fetch {
   ""CEO"": $ceo_name,
   ""Child"": $child_name,
-  ""BoardMemberOf"": $other_org_name
+  ""board_member_of"": $other_org_name
 };"
 "synthetic-2","companies","541","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_BOARD_MEMBER]->(Organization) but schema says Organization->Person","Who are the children of CEOs who are also board members of other organizations?","MATCH (ceo:Person)-[:HAS_CEO]->(org:Organization)
 MATCH (ceo)-[:HAS_CHILD]->(child:Person)
@@ -1142,14 +1142,14 @@ RETURN ceo.name AS CEO, child.name AS Child, otherOrg.name AS BoardMemberOf","ma
 $ceo isa person, has name $ceo_name;
 $child isa person, has name $child_name;
 $org isa organization;
-$otherOrg isa organization, has name $other_org_name;
+$other_org isa organization, has name $other_org_name;
 ceo_of (ceo: $ceo, organization: $org);
 parent_of (parent: $ceo, child: $child);
-board_member_of (member: $child, organization: $otherOrg);
+board_member_of (member: $child, organization: $other_org);
 fetch {
   ""CEO"": $ceo_name,
   ""Child"": $child_name,
-  ""BoardMemberOf"": $other_org_name
+  ""board_member_of"": $other_org_name
 };"
 "synthetic-2","companies","560","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_CEO]->(Organization) but schema says Organization->Person","Which 3 organizations have CEOs who have written articles about their own organizations?","MATCH (ceo:Person)-[:HAS_CEO]->(org:Organization)
 MATCH (ceo)-[:HAS_WRITTEN]->(article:Article)-[:MENTIONS]->(org)
@@ -1177,8 +1177,8 @@ $o isa organization, has revenue $r;
 $r > 100000000;
 invested_in (investor: $p, organization: $o);
 fetch {
-  ""InvestorName"": $p.name,
-  ""OrganizationName"": $o.name
+  ""investor_name"": $p.name,
+  ""organization_name"": $o.name
 };"
 "synthetic-2","companies","643","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_BOARD_MEMBER]->(Organization) but schema says Organization->Person","Name persons who are board members of more than three organizations.","MATCH (p:Person)-[:HAS_BOARD_MEMBER]->(o:Organization)
 WITH p, COUNT(o) AS orgCount
@@ -1206,8 +1206,8 @@ $o isa organization;
 invested_in (investor: $p, organization: $o);
 board_member_of (member: $p, organization: $o);
 fetch {
-  ""personName"": $p.name,
-  ""organizationName"": $o.name
+  ""person_name"": $p.name,
+  ""organization_name"": $o.name
 };"
 "synthetic-2","companies","675","high","cypher_wrong_direction","Cypher has (Organization)-[:HAS_BOARD_MEMBER]->(Person) but schema says Person->Organization","List the persons who are both investors and board members in the same organization.","MATCH (p:Person)-[:HAS_INVESTOR]->(o:Organization)<-[:HAS_BOARD_MEMBER]-(p)
 RETURN p.name AS personName, o.name AS organizationName","match
@@ -1216,8 +1216,8 @@ $o isa organization;
 invested_in (investor: $p, organization: $o);
 board_member_of (member: $p, organization: $o);
 fetch {
-  ""personName"": $p.name,
-  ""organizationName"": $o.name
+  ""person_name"": $p.name,
+  ""organization_name"": $o.name
 };"
 "synthetic-2","companies","725","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_CEO]->(Organization) but schema says Organization->Person","Can you name 3 people who are both investors and CEOs of different organizations?","MATCH (ceo:Person)-[:HAS_CEO]->(org1:Organization),
       (investor:Person)-[:HAS_INVESTOR]->(org2:Organization)
@@ -1261,11 +1261,11 @@ ORDER BY orgCount DESC
 LIMIT 3","match
 $p isa person;
 invested_in (investor: $p, organization: $o);
-reduce $orgCount = count($o) groupby $p;
-match $orgCount > 1;
-sort $orgCount desc;
+reduce $org_count = count($o) groupby $p;
+match $org_count > 1;
+sort $org_count desc;
 limit 3;
-fetch { ""name"": $p.name, ""orgCount"": $orgCount };"
+fetch { ""name"": $p.name, ""org_count"": $org_count };"
 "synthetic-2","companies","741","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_CEO]->(Organization) but schema says Organization->Person","Find the first 3 people who have the role of CEO in more than one organization.","MATCH (p:Person)-[:HAS_CEO]->(o:Organization)
 WITH p, COUNT(o) AS orgCount
 WHERE orgCount > 1
@@ -1280,7 +1280,7 @@ sort $org_count desc;
 limit 3;
 fetch {
   ""CEOName"": $p.name,
-  ""orgCount"": $org_count
+  ""org_count"": $org_count
 };"
 "synthetic-2","companies","781","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_BOARD_MEMBER]->(Organization) but schema says Organization->Person","Which people are board members in organizations with more than 1000 employees?","MATCH (p:Person)-[:HAS_BOARD_MEMBER]->(o:Organization)
 WHERE o.nbrEmployees > 1000
@@ -1290,7 +1290,7 @@ $o isa organization, has name $oname, has nbr_employees $emp;
 $emp > 1000;
 board_member_of (member: $p, organization: $o);
 fetch {
-  ""BoardMember"": $pname,
+  ""board_member"": $pname,
   ""Organization"": $oname
 };"
 "synthetic-2","companies","788","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_INVESTOR]->(Organization) but schema says Organization->Person","What are the names of the first 3 organizations that have the same investor?","MATCH (investor:Person)-[:HAS_INVESTOR]->(org1:Organization)
@@ -1317,7 +1317,7 @@ located_in (organization: $o, city: $c);
 invested_in (organization: $o, investor: $p);
 select $n;
 distinct;
-fetch { ""organizationName"": $n };"
+fetch { ""organization_name"": $n };"
 "synthetic-2","companies","859","high","cypher_wrong_direction","Cypher has (Organization)-[:HAS_INVESTOR]->(Person) but schema says Person->Organization","What are the names of the first 3 people who are investors in organizations based in 'Seattle'?","MATCH (c:City {name: ""Seattle""})<-[:IN_CITY]-(o:Organization)<-[:HAS_INVESTOR]-(p:Person)
 RETURN p.name
 LIMIT 3","match
@@ -1334,14 +1334,14 @@ MATCH (ceo)-[:HAS_BOARD_MEMBER]->(otherOrg:Organization)
 RETURN org.name AS Organization, ceo.name AS CEO, otherOrg.name AS BoardMemberOf","match
 $ceo isa person;
 $org isa organization;
-$otherOrg isa organization;
+$other_org isa organization;
 ceo_of (ceo: $ceo, organization: $org);
-board_member_of (member: $ceo, organization: $otherOrg);
-not { $org is $otherOrg; };
+board_member_of (member: $ceo, organization: $other_org);
+not { $org is $other_org; };
 fetch {
   ""Organization"": $org.name,
   ""CEO"": $ceo.name,
-  ""BoardMemberOf"": $otherOrg.name
+  ""board_member_of"": $other_org.name
 };"
 "synthetic-2","companies","901","high","cypher_wrong_direction","Cypher has (Person)-[:HAS_INVESTOR]->(Organization) but schema says Organization->Person","Identify the first 3 organizations that have the same investor and are competitors.","MATCH (investor:Person)-[:HAS_INVESTOR]->(org1:Organization)-[:HAS_COMPETITOR]->(org2:Organization)
 WHERE (investor)-[:HAS_INVESTOR]->(org2)
@@ -1481,7 +1481,7 @@ $f has amount $a;
 reduce $total = sum($a) groupby $e, $name;
 sort $total desc;
 limit 3;
-fetch { ""entityName"": $name, ""totalAmount"": $total };"
+fetch { ""entity_name"": $name, ""total_amount"": $total };"
 "synthetic-2","fincen","215","high","cypher_wrong_direction","Cypher has (Entity)-[:ORIGINATOR]->(Filing) but schema says Filing->Entity","Find the top 5 entities that have originated the most filings with a beneficiary bank in Germany.","MATCH (e:Entity)-[:ORIGINATOR]->(f:Filing)-[:BENEFITS]->(b:Entity)-[:COUNTRY]->(c:Country {name: ""Germany""})
 WITH e, COUNT(f) AS num_filings
 ORDER BY num_filings DESC
@@ -1497,7 +1497,7 @@ entity_country (fincen_entity: $b, country: $c);
 reduce $count = count($f) groupby $e;
 sort $count desc;
 limit 5;
-fetch { ""EntityName"": $e.name, ""NumberOfFilings"": $count };"
+fetch { ""entity_name"": $e.name, ""number_of_filings"": $count };"
 "synthetic-2","fincen","225","high","cypher_wrong_direction","Cypher has (Filing)-[:FILED]->(Entity) but schema says Entity->Filing","Find the top 5 countries where entities are located that filed filings with an amount over 1 million USD in 2008.","MATCH (f:Filing)-[:FILED]->(e:Entity)-[:COUNTRY]->(c:Country)
 WHERE f.amount > 1000000 AND f.begin >= datetime('2008-01-01T00:00:00Z') AND f.end <= datetime('2008-12-31T23:59:59Z')
 RETURN c.name AS country, COUNT(e) AS entity_count
@@ -1536,7 +1536,7 @@ $f isa filing, has originator_bank_country ""Singapore"";
 originator (originating_entity: $e, filing: $f);
 select $e;
 distinct;
-fetch { ""OriginatorEntity"": $e.name };"
+fetch { ""originator_entity"": $e.name };"
 "synthetic-2","fincen","323","high","cypher_wrong_direction","Cypher has (Entity)-[:ORIGINATOR]->(Filing) but schema says Filing->Entity","List the top 3 entities by the number of filings they are involved in as originators in the technology sector.","MATCH (e:Entity)-[:ORIGINATOR]->(f:Filing)
 WHERE e.name CONTAINS ""technology""
 WITH e, COUNT(f) AS num_filings
@@ -1611,7 +1611,7 @@ $count > 20;
 sort $count desc;
 limit 3;
 fetch {
-  ""entityName"": $e.name
+  ""entity_name"": $e.name
 };"
 "synthetic-2","fincen","373","high","cypher_wrong_direction","Cypher has (Entity)-[:BENEFITS]->(Filing) but schema says Filing->Entity","Show the top 5 entities with the most filings as a beneficiary in the financial sector.","MATCH (e:Entity)-[:BENEFITS]->(f:Filing)
 WITH e, COUNT(f) AS num_filings
@@ -1662,8 +1662,8 @@ benefits (beneficiary: $e, filing: $f);
 select $e;
 distinct;
 fetch {
-  ""entityName"": $e.name,
-  ""entityId"": $e.entity_id
+  ""entity_name"": $e.name,
+  ""entity_id"": $e.entity_id
 };"
 "synthetic-2","fincen","560","high","cypher_wrong_direction","Cypher has (Entity)-[:ORIGINATOR]->(Filing) but schema says Filing->Entity","Which entities act as originators in the most number of filings?","MATCH (e:Entity)-[:ORIGINATOR]->(f:Filing)
 WITH e, COUNT(f) AS num_filings
@@ -1689,8 +1689,8 @@ reviews (review: $r, reviewed_business: $b);
 wrote (author: $u, review: $r);
 $u has name $un;
 fetch {
-  ""BusinessName"": $bn,
-  ""ReviewerName"": $un
+  ""business_name"": $bn,
+  ""reviewer_name"": $un
 };"
 "synthetic-2","grandstack","185","high","cypher_wrong_direction","Cypher has (Review)-[:WROTE]->(User) but schema says User->Review","What are the names of businesses with reviews mentioning 'breakfast' and their corresponding categories?","MATCH (b:Business)<-[:REVIEWS]-(r:Review)-[:WROTE]->(u:User)
 WHERE r.text CONTAINS 'breakfast'
@@ -1703,8 +1703,8 @@ RETURN b.name AS businessName, c.name AS categoryName","match
   $c isa category;
   in_category (business: $b, category: $c);
 fetch {
-  ""businessName"": $b.name,
-  ""categoryName"": $c.name
+  ""business_name"": $b.name,
+  ""category_name"": $c.name
 };"
 "synthetic-2","grandstack","362","high","cypher_wrong_direction","Cypher has (Review)-[:WROTE]->(User) but schema says User->Review","What are the categories of businesses that have a review with exactly 4.5 stars?","MATCH (b:Business)<-[:REVIEWS]-(r:Review)-[:WROTE]->(u:User)
 WHERE r.stars = 4.5
@@ -1789,7 +1789,7 @@ produced_by (media: $a, producer: $pc);
 reduce $count = count($a) groupby $pc;
 sort $count desc;
 limit 5;
-fetch { ""ProductionCompany"": $pc.production_company_name, ""NumberOfAdultFilms"": $count };"
+fetch { ""production_company"": $pc.production_company_name, ""number_of_adult_films"": $count };"
 "synthetic-2","neoflix","177","high","cypher_wrong_direction","Cypher has (Video)-[:CREW_FOR]->(Person) but schema says Person->Video","Name the top 5 videos with the most crew members in the 'Production' department.","MATCH (v:Video)-[:CREW_FOR]->(p:Person)
 WHERE p.department = 'Production'
 WITH v, COUNT(p) AS crew_count
@@ -1831,8 +1831,8 @@ reduce $count = count($a) groupby $pc;
 sort $count desc;
 limit 3;
 fetch {
-  ""ProductionCompany"": $pc.production_company_name,
-  ""NumberOfAdultFilms"": $count
+  ""production_company"": $pc.production_company_name,
+  ""number_of_adult_films"": $count
 };"
 "synthetic-2","neoflix","477","high","cypher_wrong_direction","Cypher has (ProductionCompany)-[:PRODUCED_BY]->(Movie) but schema says Movie->ProductionCompany","Which production companies have produced movies that are part of a collection?","MATCH (pc:ProductionCompany)-[:PRODUCED_BY]->(m:Movie)-[:IN_COLLECTION]->(c:Collection)
 RETURN DISTINCT pc.name AS ProductionCompany","match
@@ -1844,7 +1844,7 @@ in_collection (media: $m, collection: $c);
 select $pc;
 distinct;
 fetch {
-  ""ProductionCompany"": $pc.production_company_name
+  ""production_company"": $pc.production_company_name
 };"
 "synthetic-2","neoflix","497","high","cypher_wrong_direction","Cypher has (ProductionCompany)-[:PRODUCED_BY]->(Movie) but schema says Movie->ProductionCompany","What are the first 5 production companies by the number of genres they produce movies in?","MATCH (pc:ProductionCompany)-[:PRODUCED_BY]->(m:Movie)-[:IN_GENRE]->(g:Genre)
 WITH pc, COUNT(DISTINCT g) AS genreCount
@@ -1860,7 +1860,7 @@ distinct;
 reduce $count = count($g) groupby $pc, $name;
 sort $count desc;
 limit 5;
-fetch { ""ProductionCompany"": $name, ""genreCount"": $count };"
+fetch { ""production_company"": $name, ""genre_count"": $count };"
 "synthetic-2","neoflix","603","high","cypher_wrong_direction","Cypher has (ProductionCompany)-[:PRODUCED_BY]->(Video) but schema says Video->ProductionCompany","List the top 5 production companies by the number of videos they have produced.","MATCH (pc:ProductionCompany)-[:PRODUCED_BY]->(v:Video)
 WITH pc, COUNT(v) AS video_count
 ORDER BY video_count DESC
@@ -1887,7 +1887,7 @@ $rel isa crew_for (crew_member: $p, film: $m), has job ""Director"";
 reduce $total_revenue = sum($rev) groupby $p;
 sort $total_revenue desc;
 limit 3;
-fetch { ""Director"": $p.person_name, ""TotalRevenue"": $total_revenue };"
+fetch { ""Director"": $p.person_name, ""total_revenue"": $total_revenue };"
 "synthetic-2","neoflix","746","high","cypher_wrong_direction","Cypher has (ProductionCompany)-[:PRODUCED_BY]->(Adult) but schema says Adult->ProductionCompany","Which 3 production companies have produced the most adult films?","MATCH (pc:ProductionCompany)-[:PRODUCED_BY]->(a:Adult)
 RETURN pc.name, COUNT(a) AS num_adult_films
 ORDER BY num_adult_films DESC
@@ -1910,8 +1910,8 @@ reduce $count = count($a) groupby $pc, $name;
 sort $count desc;
 limit 3;
 fetch {
-  ""ProductionCompany"": $name,
-  ""NumberOfAdultFilms"": $count
+  ""production_company"": $name,
+  ""number_of_adult_films"": $count
 };"
 "synthetic-2","neoflix","852","high","cypher_wrong_direction","Cypher has (ProductionCompany)-[:PRODUCED_BY]->(Movie) but schema says Movie->ProductionCompany","Which 3 production companies have produced movies in more than 3 different languages?","MATCH (pc:ProductionCompany)-[:PRODUCED_BY]->(m:Movie)-[:SPOKEN_IN_LANGUAGE]->(l:Language)
 WITH pc, count(DISTINCT l) AS languageCount
@@ -1929,7 +1929,7 @@ reduce $lang_count = count($l) groupby $pc, $name;
 match $lang_count > 3;
 sort $lang_count desc;
 limit 3;
-fetch { ""ProductionCompany"": $name, ""languageCount"": $lang_count };"
+fetch { ""production_company"": $name, ""language_count"": $lang_count };"
 "synthetic-2","network","16","high","cypher_wrong_direction","Cypher has (Interface)-[:ROUTES]->(Zone) but schema says Zone->Interface","Identify all machines with a disk size greater than 256 GB in zone 4.","MATCH (m:Machine)-[:TYPE]->(t:Type), (m)-[:ROUTES]->(i:Interface), (i)-[:ROUTES]->(z:Zone)
 WHERE t.disk > 256 AND z.zone = 4
 RETURN m.name","match
@@ -1962,8 +1962,8 @@ instance_of (template: $s, running_instance: $a);
 select $sn, $an;
 distinct;
 fetch {
-  ""SoftwareName"": $sn,
-  ""ApplicationName"": $an
+  ""software_name"": $sn,
+  ""application_name"": $an
 };"
 "synthetic-2","offshoreleaks","141","high","cypher_wrong_direction","Cypher has (Entity)-[:officer_of]->(Officer) but schema says Officer->Entity","Identify entities with more than one officer linked to them and have a status of 'Active'.","MATCH (e:Entity)-[:officer_of]->(o:Officer)
 WHERE e.status = 'Active'
@@ -1974,7 +1974,7 @@ $e isa offshore_entity, has status ""Active"", has name $n;
 officer_of (officer: $o, offshore_entity: $e);
 reduce $officer_count = count($o) groupby $e, $n;
 match $officer_count > 1;
-fetch { ""entityName"": $n, ""officerCount"": $officer_count };"
+fetch { ""entity_name"": $n, ""officer_count"": $officer_count };"
 "synthetic-2","recommendations","736","high","cypher_wrong_direction","Cypher has (Movie)-[:RATED]->(User) but schema says User->Movie","Find all movies that have a movieId starting with '1' and have been rated by at least one user.","MATCH (m:Movie)-[:RATED]->(u:User)
 WHERE m.movieId STARTS WITH '1'
 RETURN DISTINCT m.title, m.movieId","match
@@ -1985,7 +1985,7 @@ select $t, $mid;
 distinct;
 fetch {
   ""title"": $t,
-  ""movieId"": $mid
+  ""movie_id"": $mid
 };"
 "synthetic-2","stackoverflow2","242","high","cypher_wrong_direction","Cypher has (Question)-[:ANSWERED]->(Answer) but schema says Answer->Question","What are the top 3 questions with the highest number of tags and answers?","MATCH (q:Question)-[:TAGGED]->(t:Tag)
 WITH q, COUNT(t) AS tag_count
@@ -2021,13 +2021,13 @@ reduce $count = count($a) groupby $q, $vc;
 sort $count desc, $vc desc;
 limit 3;
 match
-answered (question: $q, answer: $acceptedAnswer);
-$acceptedAnswer has is_accepted true;
+answered (question: $q, answer: $accepted_answer);
+$accepted_answer has is_accepted true;
 fetch {
-  ""questionTitle"": $q.title,
-  ""questionLink"": $q.question_link,
-  ""acceptedAnswerLink"": $acceptedAnswer.answer_link,
-  ""acceptedAnswerBody"": $acceptedAnswer.body_markdown
+  ""question_title"": $q.title,
+  ""question_link"": $q.question_link,
+  ""accepted_answer_link"": $accepted_answer.answer_link,
+  ""accepted_answer_body"": $accepted_answer.body_markdown
 };"
 "synthetic-2","twitch","26","high","cypher_wrong_direction","Cypher has (Stream)-[:VIP]->(User) but schema says User->Stream","Who are the first 5 users who are chatters and VIPs in the same streams?","MATCH (u:User)-[:CHATTER]->(s:Stream)<-[:VIP]-(u)
 RETURN u.name AS userName
@@ -2037,9 +2037,9 @@ $s isa stream;
 chat_activity (chatting_user: $u, chatting_channel: $s);
 vip_status (vip_user: $u, vip_channel: $s);
 limit 5;
-fetch { ""userName"": $u.name };"
+fetch { ""user_name"": $u.name };"
 "synthetic-2","twitch","52","high","cypher_wrong_direction","Cypher has (User)-[:VIP]->(Stream) but schema says Stream->User","What are the names of users who are both moderators and VIPs in any stream?","MATCH (u:User)-[:MODERATOR]->(s:Stream), (u)-[:VIP]->(s)
-RETURN DISTINCT u.name AS userName","match $u isa user; $s isa stream; moderation (moderated_channel: $s, moderating_user: $u); vip_status (channel_with_vips: $s, vip_user: $u); select $u; distinct; fetch { ""userName"": $u.name };"
+RETURN DISTINCT u.name AS userName","match $u isa user; $s isa stream; moderation (moderated_channel: $s, moderating_user: $u); vip_status (channel_with_vips: $s, vip_user: $u); select $u; distinct; fetch { ""user_name"": $u.name };"
 "synthetic-2","twitch","66","high","cypher_wrong_direction","Cypher has (Stream)-[:VIP]->(User) but schema says User->Stream","Which streams have users with the role of both VIP and moderator?","MATCH (s:Stream)<-[:VIP]-(u:User)-[:MODERATOR]->(s)
 RETURN s.name AS streamName, s.url AS streamUrl, u.name AS userName","match
 $s isa stream;
@@ -2047,9 +2047,9 @@ $u isa user;
 vip_status (vip_user: $u, vip_channel: $s);
 moderation (moderating_user: $u, moderated_channel: $s);
 fetch {
-  ""streamName"": $s.name,
-  ""streamUrl"": $s.url,
-  ""userName"": $u.name
+  ""stream_name"": $s.name,
+  ""stream_url"": $s.url,
+  ""user_name"": $u.name
 };"
 "synthetic-2","twitch","72","high","cypher_wrong_direction","Cypher has (User)-[:VIP]->(Stream) but schema says Stream->User","Which users have been VIPs in streams with a total view count over 5 million?","MATCH (u:User)-[:VIP]->(s:Stream)
 WHERE s.total_view_count > 5000000
@@ -2073,7 +2073,7 @@ vip_status (vip_user: $u, vip_channel: $s2);
 not { $s1 is $s2; };
 limit 3;
 fetch {
-  ""userName"": $u.name
+  ""user_name"": $u.name
 };"
 "synthetic-2","twitch","133","high","cypher_wrong_direction","Cypher has (User)-[:VIP]->(Stream) but schema says Stream->User","Who are the first 5 users who have been VIPs in streams with fewer than 10,000 followers?","MATCH (u:User)-[:VIP]->(s:Stream)
 WHERE s.followers < 10000
@@ -2099,8 +2099,8 @@ reduce $count = count($s) groupby $u, $name;
 sort $count desc;
 limit 5;
 fetch {
-  ""userName"": $name,
-  ""streamCount"": $count
+  ""user_name"": $name,
+  ""stream_count"": $count
 };"
 "synthetic-2","twitch","198","high","cypher_wrong_direction","Cypher has (User)-[:VIP]->(Stream) but schema says Stream->User","Identify the streams where 'itsbigchase' is both a moderator and VIP.","MATCH (u:User {name: 'itsbigchase'})
 MATCH (u)-[:MODERATOR]->(s:Stream)
@@ -2125,7 +2125,7 @@ not { $s2 is $s1; };
 vip_status (vip_user: $u, channel_with_vips: $s1);
 vip_status (vip_user: $u, channel_with_vips: $s2);
 fetch {
-  ""vipUser"": $uname
+  ""vip_user"": $uname
 };"
 "synthetic-2","twitch","235","high","cypher_wrong_direction","Cypher has (User)-[:VIP]->(Stream) but schema says Stream->User","Which streams are moderated by users who are also VIPs in the same stream?","MATCH (s:Stream)<-[:MODERATOR]-(u:User)-[:VIP]->(s)
 RETURN s.name AS stream_name, u.name AS moderator_vip_name","match
@@ -2185,7 +2185,7 @@ vip_status (vip_user: $u, vip_channel: $s);
 reduce $vip_count = count($s) groupby $u;
 sort $vip_count desc;
 limit 5;
-fetch { ""userName"": $u.name, ""vip_count"": $vip_count };"
+fetch { ""user_name"": $u.name, ""vip_count"": $vip_count };"
 "synthetic-2","twitch","312","high","cypher_wrong_direction","Cypher has (Stream)-[:VIP]->(User) but schema says User->Stream","Which streams have both a 'MODERATOR' and a 'VIP' relationship with the same user?","MATCH (u:User)-[:MODERATOR]->(s:Stream)<-[:VIP]-(u)
 RETURN s.name AS streamName, u.name AS userName","match
 $s isa stream;
@@ -2193,8 +2193,8 @@ $u isa user;
 moderation (moderating_user: $u, moderated_channel: $s);
 vip_status (vip_user: $u, vip_channel: $s);
 fetch {
-  ""streamName"": $s.name,
-  ""userName"": $u.name
+  ""stream_name"": $s.name,
+  ""user_name"": $u.name
 };"
 "synthetic-2","twitch","345","high","cypher_wrong_direction","Cypher has (User)-[:VIP]->(Stream) but schema says Stream->User","What are the first 3 users who are VIPs in streams with more than 10,000 total views?","MATCH (u:User)-[:VIP]->(s:Stream)
 WHERE s.total_view_count > 10000
@@ -2230,18 +2230,18 @@ vip_status (vip_user: $u, vip_channel: $s);
 reduce $count = count($s) groupby $u, $n;
 sort $count desc;
 limit 3;
-fetch { ""userName"": $n, ""vip_stream_count"": $count };"
+fetch { ""user_name"": $n, ""vip_stream_count"": $count };"
 "synthetic-2","twitch","384","high","cypher_wrong_direction","Cypher has (User)-[:VIP]->(Stream) but schema says Stream->User","Which 3 users are VIPs in the most number of different users' streams?","MATCH (vipUser:User)-[:VIP]->(stream:Stream)
 WITH vipUser, count(DISTINCT stream) AS streamCount
 ORDER BY streamCount DESC
 LIMIT 3
 RETURN vipUser.name AS vipUserName, streamCount","match
-$vipUser isa user;
-vip_status (vip_user: $vipUser, vip_channel: $stream);
-reduce $streamCount = count($stream) groupby $vipUser;
-sort $streamCount desc;
+$vip_user isa user;
+vip_status (vip_user: $vip_user, vip_channel: $stream);
+reduce $stream_count = count($stream) groupby $vip_user;
+sort $stream_count desc;
 limit 3;
-fetch { ""vipUserName"": $vipUser.name, ""streamCount"": $streamCount };"
+fetch { ""vip_user_name"": $vip_user.name, ""stream_count"": $stream_count };"
 "synthetic-2","twitch","438","high","cypher_wrong_direction","Cypher has (User)-[:VIP]->(Stream) but schema says Stream->User","Which users are VIPs in streams with a total view count exceeding 500,000?","MATCH (u:User)-[:VIP]->(s:Stream)
 WHERE s.total_view_count > 500000
 RETURN u.name AS vip_user, s.name AS stream_name, s.total_view_count AS view_count","match
@@ -2261,12 +2261,12 @@ RETURN u.name AS vipUser, streamCount","match
 $u isa user;
 $s isa stream;
 vip_status (vip_user: $u, vip_channel: $s);
-reduce $streamCount = count($s) groupby $u;
+reduce $stream_count = count($s) groupby $u;
 match
-$streamCount > 1;
+$stream_count > 1;
 fetch {
-  ""vipUser"": $u.name,
-  ""streamCount"": $streamCount
+  ""vip_user"": $u.name,
+  ""stream_count"": $stream_count
 };"
 "synthetic-2","twitch","484","high","cypher_wrong_direction","Cypher has (User)-[:VIP]->(Stream) but schema says Stream->User","What are the names of the first 3 users who are both moderators and VIPs for any stream?","MATCH (u:User)-[:MODERATOR]->(s:Stream)
 MATCH (u)-[:VIP]->(s)
@@ -2288,10 +2288,10 @@ RETURN u.name AS userName, streamCount","match
 $u isa user;
 $s isa stream;
 vip_status (vip_user: $u, vip_channel: $s);
-reduce $streamCount = count($s) groupby $u;
-sort $streamCount desc;
+reduce $stream_count = count($s) groupby $u;
+sort $stream_count desc;
 limit 3;
-fetch { ""userName"": $u.name, ""streamCount"": $streamCount };"
+fetch { ""user_name"": $u.name, ""stream_count"": $stream_count };"
 "synthetic-2","twitch","532","high","cypher_wrong_direction","Cypher has (User)-[:VIP]->(Stream) but schema says Stream->User","Which 3 users have VIP status on the most streams?","MATCH (u:User)-[:VIP]->(s:Stream)
 WITH u, COUNT(s) AS vip_stream_count
 ORDER BY vip_stream_count DESC
@@ -2303,7 +2303,7 @@ vip_status (vip_user: $u, vip_channel: $s);
 reduce $count = count($s) groupby $u;
 sort $count desc;
 limit 3;
-fetch { ""userName"": $u.name, ""vip_stream_count"": $count };"
+fetch { ""user_name"": $u.name, ""vip_stream_count"": $count };"
 "synthetic-2","twitch","554","high","cypher_wrong_direction","Cypher has (Stream)-[:VIP]->(User) but schema says User->Stream","Which 3 streams have the highest number of VIP users?","MATCH (s:Stream)<-[:VIP]-(u:User)
 WITH s, COUNT(u) AS vip_count
 ORDER BY vip_count DESC

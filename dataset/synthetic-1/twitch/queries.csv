@@ -146,7 +146,7 @@ LIMIT 5","match
   $ca < 2022-01-01;
 sort $ca asc;
 limit 5;
-fetch { ""streamName"": $sn, ""createdAt"": $ca };"
+fetch { ""stream_name"": $sn, ""created_at"": $ca };"
 "15","List the first 3 users who are VIPs in the stream 'itsbigchase'.","MATCH (u:User)-[:VIP]->(s:Stream {name: 'itsbigchase'})
 RETURN u.name AS user
 LIMIT 3","match
@@ -334,8 +334,8 @@ LIMIT 3","match
   $ca < 2019-01-01;
   vip_status (channel_with_vips: $s, vip_user: $vip);
   $vip has name $vn;
-reduce $vipCount = count($s) groupby $vn;
-sort $vipCount desc;
+reduce $vip_count = count($s) groupby $vn;
+sort $vip_count desc;
 limit 3;"
 "36","List the first 5 streams that play the game 'Rust'.","MATCH (s:Stream)-[:PLAYS]->(:Game {name: 'Rust'})
 RETURN s.name AS stream_name, s.url AS stream_url
@@ -598,8 +598,8 @@ WHERE languageCount > 1
 RETURN s","match
   $s isa stream, has name $sn;
   language_usage (channel: $s, used_language: $l);
-reduce $languageCount = count($l) groupby $sn;
-sort $languageCount desc;"
+reduce $language_count = count($l) groupby $sn;
+sort $language_count desc;"
 "69","Which users are chatters in more than three streams?","MATCH (u:User)-[:CHATTER]->(s:Stream)
 WITH u, count(s) AS num_streams
 WHERE num_streams > 3
@@ -678,8 +678,8 @@ LIMIT 3","match
   $f > 1000000;
   game_play (streaming_channel: $s, played_game: $g);
   $g has name $gn;
-reduce $playCount = count($s) groupby $gn;
-sort $playCount desc;
+reduce $play_count = count($s) groupby $gn;
+sort $play_count desc;
 limit 3;"
 "78","Find the top 5 streams with the most total view count that use English language.","MATCH (s:Stream)-[:HAS_LANGUAGE]->(l:Language {name: 'en'})
 RETURN s.name AS stream, s.total_view_count AS views
@@ -861,8 +861,8 @@ ORDER BY s.followers DESC","match
   $s isa stream, has name $sn, has followers $f;
   game_play (streaming_channel: $s, played_game: $g);
   $g has name $gn;
-reduce $streamCount = count($s) groupby $gn;
-sort $streamCount asc;
+reduce $stream_count = count($s) groupby $gn;
+sort $stream_count asc;
 limit 3;"
 "96","List the top 5 oldest streams in the graph.","MATCH (s:Stream)
 RETURN s.name, s.createdAt
@@ -871,7 +871,7 @@ LIMIT 5","match
   $s isa stream, has name $sn, has created_at $ca;
 sort $ca asc;
 limit 5;
-fetch { ""name"": $sn, ""createdAt"": $ca };"
+fetch { ""name"": $sn, ""created_at"": $ca };"
 "97","What are the top 3 most viewed games by streams that have a team?","MATCH (s:Stream)-[:PLAYS]->(g:Game), (s)-[:HAS_TEAM]->(:Team)
 WITH g.name AS game, sum(s.total_view_count) AS total_views
 RETURN game, total_views
@@ -951,12 +951,12 @@ ORDER BY numStreams DESC","match
   $g has name $gn;
 select $s, $gn;
 distinct;
-reduce $numStreams = count($s) groupby $gn;
-match $numStreams > 5;
-sort $numStreams desc;
+reduce $num_streams = count($s) groupby $gn;
+match $num_streams > 5;
+sort $num_streams desc;
 fetch {
   ""game"": $gn,
-  ""numStreams"": $numStreams
+  ""num_streams"": $num_streams
 };"
 "105","What are the names of users who are moderators for more than three streams?","MATCH (u:User)-[:MODERATOR]->(s:Stream)
 WITH u, count(s) AS num_moderated_streams
@@ -1115,10 +1115,10 @@ ORDER BY moderatorCount DESC
 LIMIT 10","match
   $s isa stream, has name $sn;
   try { moderation (moderated_channel: $s, moderating_user: $m); };
-reduce $moderatorCount = count($m) groupby $sn;
-sort $moderatorCount desc;
+reduce $moderator_count = count($m) groupby $sn;
+sort $moderator_count desc;
 limit 10;
-fetch { ""streamName"": $sn, ""moderatorCount"": $moderatorCount };"
+fetch { ""stream_name"": $sn, ""moderator_count"": $moderator_count };"
 "124","List the games played by streams with the lowest follower counts.","MATCH (s:Stream)-[:PLAYS]->(g:Game)
 WHERE s.followers IS NOT NULL
 WITH g, min(s.followers) AS minFollowers
@@ -1128,8 +1128,8 @@ RETURN g.name AS game, minFollowers AS lowestFollowerCount","match
   $s isa stream, has followers $f;
   game_play (streaming_channel: $s, played_game: $g);
   $g has name $gn;
-reduce $minFollowers = min($f) groupby $gn;
-sort $minFollowers asc;
+reduce $min_followers = min($f) groupby $gn;
+sort $min_followers asc;
 limit 10;"
 "125","Which streams are part of the team 'ESO Stream Team'?","MATCH (s:Stream)-[:HAS_TEAM]->(t:Team {name: 'ESO Stream Team'})
 RETURN s.name AS stream_name, s.url AS stream_url","match
@@ -1192,8 +1192,8 @@ ORDER BY streamCount DESC
 LIMIT 3","match
   game_play (streaming_channel: $s, played_game: $g);
   $g has name $gn;
-reduce $streamCount = count($s) groupby $gn;
-sort $streamCount desc;
+reduce $stream_count = count($s) groupby $gn;
+sort $stream_count desc;
 limit 3;"
 "133","What are the top 5 languages used by streams with more than 100,000 followers?","MATCH (s:Stream)-[:HAS_LANGUAGE]->(l:Language)
 WHERE s.followers > 100000
@@ -1329,7 +1329,7 @@ LIMIT 5","match
   $ca > 2019-01-01;
 sort $tvc desc;
 limit 5;
-fetch { ""name"": $sn, ""createdAt"": $ca, ""total_view_count"": $tvc };"
+fetch { ""name"": $sn, ""created_at"": $ca, ""total_view_count"": $tvc };"
 "147","What are the top 3 most common games played by streams with a 'ru' language setup?","MATCH (s:Stream)-[:HAS_LANGUAGE]->(:Language {name: 'ru'})
 MATCH (s)-[:PLAYS]->(g:Game)
 RETURN g.name AS game, count(*) AS streams
@@ -1398,7 +1398,7 @@ LIMIT 5","match
   $s isa stream, has name $sn, has created_at $ca;
 sort $ca asc;
 limit 5;
-fetch { ""name"": $sn, ""createdAt"": $ca };"
+fetch { ""name"": $sn, ""created_at"": $ca };"
 "154","Which 3 languages are least common among streams with more than 10,000 followers?","MATCH (s:Stream)-[:HAS_LANGUAGE]->(l:Language)
 WHERE s.followers > 10000
 WITH l, count(*) as count
@@ -1473,7 +1473,7 @@ RETURN u.name AS user, s.name AS stream, s.createdAt AS streamCreatedAt","match
   $u has name $un;
 sort $ca asc;
 limit 3;
-fetch { ""user"": $un, ""stream"": $sn, ""streamCreatedAt"": $ca };"
+fetch { ""user"": $un, ""stream"": $sn, ""stream_created_at"": $ca };"
 "161","List the top 5 streams that are part of a team created before 2015.","MATCH (s:Stream)-[:HAS_TEAM]->(t:Team)
 WHERE t.createdAt < date(""2015-01-01"")
 RETURN s.name AS stream, s.followers AS followers
@@ -1503,8 +1503,8 @@ ORDER BY uniqueGames DESC
 LIMIT 3","match
   $s isa stream, has name $sn;
   game_play (streaming_channel: $s, played_game: $g);
-reduce $uniqueGames = count($g) groupby $sn;
-sort $uniqueGames desc;
+reduce $unique_games = count($g) groupby $sn;
+sort $unique_games desc;
 limit 3;"
 "164","List the top 5 streams that have had more than three different languages associated with them.","MATCH (s:Stream)-[:HAS_LANGUAGE]->(l:Language)
 WITH s, count(distinct l) as languageCount
@@ -1514,8 +1514,8 @@ ORDER BY languageCount DESC
 LIMIT 5","match
   $s isa stream, has name $sn;
   language_usage (channel: $s, used_language: $l);
-reduce $languageCount = count($l) groupby $sn;
-sort $languageCount desc;
+reduce $language_count = count($l) groupby $sn;
+sort $language_count desc;
 limit 5;"
 "165","What are the first 3 users who are VIPs in streams with more than 10,000 total views?","MATCH (u:User)-[:VIP]->(s:Stream)
 WHERE s.total_view_count > 10000
@@ -1536,7 +1536,7 @@ LIMIT 5","match
   $t isa team, has name $tn, has created_at $ca;
 sort $ca asc;
 limit 5;
-fetch { ""team"": $tn, ""createdAt"": $ca };"
+fetch { ""team"": $tn, ""created_at"": $ca };"
 "167","Which 3 streams have the most users as chatters?","MATCH (s:Stream)<-[:CHATTER]-(u:User)
 RETURN s.name AS stream, count(u) AS chatter_count
 ORDER BY chatter_count DESC
@@ -1639,7 +1639,7 @@ LIMIT 3","match
   $ca > 2020-01-01;
 sort $ca asc;
 limit 3;
-fetch { ""name"": $s.name, ""createdAt"": $ca };"
+fetch { ""name"": $s.name, ""created_at"": $ca };"
 "177","What are the top 5 teams by number of associated streams with over 10,000 followers?","MATCH (t:Team)<-[:HAS_TEAM]-(s:Stream)
 WHERE s.followers > 10000
 WITH t, count(s) as numStreams
@@ -1650,8 +1650,8 @@ RETURN t.name as team, numStreams","match
   team_membership (member_stream: $s, organization: $t);
   $s has followers $f;
   $f > 10000;
-reduce $numStreams = count($s) groupby $tn;
-sort $numStreams desc;
+reduce $num_streams = count($s) groupby $tn;
+sort $num_streams desc;
 limit 5;"
 "178","Which 3 languages are associated with the streams that have the least followers?","MATCH (s:Stream)-[:HAS_LANGUAGE]->(l:Language)
 WITH l, min(s.followers) AS minFollowers
@@ -1661,8 +1661,8 @@ LIMIT 3","match
   $s isa stream, has followers $f;
   language_usage (channel: $s, used_language: $l);
   $l has name $ln;
-reduce $minFollowers = min($f) groupby $ln;
-sort $minFollowers asc;
+reduce $min_followers = min($f) groupby $ln;
+sort $min_followers asc;
 limit 3;"
 "179","List the top 5 streams that have the most number of languages associated.","MATCH (s:Stream)-[:HAS_LANGUAGE]->(l:Language)
 RETURN s.name AS stream, count(l) AS num_languages
@@ -1743,7 +1743,7 @@ LIMIT 5","match
   $s isa stream, has created_at $ca;
 sort $ca asc;
 limit 5;
-fetch { ""name"": $s.name, ""createdAt"": $ca };"
+fetch { ""name"": $s.name, ""created_at"": $ca };"
 "187","Which 3 games are played by streams with the highest ratio of followers to total view counts?","MATCH (s:Stream)-[:PLAYS]->(g:Game)
 WITH g, s.followers * 1.0 / s.total_view_count AS follower_view_ratio
 RETURN g.name AS game, max(follower_view_ratio) AS max_ratio
@@ -1769,7 +1769,7 @@ LIMIT 3","match
   $ca < 2019-01-01;
 sort $ca asc;
 limit 3;
-fetch { ""name"": $s.name, ""createdAt"": $ca };"
+fetch { ""name"": $s.name, ""created_at"": $ca };"
 "189","Which 3 streams have the most users as VIPs?","MATCH (s:Stream)-[:VIP]->(u:User)
 RETURN s.name AS stream, count(u) AS vip_count
 ORDER BY vip_count DESC
@@ -1911,7 +1911,7 @@ RETURN s.name AS stream, s.followers AS followerCount","match
   $s has name $sn, has followers $f;
   $f >= 1000;
   $f <= 5000;
-fetch { ""stream"": $sn, ""followerCount"": $f };"
+fetch { ""stream"": $sn, ""follower_count"": $f };"
 "204","Find the first 3 users who are moderators of more than one stream.","MATCH (u:User)-[:MODERATOR]->(s:Stream)
 WITH u, count(s) AS num_moderated_streams
 WHERE num_moderated_streams > 1
@@ -2016,15 +2016,15 @@ LIMIT 5","match
   $s has name $sn, has followers $f;
 sort $f asc;
 limit 5;
-fetch { ""stream"": $sn, ""followerCount"": $f };"
+fetch { ""stream"": $sn, ""follower_count"": $f };"
 "215","What are the first 3 streams with the most VIPs linked to them?","MATCH (s:Stream)<-[:VIP]-()
 RETURN s.name AS stream, count(*) AS vipCount
 ORDER BY vipCount DESC
 LIMIT 3","match
   $s isa stream, has name $sn;
   vip_status (channel_with_vips: $s, vip_user: $v);
-reduce $vipCount = count($v) groupby $sn;
-sort $vipCount desc;
+reduce $vip_count = count($v) groupby $sn;
+sort $vip_count desc;
 limit 3;"
 "216","Which streams have at least one user named 'itsbigchase' as a chatter?","MATCH (s:Stream)
 WHERE exists{ (u:User {name: 'itsbigchase'})-[:CHATTER]->(s) }
@@ -2166,7 +2166,7 @@ LIMIT 3","match
   $s has name $sn;
 sort $tca asc;
 limit 3;
-fetch { ""stream"": $sn, ""team"": $tn, ""teamCreatedAt"": $tca };"
+fetch { ""stream"": $sn, ""team"": $tn, ""team_created_at"": $tca };"
 "231","Which streams have a total view count above 1 million and a moderator named 'creightonolsen'?","MATCH (s:Stream)
 WHERE s.total_view_count > 1000000 AND
       exists{ (s)-[:MODERATOR]->(:User {name: 'creightonolsen'}) }
@@ -2187,7 +2187,7 @@ LIMIT 3","match
   $cca < 2017-01-01;
 sort $sca asc;
 limit 3;
-fetch { ""stream"": $sn, ""streamCreated"": $sca };"
+fetch { ""stream"": $sn, ""stream_created"": $sca };"
 "233","List the top 5 streams with moderators who are users and have a follower count above 2000.","MATCH (s:Stream)-[:MODERATOR]->(u:User)
 WHERE u.followers > 2000
 RETURN s.name AS stream, s.followers AS followers
@@ -2315,7 +2315,7 @@ LIMIT 5","match
   $ca < 2018-01-01;
 sort $tvc desc;
 limit 5;
-fetch { ""stream"": $sn, ""createdAt"": $ca };"
+fetch { ""stream"": $sn, ""created_at"": $ca };"
 "246","What are the first 3 streams with a language named 'ru' and a total view count below 10,000?","MATCH (s:Stream)-[:HAS_LANGUAGE]->(l:Language {name: 'ru'})
 WHERE s.total_view_count < 10000
 RETURN s.name, s.total_view_count
@@ -2550,8 +2550,8 @@ LIMIT 5","match
   game_play (streaming_channel: $s, played_game: $g);
   language_usage (channel: $s, used_language: $l);
   $g has name $gn;
-reduce $languageCount = count($l) groupby $gn;
-sort $languageCount desc;
+reduce $language_count = count($l) groupby $gn;
+sort $language_count desc;
 limit 5;"
 "268","Which 3 teams were created most recently and have at least one stream associated with them?","MATCH (t:Team)<-[:HAS_TEAM]-(s:Stream)
 WITH t, count(s) AS stream_count
@@ -2577,7 +2577,7 @@ LIMIT 3","match
   $g has name $gn;
 sort $ca asc;
 limit 3;
-fetch { ""streamName"": $sn, ""gameName"": $gn, ""createdAt"": $ca };"
+fetch { ""stream_name"": $sn, ""game_name"": $gn, ""created_at"": $ca };"
 "270","Which streams have a follower count between 10,000 and 50,000, listing the first 5?","MATCH (s:Stream)
 WHERE s.followers >= 10000 AND s.followers <= 50000
 RETURN s.name AS stream_name, s.followers
@@ -2632,7 +2632,7 @@ LIMIT 3","match
   $s has name $sn;
 sort $tca asc;
 limit 3;
-fetch { ""stream"": $sn, ""team"": $tn, ""teamCreatedAt"": $tca };"
+fetch { ""stream"": $sn, ""team"": $tn, ""team_created_at"": $tca };"
 "275","Which streams play 'VALORANT' and have over one million total views, listing the first 5?","MATCH (s:Stream)-[:PLAYS]->(g:Game {name: 'VALORANT'})
 WHERE s.total_view_count > 1000000
 RETURN s.name AS stream, s.total_view_count AS total_views
@@ -2656,7 +2656,7 @@ LIMIT 3","match
   $ca < 2015-01-01T00:00:00;
 sort $ca asc;
 limit 3;
-fetch { ""moderator"": $mn, ""modSince"": $ca };"
+fetch { ""moderator"": $mn, ""mod_since"": $ca };"
 "277","List the first 5 streams that have changed their primary game at least once.","MATCH (s:Stream)-[:PLAYS]->(g:Game)
 WITH s, count(distinct g) AS num_games
 WHERE num_games > 1
@@ -2830,7 +2830,7 @@ LIMIT 3","match
   $t has name $tn, has created_at $tca;
 sort $tca asc;
 limit 3;
-fetch { ""stream"": $sn, ""team"": $tn, ""teamCreatedAt"": $tca };"
+fetch { ""stream"": $sn, ""team"": $tn, ""team_created_at"": $tca };"
 "294","Which 3 users have chatted in the most streams and what are their names?","MATCH (u:User)-[:CHATTER]->(s:Stream)
 WITH u, count(s) AS stream_count
 ORDER BY stream_count DESC
@@ -2848,8 +2848,8 @@ LIMIT 3
 RETURN s.url AS streamURL","match
   $s isa stream, has url $u;
   language_usage (channel: $s, used_language: $l);
-reduce $languageCount = count($l) groupby $u;
-sort $languageCount desc;
+reduce $language_count = count($l) groupby $u;
+sort $language_count desc;
 limit 3;"
 "296","List the first 5 streams that have been moderated by the same user for over 5 years.","MATCH (s:Stream)-[:MODERATOR]->(u:User)
 WHERE u.createdAt < datetime() - duration('P5Y')
@@ -2952,7 +2952,7 @@ LIMIT 5","match
   language_usage (channel: $s, used_language: $l2);
   not { $l1 is $l2; };
 limit 5;
-fetch { ""streamName"": $sn, ""streamUrl"": $su };"
+fetch { ""stream_name"": $sn, ""stream_url"": $su };"
 "305","What are the top 3 streams by total view count that also have a team associated with them?","MATCH (s:Stream)-[:HAS_TEAM]->(:Team)
 RETURN s.name AS stream_name, s.total_view_count AS total_views
 ORDER BY s.total_view_count DESC
@@ -3046,7 +3046,7 @@ LIMIT 3","match
   language_usage (channel: $s, used_language: $l2);
   not { $l1 is $l2; };
 limit 3;
-fetch { ""streamName"": $sn, ""streamUrl"": $su };"
+fetch { ""stream_name"": $sn, ""stream_url"": $su };"
 "313","Which streams have no team associated and list the first 5.","MATCH (s:Stream)
 WHERE NOT exists((s)-[:HAS_TEAM]->(:Team))
 RETURN s.name AS stream_name, s.url AS stream_url
@@ -3474,7 +3474,7 @@ RETURN s.name AS stream, s.followers AS followerCount","match
   game_play (streaming_channel: $s, played_game: $g);
   language_usage (channel: $s, used_language: $l);
   $s has name $sn, has followers $f;
-fetch { ""stream"": $sn, ""followerCount"": $f };"
+fetch { ""stream"": $sn, ""follower_count"": $f };"
 "356","Which users are VIPs for the stream with the highest follower count?","MATCH (s:Stream)
 WITH s
 ORDER BY s.followers DESC
@@ -3631,8 +3631,8 @@ RETURN l.name AS language, count(s) AS streamCount
 ORDER BY streamCount DESC","match
   language_usage (channel: $s, used_language: $l);
   $l has name $ln;
-reduce $streamCount = count($s) groupby $ln;
-sort $streamCount desc;"
+reduce $stream_count = count($s) groupby $ln;
+sort $stream_count desc;"
 "376","List the top 3 streams that have the most chatters.","MATCH (s:Stream)<-[:CHATTER]-()
 RETURN s.name AS stream, count(*) AS chatter_count
 ORDER BY chatter_count DESC
@@ -3802,7 +3802,7 @@ LIMIT 5","match
   $s isa stream, has name $sn, has created_at $ca;
 sort $ca desc;
 limit 5;
-fetch { ""name"": $sn, ""createdAt"": $ca };"
+fetch { ""name"": $sn, ""created_at"": $ca };"
 "400","What are the descriptions of the streams with the least followers?","MATCH (s:Stream)
 WHERE s.description IS NOT NULL
 RETURN s.description
@@ -3817,7 +3817,7 @@ WHERE t.createdAt < date(""2015-01-01"")
 RETURN t.name AS team, t.createdAt AS createdAt","match
   $t isa team, has created_at $ca, has name $n;
   $ca < 2015-01-01;
-fetch { ""team"": $n, ""createdAt"": $ca };"
+fetch { ""team"": $n, ""created_at"": $ca };"
 "402","How many users are chatters in more than one stream?","MATCH (u:User)-[:CHATTER]->(:Stream)
 WITH u, count(DISTINCT u) AS stream_count
 WHERE stream_count > 1
@@ -3940,10 +3940,10 @@ RETURN g.name as game, playCount","match
   $f > 100000;
   game_play (streaming_channel: $s, played_game: $g);
   $g has name $gn;
-reduce $playCount = count($s) groupby $gn;
-sort $playCount desc;
+reduce $play_count = count($s) groupby $gn;
+sort $play_count desc;
 limit 3;
-fetch { ""game"": $gn, ""playCount"": $playCount };"
+fetch { ""game"": $gn, ""play_count"": $play_count };"
 "417","What are the top 3 most common languages used by streams?","MATCH (s:Stream)-[:HAS_LANGUAGE]->(l:Language)
 RETURN l.name AS language, count(*) AS count
 ORDER BY count DESC
@@ -3993,7 +3993,7 @@ LIMIT 3","match
   $s isa stream, has name $n, has created_at $ca, has url $u;
   $ca < 2010-01-01;
 limit 3;
-fetch { ""name"": $n, ""createdAt"": $ca, ""url"": $u };"
+fetch { ""name"": $n, ""created_at"": $ca, ""url"": $u };"
 "422","Which streams are part of a team created after 2015?","MATCH (s:Stream)-[:HAS_TEAM]->(t:Team)
 WHERE t.createdAt > datetime('2015-01-01')
 RETURN s.name AS stream, t.name AS team","match
@@ -4089,7 +4089,7 @@ LIMIT 3","match
   $ca < 2017-01-01;
 sort $ca asc;
 limit 3;
-fetch { ""team"": $tn, ""createdAt"": $ca };"
+fetch { ""team"": $tn, ""created_at"": $ca };"
 "432","Show the top 3 teams by the number of streams they are associated with.","MATCH (t:Team)<-[:HAS_TEAM]-(s:Stream)
 RETURN t.name AS team, count(s) AS num_streams
 ORDER BY num_streams DESC
@@ -4115,11 +4115,11 @@ fetch { ""name"": $un };"
 RETURN s.name AS stream, m.name AS moderator, otherStream.name AS vipInStream","match
   $s isa stream, has name $sn;
   $m isa user, has name $mn;
-  $otherStream isa stream, has name $osn;
+  $other_stream isa stream, has name $osn;
   moderation (moderated_channel: $s, moderating_user: $m);
-  vip_status (channel_with_vips: $otherStream, vip_user: $m);
-  not { $s is $otherStream; };
-fetch { ""stream"": $sn, ""moderator"": $mn, ""vipInStream"": $osn };"
+  vip_status (channel_with_vips: $other_stream, vip_user: $m);
+  not { $s is $other_stream; };
+fetch { ""stream"": $sn, ""moderator"": $mn, ""vip_in_stream"": $osn };"
 "435","Identify the 3 streams with the most user moderators.","MATCH (s:Stream)<-[:MODERATOR]-(u:User)
 RETURN s.name AS stream, count(u) AS num_moderators
 ORDER BY num_moderators DESC
@@ -4175,7 +4175,7 @@ LIMIT 3","match
   team_membership (member_stream: $s, organization: $t);
 sort $ca asc;
 limit 3;
-fetch { ""team"": $tn, ""createdAt"": $ca };"
+fetch { ""team"": $tn, ""created_at"": $ca };"
 "440","What are the top 5 games played by streams created before 2015?","MATCH (s:Stream)-[:PLAYS]->(g:Game)
 WHERE s.createdAt < date(""2015-01-01"")
 RETURN g.name AS game, count(*) AS streams
@@ -4294,7 +4294,7 @@ LIMIT 3","match
   $s isa stream, has name $n, has created_at $ca;
 sort $ca desc;
 limit 3;
-fetch { ""name"": $n, ""createdAt"": $ca };"
+fetch { ""name"": $n, ""created_at"": $ca };"
 "452","List the top 5 users who are moderators for the most streams.","MATCH (u:User)-[:MODERATOR]->(s:Stream)
 WITH u, count(s) AS num_moderated_streams
 ORDER BY num_moderated_streams DESC
@@ -4390,10 +4390,10 @@ RETURN g.name AS game, playCount","match
   game_play (streaming_channel: $s, played_game: $g);
   vip_status (channel_with_vips: $s, vip_user: $u);
   $g has name $gn;
-reduce $playCount = count($s) groupby $gn;
-sort $playCount desc;
+reduce $play_count = count($s) groupby $gn;
+sort $play_count desc;
 limit 3;
-fetch { ""game"": $gn, ""playCount"": $playCount };"
+fetch { ""game"": $gn, ""play_count"": $play_count };"
 "461","Find the streams with the most unique games played.","MATCH (s:Stream)-[:PLAYS]->(g:Game)
 WITH s, count(distinct g) as uniqueGamesPlayed
 RETURN s.name as streamName, uniqueGamesPlayed
@@ -4401,10 +4401,10 @@ ORDER BY uniqueGamesPlayed DESC
 LIMIT 10","match
   $s isa stream, has name $sn;
   game_play (streaming_channel: $s, played_game: $g);
-reduce $uniqueGamesPlayed = count($g) groupby $sn;
-sort $uniqueGamesPlayed desc;
+reduce $unique_games_played = count($g) groupby $sn;
+sort $unique_games_played desc;
 limit 10;
-fetch { ""streamName"": $sn, ""uniqueGamesPlayed"": $uniqueGamesPlayed };"
+fetch { ""stream_name"": $sn, ""unique_games_played"": $unique_games_played };"
 "462","Which streams have a moderator named 'itsbigchase'?","MATCH (s:Stream)<-[:MODERATOR]-(u:User {name: 'itsbigchase'})
 RETURN s","match
   $s isa stream, has name $sn, has url $u, has followers $f, has total_view_count $tvc;
@@ -4446,10 +4446,10 @@ RETURN s.name as stream, numGames
 LIMIT 10","match
   $s isa stream, has name $sn;
   game_play (streaming_channel: $s, played_game: $g);
-reduce $numGames = count($g) groupby $sn;
-sort $numGames desc;
+reduce $num_games = count($g) groupby $sn;
+sort $num_games desc;
 limit 10;
-fetch { ""stream"": $sn, ""numGames"": $numGames };"
+fetch { ""stream"": $sn, ""num_games"": $num_games };"
 "467","Identify 5 streams where users are both VIPs and moderators.","MATCH (s:Stream)
 WHERE exists{ (s)<-[:VIP]-(:User)-[:MODERATOR]->(s) }
 RETURN s.name
@@ -4485,10 +4485,10 @@ LIMIT 3
 RETURN s.name as streamName, numLanguages","match
   $s isa stream, has name $sn;
   language_usage (channel: $s, used_language: $l);
-reduce $numLanguages = count($l) groupby $sn;
-sort $numLanguages desc;
+reduce $num_languages = count($l) groupby $sn;
+sort $num_languages desc;
 limit 3;
-fetch { ""streamName"": $sn, ""numLanguages"": $numLanguages };"
+fetch { ""stream_name"": $sn, ""num_languages"": $num_languages };"
 "471","Which streams have a user as both a VIP and a MODERATOR?","MATCH (s:Stream)<-[:VIP]-(u:User)-[:MODERATOR]->(s)
 RETURN s.name AS stream, u.name AS user","match
   $s isa stream, has name $sn;
@@ -4615,9 +4615,9 @@ RETURN s.name AS stream, collect(l.name) AS languages, count(l) AS languageCount
 ORDER BY languageCount DESC","match
   $s isa stream, has name $sn;
   language_usage (channel: $s, used_language: $l);
-reduce $languageCount = count($l) groupby $sn;
-sort $languageCount desc;
-fetch { ""stream"": $sn, ""languageCount"": $languageCount };"
+reduce $language_count = count($l) groupby $sn;
+sort $language_count desc;
+fetch { ""stream"": $sn, ""language_count"": $language_count };"
 "483","List the streams that are moderated by users with more than 10,000 followers.","MATCH (s:Stream)<-[:MODERATOR]-(u:User)
 WHERE u.followers > 10000
 RETURN s","match
@@ -4632,10 +4632,10 @@ ORDER BY languageCount DESC
 LIMIT 3","match
   $s isa stream, has name $sn;
   language_usage (channel: $s, used_language: $l);
-reduce $languageCount = count($l) groupby $sn;
-sort $languageCount desc;
+reduce $language_count = count($l) groupby $sn;
+sort $language_count desc;
 limit 3;
-fetch { ""stream"": $sn, ""languageCount"": $languageCount };"
+fetch { ""stream"": $sn, ""language_count"": $language_count };"
 "485","Which streams have a user named 'itsbigchase' as a moderator and a chatter?","MATCH (s:Stream)
 WHERE exists{ (s)<-[:MODERATOR]-(:User {name: 'itsbigchase'}) }
 AND exists{ (s)<-[:CHATTER]-(:User {name: 'itsbigchase'}) }
@@ -4654,10 +4654,10 @@ RETURN g.name as game, languageCount
   game_play (streaming_channel: $s, played_game: $g);
   language_usage (channel: $s, used_language: $l);
   $g has name $gn;
-reduce $languageCount = count($l) groupby $gn;
-sort $languageCount desc;
+reduce $language_count = count($l) groupby $gn;
+sort $language_count desc;
 limit 5;
-fetch { ""game"": $gn, ""languageCount"": $languageCount };"
+fetch { ""game"": $gn, ""language_count"": $language_count };"
 "487","List the 3 streams that have been followed by more than 1 million users.","MATCH (s:Stream)
 WHERE s.followers > 1000000
 RETURN s.name AS stream_name, s.followers AS follower_count
@@ -4724,10 +4724,10 @@ LIMIT 3
 RETURN s.name as streamName, numGames","match
   $s isa stream, has name $sn;
   game_play (streaming_channel: $s, played_game: $g);
-reduce $numGames = count($g) groupby $sn;
-sort $numGames desc;
+reduce $num_games = count($g) groupby $sn;
+sort $num_games desc;
 limit 3;
-fetch { ""streamName"": $sn, ""numGames"": $numGames };"
+fetch { ""stream_name"": $sn, ""num_games"": $num_games };"
 "493","Which streams have the highest number of user VIPs?","MATCH (s:Stream)<-[:VIP]-(u:User)
 RETURN s.name AS stream, count(u) AS vip_count
 ORDER BY vip_count DESC
@@ -4794,10 +4794,10 @@ ORDER BY languageCount DESC
 LIMIT 5","match
   $s isa stream, has name $sn;
   language_usage (channel: $s, used_language: $l);
-reduce $languageCount = count($l) groupby $sn;
-sort $languageCount desc;
+reduce $language_count = count($l) groupby $sn;
+sort $language_count desc;
 limit 5;
-fetch { ""stream"": $sn, ""languageCount"": $languageCount };"
+fetch { ""stream"": $sn, ""language_count"": $language_count };"
 "500","Show the streams with the most distinct moderators.","MATCH (s:Stream)<-[:MODERATOR]-(m:User)
 WITH s, count(distinct m) AS num_moderators
 RETURN s.name AS stream, num_moderators
@@ -4825,7 +4825,7 @@ RETURN s.name AS stream, t.name AS team, t.createdAt AS teamCreatedAt","match
   $t isa team, has name $tn, has created_at $ca;
   team_membership (member_stream: $s, organization: $t);
   $ca < 2015-01-01;
-fetch { ""stream"": $sn, ""team"": $tn, ""teamCreatedAt"": $ca };"
+fetch { ""stream"": $sn, ""team"": $tn, ""team_created_at"": $ca };"
 "503","Show the 3 newest teams associated with streams.","MATCH (s:Stream)-[:HAS_TEAM]->(t:Team)
 RETURN t.name AS team, t.createdAt AS created
 ORDER BY t.createdAt DESC
@@ -4862,10 +4862,10 @@ LIMIT 5
 RETURN s.name as stream, numGames as distinctGamesPlayed","match
   $s isa stream, has name $sn;
   game_play (streaming_channel: $s, played_game: $g);
-reduce $numGames = count($g) groupby $sn;
-sort $numGames desc;
+reduce $num_games = count($g) groupby $sn;
+sort $num_games desc;
 limit 5;
-fetch { ""stream"": $sn, ""distinctGamesPlayed"": $numGames };"
+fetch { ""stream"": $sn, ""distinct_games_played"": $num_games };"
 "507","Show the streams that have the most distinct languages.","MATCH (s:Stream)-[:HAS_LANGUAGE]->(l:Language)
 WITH s, count(distinct l) as languageCount
 RETURN s.name as streamName, languageCount
@@ -4873,10 +4873,10 @@ ORDER BY languageCount DESC
 LIMIT 10","match
   $s isa stream, has name $sn;
   language_usage (channel: $s, used_language: $l);
-reduce $languageCount = count($l) groupby $sn;
-sort $languageCount desc;
+reduce $language_count = count($l) groupby $sn;
+sort $language_count desc;
 limit 10;
-fetch { ""streamName"": $sn, ""languageCount"": $languageCount };"
+fetch { ""stream_name"": $sn, ""language_count"": $language_count };"
 "508","List the streams with the most distinct teams associated.","MATCH (s:Stream)-[:HAS_TEAM]->(t:Team)
 WITH s, count(distinct t) as teamCount
 RETURN s.name as streamName, teamCount
@@ -4884,10 +4884,10 @@ ORDER BY teamCount DESC
 LIMIT 10","match
   $s isa stream, has name $sn;
   team_membership (member_stream: $s, organization: $t);
-reduce $teamCount = count($t) groupby $sn;
-sort $teamCount desc;
+reduce $team_count = count($t) groupby $sn;
+sort $team_count desc;
 limit 10;
-fetch { ""streamName"": $sn, ""teamCount"": $teamCount };"
+fetch { ""stream_name"": $sn, ""team_count"": $team_count };"
 "509","What are the names of the top 5 streams with the highest follower counts?","MATCH (s:Stream)
 RETURN s.name AS stream_name, s.followers AS follower_count
 ORDER BY follower_count DESC
@@ -4913,10 +4913,10 @@ LIMIT 3","match
   $f > 500000;
   game_play (streaming_channel: $s, played_game: $g);
   $g has name $gn;
-reduce $playCount = count($s) groupby $gn;
-sort $playCount desc;
+reduce $play_count = count($s) groupby $gn;
+sort $play_count desc;
 limit 3;
-fetch { ""game"": $gn, ""playCount"": $playCount };"
+fetch { ""game"": $gn, ""play_count"": $play_count };"
 "512","Which languages are used by streams that have more than 1 million total views?","MATCH (s:Stream)-[:HAS_LANGUAGE]->(l:Language)
 WHERE s.total_view_count > 1000000
 RETURN DISTINCT l.name","match
@@ -5037,10 +5037,10 @@ WHERE otherStream <> s
 RETURN s.name AS stream, u.name AS chatter_and_moderator","match
   $s isa stream, has name $sn;
   $u isa user, has name $un;
-  $otherStream isa stream;
+  $other_stream isa stream;
   chat_activity (channel_with_chatters: $s, chatting_user: $u);
-  moderation (moderated_channel: $otherStream, moderating_user: $u);
-  not { $s is $otherStream; };
+  moderation (moderated_channel: $other_stream, moderating_user: $u);
+  not { $s is $other_stream; };
 fetch { ""stream"": $sn, ""chatter_and_moderator"": $un };"
 "524","List the top 5 streams by total view count that have a team associated with them.","MATCH (s:Stream)-[:HAS_TEAM]->(:Team)
 WHERE s.total_view_count IS NOT NULL
@@ -5291,7 +5291,7 @@ LIMIT 3","match
   $t has created_at $ca;
   $ca < 2015-01-01;
 limit 3;
-fetch { ""streamName"": $sn, ""streamURL"": $u };"
+fetch { ""stream_name"": $sn, ""stream_url"": $u };"
 "547","Which streams have VIP users and what are the names of these VIPs?","MATCH (s:Stream)-[:VIP]->(vip:User)
 RETURN s.name AS stream, vip.name AS vip","match
   $s isa stream, has name $sn;
@@ -5328,7 +5328,7 @@ LIMIT 3","match
   moderation (moderated_channel: $s, moderating_user: $m);
 sort $f asc;
 limit 3;
-fetch { ""stream"": $sn, ""followerCount"": $f };"
+fetch { ""stream"": $sn, ""follower_count"": $f };"
 "551","Which games are played by streams that have both English and German-speaking users?","MATCH (s:Stream)-[:PLAYS]->(g:Game)
 WHERE exists{ (s)-[:HAS_LANGUAGE]->(:Language {name: 'en'}) } 
   AND exists{ (s)-[:HAS_LANGUAGE]->(:Language {name: 'de'}) }
@@ -5377,7 +5377,7 @@ LIMIT 3","match
   $g has name ""DayZ"";
 sort $f desc;
 limit 3;
-fetch { ""stream"": $sn, ""followerCount"": $f };"
+fetch { ""stream"": $sn, ""follower_count"": $f };"
 "556","What are the descriptions of streams that are moderated by users with names starting with 'c'?","MATCH (s:Stream)<-[:MODERATOR]-(u:User)
 WHERE u.name STARTS WITH 'c' AND s.description IS NOT NULL
 RETURN s.description","match
@@ -5393,10 +5393,10 @@ LIMIT 5
 RETURN game, streamCount","match
   $g isa game, has name $gn;
   game_play (streaming_channel: $s, played_game: $g);
-reduce $streamCount = count($s) groupby $gn;
-sort $streamCount desc;
+reduce $stream_count = count($s) groupby $gn;
+sort $stream_count desc;
 limit 5;
-fetch { ""game"": $gn, ""streamCount"": $streamCount };"
+fetch { ""game"": $gn, ""stream_count"": $stream_count };"
 "558","What are the first 3 streams that were created after 2019 and their total view count?","MATCH (s:Stream)
 WHERE s.createdAt > date('2019-01-01')
 RETURN s.name, s.total_view_count
