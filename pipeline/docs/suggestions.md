@@ -257,6 +257,218 @@ fetch {
 
 ---
 
+## Companies Dataset (synthetic-2)
+
+### Index 662: Recursive transitive closure (variable-length path)
+
+**Question:** Which 3 organizations have the most complex supply chains according to the database?
+
+**Cypher:**
+```cypher
+MATCH (o:Organization)-[:HAS_SUPPLIER*]->(s:Organization)
+WITH o, COUNT(DISTINCT s) AS supplierCount
+RETURN o.name AS organization, supplierCount
+ORDER BY supplierCount DESC
+LIMIT 3
+```
+
+**TypeQL (validated):**
+```typeql
+with fun supply_chain($o: organization) -> { organization }:
+  match
+    {
+      supplies (supplier: $s, customer: $o);
+    } or {
+      let $mid in supply_chain($o);
+      supplies (supplier: $s, customer: $mid);
+    };
+  return { $s };
+with fun supply_chain_size($o: organization) -> integer:
+  match let $s in supply_chain($o);
+  select $s;
+  distinct;
+  return count;
+match
+$o isa organization;
+let $count = supply_chain_size($o);
+sort $count desc;
+limit 3;
+fetch {
+  "organization": $o.name,
+  "supply_chain_size": $count
+};
+```
+
+**Key pattern:** Recursive stream function replaces Cypher `[:REL*]` variable-length paths. The stream function `supply_chain` returns all reachable nodes via base case (direct relation) + recursive case (disjunction). A second function counts distinct results. TypeDB tables recursive calls to break cycles.
+
+---
+
+## Stack Overflow 2 Dataset
+
+### Index 253: Fetch subquery (replacing collect)
+
+**Question:** List the 3 questions with the highest scores and their associated tags.
+
+**Cypher:**
+```cypher
+MATCH (q:Question)-[:TAGGED]->(t:Tag)
+WITH q, t
+ORDER BY q.view_count DESC
+LIMIT 3
+RETURN q.title AS question_title, q.view_count AS view_count, collect(t.name) AS tags
+```
+
+**TypeQL (validated):**
+```typeql
+match
+$q isa question, has view_count $vc;
+sort $vc desc;
+limit 3;
+fetch {
+  "question_title": $q.title,
+  "view_count": $vc,
+  "tags": [
+    match
+      tagged (question: $q, tag: $t);
+    fetch {
+      "name": $t.name
+    };
+  ]
+};
+```
+
+**Key pattern:** Fetch subquery replaces Cypher `collect()`. The `"key": [ match ...; fetch { ... }; ]` syntax runs an inner query per outer row and collects results as a nested JSON array. The inner `match` can reference variables from the outer query (`$q`).
+
+---
+
+### Index 261: Two-stage aggregation via function pipeline
+
+**Question:** Who are the top 3 users who commented the most on the highest viewed questions?
+
+**Cypher:**
+```cypher
+MATCH (q:Question)-[:COMMENTED_ON]-(c:Comment)<-[:COMMENTED]-(u:User)
+WITH q, u, COUNT(c) AS comment_count
+ORDER BY q.view_count DESC
+LIMIT 3
+WITH u, SUM(comment_count) AS total_comments
+RETURN u.display_name AS user, total_comments
+ORDER BY total_comments DESC
+LIMIT 3
+```
+
+**TypeQL (validated):**
+```typeql
+with fun comment_count_on_top_questions($u: user) -> integer:
+  match
+    $q isa question, has view_count $vc;
+    sort $vc desc;
+    limit 3;
+    match
+      commented_on (comment: $c, question: $q);
+      commented (commenter: $u, comment: $c);
+    return count;
+match
+$u isa user;
+let $total = comment_count_on_top_questions($u);
+$total > 0;
+sort $total desc;
+limit 3;
+fetch {
+  "user": $u.display_name,
+  "total_comments": $total
+};
+```
+
+**Key pattern:** Chained `match; sort; limit; match;` inside a function body creates a pipeline: first narrow to top N items, then extend with additional patterns. This replaces Cypher's two-stage `WITH ... ORDER BY ... LIMIT ... WITH ...` CTE pattern.
+
+---
+
+### Index 169: Epoch integer arithmetic for "last year"
+
+**Question:** Which users have asked the most questions in the last year?
+
+**Cypher:**
+```cypher
+WITH timestamp() AS current_time, timestamp() - 31536000 AS one_year_ago
+MATCH (u:User)-[:ASKED]->(q:Question)
+WHERE q.creation_date >= one_year_ago
+WITH u, COUNT(q) AS question_count
+ORDER BY question_count DESC
+LIMIT 10
+RETURN u.display_name AS user, question_count
+```
+
+**TypeQL (validated):**
+```typeql
+with fun max_creation_date() -> integer:
+  match
+    $q isa question, has creation_date $cd;
+  return max($cd);
+match
+$u isa user;
+asked (asker: $u, question: $q);
+$q has creation_date $cd;
+let $max_date = max_creation_date();
+let $threshold = $max_date - 31536000;
+$cd >= $threshold;
+reduce $question_count = count($q) groupby $u;
+sort $question_count desc;
+limit 10;
+fetch {
+  "user": $u.display_name,
+  "question_count": $question_count
+};
+```
+
+**Key pattern:** When timestamps are stored as epoch integers, use `max()` aggregate as a proxy for "now" and integer arithmetic to compute relative time thresholds. This replaces Cypher's `timestamp()` function.
+
+---
+
+## Twitch Dataset
+
+### Index 360: Recursive stream function for moderator chains
+
+**Question:** Which streams have the longest moderator chains (a moderator, who is also a moderator, and so on)?
+
+**Cypher:**
+```cypher
+MATCH path = (s:Stream)-[:MODERATOR*]->(u:User)
+WITH s, length(path) AS chainLength
+ORDER BY chainLength DESC
+LIMIT 1
+RETURN s.name AS streamName, chainLength
+```
+
+**TypeQL (validated):**
+```typeql
+with fun all_chain_members($s: stream) -> { stream }:
+  match
+    {
+      moderation (moderated_channel: $s, moderating_channel: $next);
+    } or {
+      let $mid in all_chain_members($s);
+      moderation (moderated_channel: $mid, moderating_channel: $next);
+    };
+  return { $next };
+match
+$s isa stream;
+let $member in all_chain_members($s);
+select $s, $member;
+distinct;
+reduce $chain_length = count($member) groupby $s;
+sort $chain_length desc;
+limit 1;
+fetch {
+  "streamName": $s.name,
+  "chainLength": $chain_length
+};
+```
+
+**Key pattern:** Recursive stream function for transitive closure, then count distinct reachable nodes per starting entity to approximate chain/path length. Uses `select; distinct; reduce count groupby` to deduplicate before counting.
+
+---
+
 ## Key TypeQL Features Used
 
 1. **Custom functions (`with fun`)** - Define reusable query logic (indices 136, 330)
@@ -267,6 +479,14 @@ fetch {
 6. **Arithmetic** - `$a + $b`, `$a / $b`, `abs($a - $b)` for computed values (indices 85, 296, 330)
 7. **Role inference** - `$rel isa relation ($player);` matches player in ANY role (all permutations)
 8. **Tuple groupby** - `reduce $c = count groupby $a, $b;` for grouping by multiple variables
+9. **String length** (TypeDB 3.8+) - `let $len = len($str);` for `size()` on strings
+10. **String concatenation** (TypeDB 3.8+) - `let $s = $a + " " + $b;` for building strings
+11. **Datetime subtraction** (TypeDB 3.8+) - `let $diff = $end - $begin;` for duration between two datetime values, supports `sort $diff`
+12. **Inline date arithmetic** (TypeDB 3.8+) - `$r >= 2022-01-01T00:00:00 - P365D;` for date literal minus duration in filters
+13. **Recursive stream functions** - `with fun f($x: type) -> { type }:` for transitive closure (replaces Cypher `[:REL*]`). Uses `let $var in f($arg);` to access stream, `{ base } or { let $mid in f($arg); recursive; };` for recursion
+14. **Fetch subqueries** - `"key": [ match ...; fetch { ... }; ]` runs an inner query per outer row, collecting results as a nested JSON array (replaces Cypher `collect()`)
+15. **Function pipelines** - Chained `match; sort; limit; match;` inside function bodies for two-stage aggregation (replaces Cypher CTEs with `WITH ... ORDER BY ... LIMIT ... WITH ...`)
+16. **Epoch arithmetic** - `let $threshold = max_func() - 31536000;` for relative time on integer timestamps (replaces Cypher `timestamp()`)
 
 ## Important Scoping Rules
 
@@ -318,3 +538,8 @@ $rel isa interacts ($role: $c);
 | 49 | ✓ Validated | Chained reduce for HAVING-style filter |
 | 81 | ✓ Validated | Type variables with disjunction |
 | 85 | ✓ Validated | Chained reduce with arithmetic |
+| s2/companies 662 | ✓ Validated | Recursive stream function for transitive closure |
+| s2/stackoverflow2 253 | ✓ Validated | Fetch subquery replacing collect() |
+| s2/stackoverflow2 261 | ✓ Validated | Two-stage aggregation via function pipeline |
+| s2/stackoverflow2 169 | ✓ Validated | Epoch integer arithmetic for "last year" |
+| s2/twitch 360 | ✓ Validated | Recursive stream function for moderator chains |

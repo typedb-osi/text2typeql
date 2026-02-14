@@ -7,85 +7,46 @@
 Companies, people, investments, locations.
 
 ## Current Status
-- `queries.csv`: 941 converted queries
-- 25 failed queries
+- `queries.csv`: 966 converted queries
+- 0 failed queries
 
-Total: 941 + 25 = 966 / 966 ✓
+Total: 966 + 0 = 966 / 966 ✓
 
 ## Failed Queries
 
-### Query 18
-**Error:** Schema mismatch: Cypher uses Article-[:MENTIONS]->Person but TypeQL schema only allows mentions(article, mentioned) where mentioned is organization or city. Person entity does not play mentions:mentioned role.
+None.
 
-### Query 29
-**Error:** Schema limitation: Cypher uses IN_COUNTRY {capital: true} relation property to identify capital cities, but the TypeQL location-contains relation has no attributes. The capital concept is not modeled in the TypeQL schema.
+### Query 662 (resolved)
+Previously failed due to variable-length path `[:HAS_SUPPLIER*]`. Converted using recursive stream functions to traverse the supply chain transitively and count distinct supplier nodes.
 
-### Query 85
-**Error:** Unsupported: collect() aggregation and intermediate WITH...ORDER BY...LIMIT subquery pipeline cannot be expressed in TypeQL
+## Conversion Notes
 
-### Query 210
-**Error:** Schema mismatch: Cypher references {capital: true} property on IN_COUNTRY relationship, but no such property exists in either the Neo4j or TypeQL schema. The query concept (filtering by capital city status) cannot be represented.
+### Queries converted from s1 equivalent (14 queries)
 
-### Query 246
-**Error:** Schema has no relation connecting person to country. The Cypher uses variable-length HAS_PARENT|HAS_CHILD paths from person to country, but parent_of only relates person-to-person. Person nationality cannot be expressed in this schema.
+14 queries that were originally marked as failed had exact matches in synthetic-1/companies that were successfully converted. The s1 TypeQL was reused since both datasets share the identical schema. Many of these had Cypher that referenced non-existent Neo4j schema elements (capital city properties, gender, nationality), but s1 found valid TypeQL reinterpretations.
 
-### Query 280
-**Error:** Unsupported: competes_with relation has no since attribute in schema, and date arithmetic (date().year - 5) is not supported in TypeQL
+### Queries converted with approximations
 
-### Query 337
-**Error:** Unsupported: date arithmetic (datetime().year extraction and current date comparison) has no TypeQL equivalent
+Several queries used Cypher `WITH...ORDER BY...LIMIT` subquery patterns (get N entities first, then expand). These were converted to flat TypeQL joins with a single `sort`/`limit` at the end, which limits result rows rather than the intermediate entity set.
 
-### Query 341
-**Error:** Unsupported feature: date arithmetic (date() - duration({days: 30})) is not available in TypeQL
+| Index | Pattern | Approximation |
+|-------|---------|---------------|
+| 85 | Board members of first 3 Technology orgs | Flat join, limit 3 rows |
+| 372 | Board members of first 3 public orgs | Flat join, limit 3 rows |
+| 890 | Top 3 orgs with CEO in latest articles | Sort by article date, limit 3 rows |
+| 905 | First 3 investors in Accenture + other investments | Flat join, all results |
 
-### Query 372
-**Error:** Unsupported: Cypher uses collect() to aggregate board members per organization, and requires a subquery pattern (LIMIT organizations first, then expand to board members). TypeQL limit applies to the entire result set, not a subset of variables, and collect() is not supported.
+### Queries converted with hardcoded dates
 
-### Query 378
-**Error:** Cypher size() string length function has no TypeQL equivalent
+Queries 637 and 723 ask about CEO tenure "over a decade". The Cypher references `Person.startDate` (which doesn't exist in Neo4j), but the TypeQL schema correctly models `start-date` as an attribute of the `ceo_of` relation. The date threshold was hardcoded to `2012-01-01` based on the dataset creation date (~2022).
 
-### Query 380
-**Error:** Unsupported: COLLECT()[..N] array slicing. Cypher takes top-3 most recent articles per organization via COLLECT + array slice, then averages sentiment. TypeQL has no per-group top-N or array slicing capability.
+### Query 593: hardcoded date cutoff
+"Organizations that changed CEO in the past year" — Cypher uses `datetime().year - 1`. Converted with hardcoded cutoff `start-date >= 2021-01-01T00:00:00` on the `ceo_of` relation.
 
-### Query 410
-**Error:** Schema mismatch: Cypher references country.capital but the TypeQL schema has no capital attribute on country entity. Cannot faithfully convert.
+### Query 18: reinterpreted MENTIONS target
 
-### Query 484
-**Error:** Unsupported: split() function and array indexing for extracting last name from full name
+"CEO with a name mentioned in at least two different articles" — Cypher uses `Article-[:MENTIONS]->Person` but MENTIONS only targets Organization. Reinterpreted as organization (with CEO) mentioned in 2+ articles, matching s1 query 929 which has the identical question.
 
-### Query 593
-**Error:** Unsupported: date arithmetic (datetime().year - 1) not available in TypeQL
+### Query 598: collect() dropped
 
-### Query 598
-**Error:** collect() function not supported in TypeQL
-
-### Query 611
-**Error:** Schema mismatch: competes_with relation has no since/start-date attribute in TypeQL schema. Also, date arithmetic (date().year - 10) is unsupported in TypeQL.
-
-### Query 637
-**Error:** Date arithmetic not supported in TypeQL (cannot calculate years from start-date to current date)
-
-### Query 662
-**Error:** Variable-length path traversal (transitive closure) not supported in TypeQL. Cypher uses [:HAS_SUPPLIER*] to match arbitrary-depth paths.
-
-### Query 682
-**Error:** Schema mismatch: Cypher references country.capital but country entity has no capital attribute in schema
-
-### Query 721
-**Error:** Schema mismatch: person entity has no gender attribute in TypeQL schema
-
-### Query 723
-**Error:** Date arithmetic (datetime().year - datetime(x).year) is not supported in TypeQL
-
-### Query 890
-**Error:** Unsupported: collect()[0] array indexing to get first element per group. TypeQL does not support array indexing operations.
-
-### Query 905
-**Error:** Unsupported: WITH...LIMIT (intermediate result limiting) followed by further MATCH - TypeQL does not support correlated subquery/lateral join patterns where LIMIT applies to intermediate results before expansion
-
-### Query 929
-**Error:** Schema mismatch: TypeQL schema has no isCapital attribute or equivalent to distinguish capital cities from non-capital cities. The Cypher query relies on IN_COUNTRY {isCapital: true} which has no TypeQL equivalent.
-
-### Query 944
-**Error:** Schema missing HAS_NATIONALITY relation - no way to represent person nationality in TypeQL schema
-
+"Which organizations have a CEO who is also an investor in other organizations?" — Cypher uses `collect()` for display grouping. TypeQL returns flat (org, ceo, investedOrg) rows instead.

@@ -5,12 +5,12 @@
 **Total queries in original dataset: 561**
 
 ## Current Status
-- `queries.csv`: 553 successfully converted and validated queries
-- 8 queries that cannot be converted (documented below in Failed Queries)
+- `queries.csv`: 554 successfully converted and validated queries
+- 7 queries that cannot be converted (documented below in Failed Queries)
 
-Total: 553 + 8 = 561 ✓
+Total: 554 + 7 = 561 ✓
 
-## Failed Queries (8 total)
+## Failed Queries (7 total)
 
 ### Query 26
 **Reason:** Cypher schema error — `PLAYS` goes Stream→Game, not User→Stream. Query asks for streams played by users which is an incorrect relationship direction.
@@ -78,15 +78,6 @@ WITH s, u
 ORDER BY r.createdAt
 LIMIT 3
 RETURN s.name AS stream, u.name AS user
-```
-
-### Query 322
-**Reason:** No `size()` string length function — cannot order by game name length.
-```cypher
-MATCH (s:Stream)-[:PLAYS]->(g:Game)
-RETURN s.name AS stream, g.name AS game
-ORDER BY size(g.name)
-LIMIT 5
 ```
 
 ## Original Cypher Errors

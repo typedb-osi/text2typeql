@@ -54,7 +54,8 @@ define
     owns body_markdown,
     owns score,
     plays provided:answer,
-    plays answered:answer;
+    plays answered:answer,
+    plays commented_on:question;
 
   entity comment,
     owns comment_uuid @key,

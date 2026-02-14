@@ -55,8 +55,12 @@
 
 ### 9. Aggregation After Grouping
 - Cypher `WITH ... WHERE count > N` filters after aggregation (HAVING equivalent)
-- TypeDB 3.0 doesn't support filtering on reduce results in same query
-- These should go to failed.csv as TypeDB limitations
+- TypeDB supports this via chained reduce: `reduce $c = count groupby $x; match $c > N;`
+
+### 10. String Length Checks (TypeDB 3.8+)
+- Cypher `size(n.prop)` for string length → TypeQL `let $len = len($prop);`
+- Only applies to **string** attributes, not collections/lists
+- Example: `WHERE size(m.tagline) > 30` → `$m has tagline $t; let $len = len($t); $len > 30;`
 
 ## OPTIONAL MATCH Queries by Database
 

@@ -926,6 +926,25 @@ fetch {
   ""Entity2"": $n2,
   ""SharedAddress"": $addr
 };"
+103,Who are the officers serving as intermediaries for more than one entity?,"MATCH (o:Officer)-[:officer_of]->(e:Entity)
+WITH o, COUNT(DISTINCT e) AS entityCount
+WHERE entityCount > 1
+MATCH (o)-[:intermediary_of]->(e2:Entity)
+RETURN o.name AS OfficerName, COLLECT(DISTINCT e2.name) AS Entities","with fun entity_count($i: intermediary) -> integer:
+  match
+    intermediary_of (intermediary: $i, offshore_entity: $e);
+  select $e;
+  distinct;
+  return count;
+match
+$i isa intermediary;
+let $count = entity_count($i);
+$count > 1;
+intermediary_of (intermediary: $i, offshore_entity: $e);
+fetch {
+  ""officerName"": $i.name,
+  ""entityName"": $e.name
+};"
 104,List the top 5 entities with the service provider 'Mossack Fonseca'.,"MATCH (e:Entity)
 WHERE e.service_provider = 'Mossack Fonseca'
 RETURN e.name AS entity_name, e.service_provider AS service_provider
@@ -2995,6 +3014,17 @@ fetch {
   ""name"": $n,
   ""node_id"": $nid
 };"
+324,Identify all officers with a status of 'ACTIVE'.,"MATCH (o:Officer)
+WHERE o.status = 'ACTIVE'
+RETURN o.name, o.node_id, o.countries, o.country_codes, o.sourceID","match
+$o isa officer, has status ""ACTIVE"";
+fetch {
+  ""name"": $o.name,
+  ""nodeId"": $o.node_id,
+  ""countries"": $o.countries,
+  ""countryCodes"": $o.country_codes,
+  ""sourceId"": $o.source_id
+};"
 325,List entities that share the same jurisdiction as 'SAM' and their names.,"MATCH (e:Entity)
 WHERE e.jurisdiction = 'SAM'
 RETURN e.name AS entity_name","match
@@ -3428,6 +3458,24 @@ distinct;
 fetch {
   ""EntityName"": $e.name,
   ""EntityID"": $e.node_id
+};"
+370,Identify entities with multiple addresses and list the addresses.,"MATCH (e:Entity)-[:registered_address]->(a:Address)
+WITH e, collect(a.address) AS addresses
+WHERE size(addresses) > 1
+RETURN e.name AS entity_name, addresses","with fun address_count($e: offshore_entity) -> integer:
+  match
+    registered_address (registrant: $e, registered_addr: $a);
+  select $a;
+  distinct;
+  return count;
+match
+$e isa offshore_entity;
+let $count = address_count($e);
+$count > 1;
+registered_address (registrant: $e, registered_addr: $a);
+fetch {
+  ""entityName"": $e.name,
+  ""address"": $a.address
 };"
 371,List officers who have a direct connection to entities incorporated in 2006.,"MATCH (e:Entity)-[:officer_of]-(o:Officer)
 WHERE e.incorporation_date CONTAINS ""2006""
@@ -4401,6 +4449,23 @@ fetch {
   ""address"": $a.address,
   ""valid_until"": $vu
 };"
+476,List the entities that have multiple former names and provide all names.,"MATCH (e:Entity)
+WHERE size(split(e.former_name, "";"")) > 1
+RETURN e.name AS current_name, e.former_name AS former_names","with fun former_name_count($e: offshore_entity) -> integer:
+  match
+    $e has former_name $fn;
+  select $fn;
+  distinct;
+  return count;
+match
+$e isa offshore_entity;
+let $count = former_name_count($e);
+$count > 1;
+$e has former_name $fn;
+fetch {
+  ""currentName"": $e.name,
+  ""formerName"": $fn
+};"
 477,Identify officers linked to entities with a company number starting with '240'.,"MATCH (e:Entity)-[:officer_of]-(o:Officer)
 WHERE e.company_number STARTS WITH '240'
 RETURN o.name AS officer_name, e.name AS entity_name, e.company_number AS company_number","match
@@ -4531,6 +4596,16 @@ $a isa postal_address, has address ""ORION HOUSE SERVICES (HK) LIMITED ROOM 1401
 registered_address (registrant: $e, registered_addr: $a);
 fetch {
   ""entity_name"": $e.name
+};"
+491,How many entities were inactivated in February 2013?,"MATCH (e:Entity)
+WHERE e.inactivation_date STARTS WITH 'FEB-2013'
+RETURN count(e) AS inactivated_entities","match
+$e isa offshore_entity, has inactivation_date $d;
+$d >= 2013-02-01;
+$d < 2013-03-01;
+reduce $count = count($e);
+fetch {
+  ""inactivatedEntities"": $count
 };"
 492,What are the names of entities that were last edited at timestamp '1638311020926'?,"MATCH (e:Entity)
 WHERE e.lastEditTimestamp = '1638311020926'

@@ -781,6 +781,19 @@ reduce $order_count = count($o) groupby $c, $name;
 sort $order_count desc;
 limit 3;
 fetch { ""customerName"": $name, ""orderCount"": $order_count };"
+66,What are the names of the top 3 orders with a freight cost greater than 100?,"MATCH (o:Order)
+WHERE toFloat(o.freight) > 100
+RETURN o.shipName, toFloat(o.freight)
+ORDER BY toFloat(o.freight) DESC
+LIMIT 3","match
+$o isa order, has ship_name $sn, has freight $f;
+$f > 100.0;
+sort $f desc;
+limit 3;
+fetch {
+  ""shipName"": $sn,
+  ""freight"": $f
+};"
 67,List the first 3 products with units in stock less than 10.,"MATCH (p:Product)
 WHERE p.unitsInStock < 10
 RETURN p.productName, p.unitsInStock
@@ -932,6 +945,27 @@ RETURN p.productName","match
 $p isa product, has units_on_order 0, has discontinued false;
 fetch {
   ""productName"": $p.product_name
+};"
+78,What are the names of the top 3 suppliers based on the average freight of orders they supplied?,"MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)<-[:ORDERS]-(o:Order)
+WITH s, o.freight AS freight
+WHERE freight IS NOT NULL
+WITH s, avg(toFloat(freight)) AS avgFreight
+ORDER BY avgFreight DESC
+LIMIT 3
+RETURN s.companyName AS supplierName, avgFreight","with fun avg_freight($s: supplier) -> double:
+  match
+    supplies (supplier: $s, product: $p);
+    orders (order: $o, product: $p);
+    $o has freight $f;
+  return mean($f);
+match
+$s isa supplier;
+let $avg = avg_freight($s);
+sort $avg desc;
+limit 3;
+fetch {
+  ""supplierName"": $s.company_name,
+  ""avgFreight"": $avg
 };"
 79,List the first 3 products that have been ordered with a discount of 0 and are from the 'Grains/Cereals' category.,"MATCH (p:Product)-[:PART_OF]->(c:Category {categoryName: 'Grains/Cereals'}),
       (o:Order)-[r:ORDERS {discount: '0'}]->(p)
@@ -1160,6 +1194,29 @@ supplies (supplier: $s, product: $p);
 part_of (product: $p, category: $c);
 fetch {
   ""supplierName"": $s.company_name
+};"
+98,List the first 3 customers who have placed orders totaling over $1000 in freight costs.,"MATCH (c:Customer)-[:PURCHASED]->(o:Order)
+WHERE toFloat(o.freight) > 1000
+RETURN c.companyName, c.contactName, c.contactTitle, c.phone, c.address, c.city, c.country
+ORDER BY o.orderDate
+LIMIT 3","with fun total_freight($c: customer) -> double:
+  match
+    purchased (customer: $c, order: $o);
+    $o has freight $f;
+  return sum($f);
+match
+$c isa customer;
+let $total = total_freight($c);
+$total > 1000.0;
+fetch {
+  ""companyName"": $c.company_name,
+  ""contactName"": $c.contact_name,
+  ""contactTitle"": $c.contact_title,
+  ""phone"": $c.phone,
+  ""address"": $c.address,
+  ""city"": $c.city,
+  ""country"": $c.country,
+  ""totalFreight"": $total
 };"
 99,Find all products that have been shipped to 'London' and have a unit price over $30.,"MATCH (o:Order)-[:ORDERS]->(p:Product)
 WHERE o.shipCity = 'London' AND p.unitPrice > 30
@@ -1724,6 +1781,24 @@ reduce $count = count($o) groupby $p;
 sort $count desc;
 limit 5;
 fetch { ""productName"": $p.product_name, ""orderCount"": $count };"
+145,List the first 3 orders shipped to Berlin with a freight cost over $100.,"MATCH (o:Order)-[:ORDERS]->(p:Product)
+WHERE o.shipCity = 'Berlin' AND toFloat(o.freight) > 100
+RETURN o.orderID, o.shipName, o.shipAddress, o.shipCity, o.shipPostalCode, o.shipCountry, o.freight
+ORDER BY o.orderDate
+LIMIT 3","match
+$o isa order, has ship_city ""Berlin"", has freight $f, has order_date $od;
+$f > 100.0;
+sort $od asc;
+limit 3;
+fetch {
+  ""orderId"": $o.order_id,
+  ""shipName"": $o.ship_name,
+  ""shipAddress"": $o.ship_address,
+  ""shipCity"": $o.ship_city,
+  ""shipPostalCode"": $o.ship_postal_code,
+  ""shipCountry"": $o.ship_country,
+  ""freight"": $f
+};"
 146,Which products have never been on order (unitsOnOrder = 0) and are not discontinued?,"MATCH (p:Product)
 WHERE p.unitsOnOrder = 0 AND p.discontinued = false
 RETURN p.productName","match
@@ -1743,6 +1818,24 @@ fetch {
   ""address"": $s.address,
   ""city"": $s.city,
   ""country"": $s.country
+};"
+148,What are the top 5 customers based on the total freight costs of their orders?,"MATCH (c:Customer)-[:PURCHASED]->(o:Order)
+WITH c, SUM(toFloat(o.freight)) AS totalFreight
+ORDER BY totalFreight DESC
+LIMIT 5
+RETURN c.companyName AS customerName, totalFreight","with fun total_freight($c: customer) -> double:
+  match
+    purchased (customer: $c, order: $o);
+    $o has freight $f;
+  return sum($f);
+match
+$c isa customer;
+let $total = total_freight($c);
+sort $total desc;
+limit 5;
+fetch {
+  ""customerName"": $c.company_name,
+  ""totalFreight"": $total
 };"
 149,List the first 3 products supplied by 'Mayumi's' with a unit price less than $20.,"MATCH (s:Supplier {companyName: ""Mayumi's (on the World Wide Web)#http://www.micros""})-[:SUPPLIES]->(p:Product)
 WHERE p.unitPrice < 20
@@ -1902,6 +1995,21 @@ fetch {
   ""productName"": $name,
   ""orderCount"": $count
 };"
+161,List the first 3 orders with a required date before '1997-06-01' and a freight cost over $200.,"MATCH (o:Order)
+WHERE o.requiredDate < '1997-06-01' AND toFloat(o.freight) > 200
+RETURN o.orderID, o.requiredDate, o.freight
+ORDER BY o.requiredDate
+LIMIT 3","match
+$o isa order, has required_date $rd, has freight $f;
+$rd < ""1997-06-01"";
+$f > 200.0;
+sort $rd asc;
+limit 3;
+fetch {
+  ""orderId"": $o.order_id,
+  ""requiredDate"": $rd,
+  ""freight"": $f
+};"
 162,Which products have been ordered with a discount of 0 and are from the 'Dairy Products' category?,"MATCH (p:Product)-[:PART_OF]->(c:Category {categoryName: 'Dairy Products'}),
       (o:Order)-[r:ORDERS {discount: '0'}]->(p)
 RETURN p.productName","match
@@ -1964,6 +2072,25 @@ $od > ""1997-01-01"";
 fetch {
   ""productName"": $p.product_name,
   ""orderDate"": $od
+};"
+167,Find all orders shipped to 'Reims' with a freight cost less than $50.,"MATCH (o:Order)
+WHERE o.shipCity = 'Reims' AND toFloat(o.freight) < 50
+RETURN o.orderID, o.shipName, o.requiredDate, o.shipCity, o.shipPostalCode, o.shippedDate, o.freight, o.orderDate, o.shipAddress, o.customerID, o.shipCountry, o.shipVia, o.shipRegion","match
+$o isa order, has ship_city ""Reims"", has freight $f;
+$f < 50.0;
+fetch {
+  ""orderId"": $o.order_id,
+  ""shipName"": $o.ship_name,
+  ""requiredDate"": $o.required_date,
+  ""shipCity"": $o.ship_city,
+  ""shipPostalCode"": $o.ship_postal_code,
+  ""shippedDate"": $o.shipped_date,
+  ""freight"": $f,
+  ""orderDate"": $o.order_date,
+  ""shipAddress"": $o.ship_address,
+  ""shipCountry"": $o.ship_country,
+  ""shipVia"": $o.ship_via,
+  ""shipRegion"": $o.ship_region
 };"
 168,What are the top 5 most frequently ordered products by customers from 'USA'?,"MATCH (c:Customer)-[:PURCHASED]->(o:Order)-[:ORDERS]->(p:Product)
 WHERE c.country = 'USA'
@@ -2089,6 +2216,20 @@ limit 3;
 fetch {
   ""productName"": $p.product_name,
   ""unitsInStock"": $stock
+};"
+176,Find all orders shipped to 'France' with a freight cost more than 50.,"MATCH (o:Order)-[:ORDERS]->(p:Product)
+WHERE o.shipCountry = 'France' AND toFloat(o.freight) > 50
+RETURN o.orderID, o.shipName, o.shipCity, o.shipPostalCode, o.shipAddress, o.shipCountry, o.freight","match
+$o isa order, has ship_country ""France"", has freight $f;
+$f > 50.0;
+fetch {
+  ""orderId"": $o.order_id,
+  ""shipName"": $o.ship_name,
+  ""shipCity"": $o.ship_city,
+  ""shipPostalCode"": $o.ship_postal_code,
+  ""shipAddress"": $o.ship_address,
+  ""shipCountry"": $o.ship_country,
+  ""freight"": $f
 };"
 177,Which orders were placed by customers from 'Berlin'?,"MATCH (c:Customer {city: 'Berlin'})-[:PURCHASED]->(o:Order)
 RETURN o.orderID AS orderID, o.orderDate AS orderDate, o.shipName AS shipName, o.shipCity AS shipCity, o.shipCountry AS shipCountry","match
@@ -3115,6 +3256,46 @@ reduce $count = count($o) groupby $country;
 sort $count desc;
 limit 3;
 fetch { ""country"": $country };"
+261,List the top 5 customers by total freight charges.,"MATCH (c:Customer)-[:PURCHASED]->(o:Order)
+WITH c, SUM(toFloat(o.freight)) AS totalFreight
+ORDER BY totalFreight DESC
+LIMIT 5
+RETURN c.companyName AS customerName, totalFreight","with fun total_freight($c: customer) -> double:
+  match
+    purchased (customer: $c, order: $o);
+    $o has freight $f;
+  return sum($f);
+match
+$c isa customer;
+let $total = total_freight($c);
+sort $total desc;
+limit 5;
+fetch {
+  ""customerName"": $c.company_name,
+  ""totalFreight"": $total
+};"
+262,Which 3 products are most frequently ordered together?,"MATCH (o:Order)-[r:ORDERS]->(p:Product)
+WITH o, collect(p.productID) AS products
+UNWIND products AS product1
+UNWIND products AS product2
+WITH product1, product2, count(*) AS frequency
+WHERE product1 < product2
+RETURN product1, product2, frequency
+ORDER BY frequency DESC
+LIMIT 3","match
+orders (order: $o, product: $p1);
+orders (order: $o, product: $p2);
+$p1 has product_id $id1;
+$p2 has product_id $id2;
+$id1 < $id2;
+reduce $freq = count($o) groupby $p1, $p2;
+sort $freq desc;
+limit 3;
+fetch {
+  ""product1"": $p1.product_name,
+  ""product2"": $p2.product_name,
+  ""frequency"": $freq
+};"
 263,List the top 3 orders with the highest freight charges.,"MATCH (o:Order)
 RETURN o.orderID, o.freight
 ORDER BY toFloat(o.freight) DESC
@@ -3186,6 +3367,17 @@ $stock > 0;
 fetch {
   ""productName"": $p.product_name,
   ""unitsInStock"": $stock
+};"
+269,What are the first 3 orders with the highest freight charges?,"MATCH (o:Order)
+RETURN o.orderID, o.freight
+ORDER BY toFloat(o.freight) DESC
+LIMIT 3","match
+$o isa order, has freight $f;
+sort $f desc;
+limit 3;
+fetch {
+  ""orderId"": $o.order_id,
+  ""freight"": $f
 };"
 270,Which products are supplied by 'Exotic Liquids'?,"MATCH (s:Supplier {companyName: 'Exotic Liquids'})-[:SUPPLIES]->(p:Product)
 RETURN p.productName AS productName","match
@@ -3595,6 +3787,20 @@ fetch {
   ""productName"": $p.product_name,
   ""quantityPerUnit"": $q
 };"
+308,Who are the customers with orders that have a 'freight' cost above 100?,"MATCH (c:Customer)-[:PURCHASED]->(o:Order)
+WHERE toFloat(o.freight) > 100
+RETURN c.companyName AS customerName, c.contactName AS contactName, c.contactTitle AS contactTitle, o.orderID AS orderID, o.freight AS freightCost","match
+$c isa customer;
+purchased (customer: $c, order: $o);
+$o has freight $f;
+$f > 100.0;
+fetch {
+  ""customerName"": $c.company_name,
+  ""contactName"": $c.contact_name,
+  ""contactTitle"": $c.contact_title,
+  ""orderId"": $o.order_id,
+  ""freightCost"": $f
+};"
 309,Find all products with a 'unitsOnOrder' of 0 and a 'reorderLevel' above 10.,"MATCH (p:Product)
 WHERE p.unitsOnOrder = 0 AND p.reorderLevel > 10
 RETURN p.productName, p.unitsOnOrder, p.reorderLevel","match
@@ -3724,6 +3930,25 @@ $c isa customer, has region ""NULL"", has contact_name $cn, has company_name $co
 fetch {
   ""customerName"": $cn,
   ""companyName"": $comp
+};"
+322,List all orders with a freight cost less than 10.,"MATCH (o:Order)
+WHERE toFloat(o.freight) < 10
+RETURN o.orderID AS orderID, o.shipName AS shipName, o.requiredDate AS requiredDate, o.shipCity AS shipCity, o.shipPostalCode AS shipPostalCode, o.shippedDate AS shippedDate, o.freight AS freight, o.orderDate AS orderDate, o.shipAddress AS shipAddress, o.customerID AS customerID, o.shipCountry AS shipCountry, o.shipVia AS shipVia, o.shipRegion AS shipRegion","match
+$o isa order, has freight $f;
+$f < 10.0;
+fetch {
+  ""orderId"": $o.order_id,
+  ""shipName"": $o.ship_name,
+  ""requiredDate"": $o.required_date,
+  ""shipCity"": $o.ship_city,
+  ""shipPostalCode"": $o.ship_postal_code,
+  ""shippedDate"": $o.shipped_date,
+  ""freight"": $f,
+  ""orderDate"": $o.order_date,
+  ""shipAddress"": $o.ship_address,
+  ""shipCountry"": $o.ship_country,
+  ""shipVia"": $o.ship_via,
+  ""shipRegion"": $o.ship_region
 };"
 323,Which products are supplied by a supplier in 'London'?,"MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)
 WHERE s.city = 'London'
@@ -4328,6 +4553,19 @@ reduce $count = count($o) groupby $p, $name;
 sort $count desc;
 limit 5;
 fetch { ""productName"": $name, ""orderCount"": $count };"
+375,List the first 3 orders with a freight cost greater than $100.,"MATCH (o:Order)
+WHERE toFloat(o.freight) > 100
+RETURN o.orderID, o.freight
+ORDER BY toFloat(o.freight) DESC
+LIMIT 3","match
+$o isa order, has freight $f;
+$f > 100.0;
+sort $f desc;
+limit 3;
+fetch {
+  ""orderId"": $o.order_id,
+  ""freight"": $f
+};"
 376,Which 3 categories have the most products with a reorder level above 15?,"MATCH (p:Product)-[:PART_OF]->(c:Category)
 WHERE p.reorderLevel > 15
 WITH c.categoryName AS category, COUNT(p) AS productCount
@@ -4674,6 +4912,34 @@ fetch {
   ""contactName"": $c.contact_name,
   ""customerID"": $c.customer_id
 };"
+399,Which 3 products have the most variations in unit price among orders?,"MATCH (p:Product)<-[:ORDERS]-(o:Order)
+WITH p.productID AS productID, p.productName AS productName, o.unitPrice AS unitPrice
+ORDER BY productID, unitPrice
+WITH productID, productName, COLLECT(unitPrice) AS prices
+WITH productID, productName, REDUCE(s = 0, i IN RANGE(1, SIZE(prices) - 1) | s + ABS(TOFLOAT(prices[i]) - TOFLOAT(prices[i-1]))) AS priceVariation
+ORDER BY priceVariation DESC
+LIMIT 3
+RETURN productName, priceVariation","with fun max_order_price($p: product) -> double:
+  match
+    $rel isa orders (product: $p);
+    $rel has order_unit_price $up;
+  return max($up);
+with fun min_order_price($p: product) -> double:
+  match
+    $rel isa orders (product: $p);
+    $rel has order_unit_price $up;
+  return min($up);
+match
+$p isa product;
+let $max = max_order_price($p);
+let $min = min_order_price($p);
+let $variation = $max - $min;
+sort $variation desc;
+limit 3;
+fetch {
+  ""productName"": $p.product_name,
+  ""priceVariation"": $variation
+};"
 400,Which 3 suppliers supply products with more than 50 units in stock?,"MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)
 WHERE p.unitsInStock > 50
 RETURN s.companyName
@@ -4696,6 +4962,17 @@ limit 5;
 fetch {
   ""productName"": $p.product_name,
   ""unitsOnOrder"": $u
+};"
+402,Which orders were placed before '1997-01-01' and have a freight greater than 100?,"MATCH (o:Order)
+WHERE o.orderDate < '1997-01-01' AND toFloat(o.freight) > 100
+RETURN o.orderID, o.orderDate, o.freight","match
+$o isa order, has order_date $od, has freight $f;
+$od < ""1997-01-01"";
+$f > 100.0;
+fetch {
+  ""orderId"": $o.order_id,
+  ""orderDate"": $od,
+  ""freight"": $f
 };"
 403,Which products have been ordered more than 100 times?,"MATCH (:Order)-[o:ORDERS]->(p:Product)
 WHERE o.quantity > 100
@@ -5415,6 +5692,22 @@ fetch {
   ""productName"": $p.product_name,
   ""unitsOnOrder"": $u
 };"
+470,List the first 3 orders made by 'Alfreds Futterkiste' with a freight cost greater than 10.,"MATCH (c:Customer {companyName: 'Alfreds Futterkiste'})-[:PURCHASED]->(o:Order)
+WHERE toFloat(o.freight) > 10
+RETURN o.orderID, o.orderDate, o.freight
+ORDER BY o.orderDate
+LIMIT 3","match
+$c isa customer, has company_name ""Alfreds Futterkiste"";
+purchased (customer: $c, order: $o);
+$o has freight $f, has order_date $od;
+$f > 10.0;
+sort $od asc;
+limit 3;
+fetch {
+  ""orderId"": $o.order_id,
+  ""orderDate"": $od,
+  ""freight"": $f
+};"
 471,What are the top 5 most ordered products in terms of quantity?,"MATCH (:Order)-[o:ORDERS]->(p:Product)
 RETURN p.productName AS productName, SUM(o.quantity) AS totalQuantity
 ORDER BY totalQuantity DESC
@@ -5997,6 +6290,24 @@ reduce $count = count($p) groupby $c, $name;
 sort $count desc;
 limit 3;
 fetch { ""category"": $name, ""productCount"": $count };"
+515,What are the top 5 customers based on the total freight cost of their orders?,"MATCH (c:Customer)-[:PURCHASED]->(o:Order)
+WITH c, SUM(toFloat(o.freight)) AS totalFreight
+ORDER BY totalFreight DESC
+LIMIT 5
+RETURN c.companyName AS customerName, totalFreight","with fun total_freight($c: customer) -> double:
+  match
+    purchased (customer: $c, order: $o);
+    $o has freight $f;
+  return sum($f);
+match
+$c isa customer;
+let $total = total_freight($c);
+sort $total desc;
+limit 5;
+fetch {
+  ""customerName"": $c.company_name,
+  ""totalFreight"": $total
+};"
 516,List the first 3 products from suppliers in 'Germany'.,"MATCH (s:Supplier {country: 'Germany'})-[:SUPPLIES]->(p:Product)
 RETURN p.productName AS productName, s.companyName AS supplierName
 LIMIT 3","match
@@ -6046,6 +6357,20 @@ fetch {
   ""productName"": $p.product_name,
   ""unitsOnOrder"": $u
 };"
+520,List the first 3 orders where the freight cost was less than $15.,"MATCH (o:Order)
+WHERE toFloat(o.freight) < 15
+RETURN o.orderID, o.freight, o.orderDate
+ORDER BY o.orderDate
+LIMIT 3","match
+$o isa order, has freight $f, has order_date $od;
+$f < 15.0;
+sort $od asc;
+limit 3;
+fetch {
+  ""orderId"": $o.order_id,
+  ""freight"": $f,
+  ""orderDate"": $od
+};"
 521,What are the top 5 products with the highest reorder levels in the 'Meat/Poultry' category?,"MATCH (p:Product)-[:PART_OF]->(c:Category {categoryName: 'Meat/Poultry'})
 RETURN p.productName, p.reorderLevel
 ORDER BY p.reorderLevel DESC
@@ -6058,6 +6383,26 @@ limit 5;
 fetch {
   ""productName"": $name,
   ""reorderLevel"": $level
+};"
+522,List the top 5 suppliers based on the average freight cost of orders for their products.,"MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)<-[:ORDERS]-(o:Order)
+WITH s, o.freight AS freight
+WHERE freight IS NOT NULL
+RETURN s.companyName AS supplier, AVG(toFloat(freight)) AS avgFreightCost
+ORDER BY avgFreightCost DESC
+LIMIT 5","with fun avg_freight($s: supplier) -> double:
+  match
+    supplies (supplier: $s, product: $p);
+    orders (order: $o, product: $p);
+    $o has freight $f;
+  return mean($f);
+match
+$s isa supplier;
+let $avg = avg_freight($s);
+sort $avg desc;
+limit 5;
+fetch {
+  ""supplier"": $s.company_name,
+  ""avgFreightCost"": $avg
 };"
 523,Which 3 products are most frequently ordered in the 'Confections' category?,"MATCH (c:Category {categoryName: 'Confections'})<-[:PART_OF]-(p:Product)<-[:ORDERS]-(o:Order)
 RETURN p.productName, COUNT(o) AS orderCount
@@ -7638,6 +7983,18 @@ supplies (supplier: $s, product: $p);
 fetch {
   ""productName"": $p.product_name
 };"
+634,List the first 5 products that were part of an order with a 'freight' cost over $250.,"MATCH (o:Order)-[:ORDERS]->(p:Product)
+WHERE toFloat(o.freight) > 250
+RETURN p.productName AS productName, o.freight AS freight
+LIMIT 5","match
+$o isa order, has freight $f;
+$f > 250.0;
+orders (order: $o, product: $p);
+limit 5;
+fetch {
+  ""productName"": $p.product_name,
+  ""freight"": $f
+};"
 635,Which products are part of the 'Beverages' category?,"MATCH (p:Product)-[:PART_OF]->(c:Category {categoryName: 'Beverages'})
 RETURN p.productName AS productName","match
 $p isa product;
@@ -7660,6 +8017,22 @@ fetch {
   ""shipPostalCode"": $o.ship_postal_code,
   ""shipAddress"": $o.ship_address,
   ""shipCountry"": $o.ship_country
+};"
+637,List the first 3 orders that were placed in 1997 and required a freight charge over $25.,"MATCH (o:Order)
+WHERE o.orderDate STARTS WITH '1997' AND toFloat(o.freight) > 25
+RETURN o.orderID, o.orderDate, o.freight
+ORDER BY o.orderDate
+LIMIT 3","match
+$o isa order, has order_date $od, has freight $f;
+$od >= ""1997-01-01"";
+$od < ""1998-01-01"";
+$f > 25.0;
+sort $od asc;
+limit 3;
+fetch {
+  ""orderId"": $o.order_id,
+  ""orderDate"": $od,
+  ""freight"": $f
 };"
 638,Who are the customers with orders that have a shipVia of '3'?,"MATCH (c:Customer)-[:PURCHASED]->(o:Order)
 WHERE o.shipVia = '3'
@@ -8077,6 +8450,18 @@ fetch {
   ""productName"": $product_name,
   ""supplierName"": $supplier_name
 };"
+672,Which orders have a required date in 1998 and a freight cost less than $5?,"MATCH (o:Order)
+WHERE o.requiredDate STARTS WITH '1998' AND toFloat(o.freight) < 5
+RETURN o.orderID, o.requiredDate, o.freight","match
+$o isa order, has required_date $rd, has freight $f;
+$rd >= ""1998-01-01"";
+$rd < ""1999-01-01"";
+$f < 5.0;
+fetch {
+  ""orderId"": $o.order_id,
+  ""requiredDate"": $rd,
+  ""freight"": $f
+};"
 673,List the suppliers that have a fax number listed.,"MATCH (s:Supplier)
 WHERE s.fax IS NOT NULL AND s.fax <> 'NULL'
 RETURN s.companyName AS supplierName, s.fax AS faxNumber","match
@@ -8278,6 +8663,17 @@ orders (order: $o, product: $p);
 fetch {
   ""productName"": $p.product_name,
   ""productID"": $p.product_id
+};"
+689,Who are the employees that processed orders for 'Rattlesnake Canyon Grocery'?,"MATCH (c:Customer {companyName: 'Rattlesnake Canyon Grocery'})-[:PURCHASED]->(o:Order)
+MATCH (e:Employee)-[:PROCESSED]->(o)
+RETURN DISTINCT e.employeeID, e.contactName, e.contactTitle","match
+$c isa customer, has company_name ""Rattlesnake Canyon Grocery"";
+purchased (customer: $c, order: $o);
+$o has employee_id $eid;
+select $eid;
+distinct;
+fetch {
+  ""employeeId"": $eid
 };"
 690,Find the first 3 orders that required shipping after '1997-01-01'.,"MATCH (o:Order)
 WHERE o.requiredDate > '1997-01-01'
@@ -8610,6 +9006,26 @@ supplies (supplier: $s, product: $p);
 select $s;
 distinct;
 fetch { ""companyName"": $s.company_name };"
+718,What are the details of orders that have a freight cost more than $50?,"MATCH (o:Order)
+WHERE toFloat(o.freight) > 50
+RETURN o.orderID AS orderID, o.shipName AS shipName, o.requiredDate AS requiredDate, o.shipCity AS shipCity, o.employeeID AS employeeID, o.shipPostalCode AS shipPostalCode, o.shippedDate AS shippedDate, o.freight AS freight, o.orderDate AS orderDate, o.shipAddress AS shipAddress, o.customerID AS customerID, o.shipCountry AS shipCountry, o.shipVia AS shipVia, o.shipRegion AS shipRegion","match
+$o isa order, has freight $f;
+$f > 50.0;
+fetch {
+  ""orderId"": $o.order_id,
+  ""shipName"": $o.ship_name,
+  ""requiredDate"": $o.required_date,
+  ""shipCity"": $o.ship_city,
+  ""employeeId"": $o.employee_id,
+  ""shipPostalCode"": $o.ship_postal_code,
+  ""shippedDate"": $o.shipped_date,
+  ""freight"": $f,
+  ""orderDate"": $o.order_date,
+  ""shipAddress"": $o.ship_address,
+  ""shipCountry"": $o.ship_country,
+  ""shipVia"": $o.ship_via,
+  ""shipRegion"": $o.ship_region
+};"
 719,List the first 3 customers from 'Germany' who ordered 'Beverages'.,"MATCH (c:Customer)-[:PURCHASED]->(o:Order)-[:ORDERS]->(p:Product)-[:PART_OF]->(cat:Category)
 WHERE c.country = 'Germany' AND cat.categoryName = 'Beverages'
 RETURN c.companyName, c.contactName, c.city
@@ -9223,6 +9639,24 @@ fetch {
   ""productName"": $p.product_name,
   ""quantity"": $q
 };"
+767,List the top 5 customers based on the total freight charges of their orders.,"MATCH (c:Customer)-[:PURCHASED]->(o:Order)
+WITH c, SUM(toFloat(o.freight)) AS totalFreight
+ORDER BY totalFreight DESC
+LIMIT 5
+RETURN c.companyName AS customerName, totalFreight","with fun total_freight($c: customer) -> double:
+  match
+    purchased (customer: $c, order: $o);
+    $o has freight $f;
+  return sum($f);
+match
+$c isa customer;
+let $total = total_freight($c);
+sort $total desc;
+limit 5;
+fetch {
+  ""customerName"": $c.company_name,
+  ""totalFreight"": $total
+};"
 768,Identify the 5 customers who have ordered the most distinct categories of products.,"MATCH (c:Customer)-[:PURCHASED]->(o:Order)-[:ORDERS]->(p:Product)-[:PART_OF]->(cat:Category)
 WITH c, cat.categoryID AS categoryID
 ORDER BY c.customerID, categoryID
@@ -9501,6 +9935,17 @@ $stock > 80;
 supplies (supplier: $s, product: $p);
 fetch {
   ""companyName"": $s.company_name
+};"
+789,Find the top 5 orders with the highest freight charges.,"MATCH (o:Order)
+RETURN o.orderID, o.freight
+ORDER BY toFloat(o.freight) DESC
+LIMIT 5","match
+$o isa order, has freight $f;
+sort $f desc;
+limit 5;
+fetch {
+  ""orderId"": $o.order_id,
+  ""freight"": $f
 };"
 790,Which 3 suppliers provide products in the 'Dairy Products' category?,"MATCH (c:Category {categoryName: 'Dairy Products'})<-[:PART_OF]-(p:Product)<-[:SUPPLIES]-(s:Supplier)
 RETURN s.companyName

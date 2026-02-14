@@ -7,100 +7,73 @@
 Financial filings, banks, countries.
 
 ## Current Status
-- `queries.csv`: 584 converted queries
-- 30 failed queries
+- `queries.csv`: 609 converted queries
+- 5 failed queries
 
-Total: 584 + 30 = 614 / 614 ✓
+Total: 609 + 5 = 614 / 614 ✓
 
-## Failed Queries
-
-### Query 6
-**Error:** Unsupported: date arithmetic (duration.between) not available in TypeQL
+## Failed Queries (5 total)
 
 ### Query 20
-**Error:** Requires string-to-float conversion (toFloat) and abs() function on computed difference - both unsupported in TypeQL
-
-### Query 23
-**Error:** Unsupported: date arithmetic (duration.between) not available in TypeQL
-
-### Query 48
-**Error:** Unsupported: date arithmetic (duration.between) is not available in TypeQL
-
-### Query 52
-**Error:** Unsupported: date arithmetic (duration.between) required to compute longest relationship duration
-
-### Query 75
-**Error:** Unsupported: date arithmetic (duration.inSeconds between two datetime values) is not available in TypeQL
-
-### Query 87
-**Error:** Unsupported: date arithmetic (duration.inSeconds between two datetimes) has no TypeQL equivalent
-
-### Query 116
-**Error:** Cypher uses duration.between() date arithmetic which is unsupported in TypeQL 3.0
-
-### Query 145
-**Error:** Unsupported: date arithmetic (duration.between) is not available in TypeQL 3.0
-
-### Query 149
-**Error:** Unsupported: date arithmetic (duration.between) is not available in TypeQL 3.0
-
-### Query 167
-**Error:** Unsupported: date arithmetic (duration.between) has no TypeQL equivalent
-
-### Query 187
-**Error:** Unsupported: date arithmetic (duration.between) has no TypeQL equivalent
-
-### Query 205
-**Error:** Unsupported: date arithmetic (duration.between) has no TypeQL equivalent
-
-### Query 222
-**Error:** Unsupported: date arithmetic (duration.between) is not available in TypeQL 3.0
-
-### Query 226
-**Error:** Unsupported: date arithmetic (duration.between) is not available in TypeQL 3.0. Cannot compute the difference between two datetime values.
-
-### Query 242
-**Error:** Unsupported: date arithmetic (duration.between) has no TypeQL equivalent
-
-### Query 319
-**Error:** Unsupported feature: date arithmetic (duration.between) is not available in TypeQL 3.0
-
-### Query 354
-**Error:** Unsupported feature: date arithmetic (duration.inDays) has no TypeQL equivalent
+**Reason:** Requires `toFloat()` for string-to-numeric casting and `abs()` on computed differences. TypeQL cannot cast string attributes to numeric types.
+```cypher
+MATCH (f:Filing)
+WITH f,
+     toFloat(f.origin_lat) AS origin_lat,
+     toFloat(f.beneficiary_lat) AS beneficiary_lat,
+     abs(toFloat(f.origin_lat) - toFloat(f.beneficiary_lat)) AS lat_diff
+ORDER BY lat_diff DESC
+LIMIT 3
+RETURN f.sar_id AS filing_id, f.originator_bank AS originator_bank, f.beneficiary_bank AS beneficiary_bank, lat_diff
+```
 
 ### Query 374
-**Error:** Date arithmetic (duration.inMonths) is not supported in TypeQL 3.0
+**Reason:** Requires `duration.inMonths()` for exact month-duration comparison. Months have variable days (28-31), so "exactly one month" is not expressible as a fixed duration in TypeQL.
+```cypher
+MATCH (f:Filing)
+WHERE duration.inMonths(datetime(f.begin), datetime(f.end)).months = 1
+RETURN f
+ORDER BY f.begin
+LIMIT 3
+```
 
 ### Query 405
-**Error:** Date arithmetic/extraction unsupported: query requires filtering by month component (Q4 = months 10-12) of datetime values across arbitrary years. TypeQL does not support datetime component extraction functions.
-
-### Query 427
-**Error:** Unsupported: date arithmetic (duration.between) not available in TypeQL
+**Reason:** Requires datetime component extraction (`date().month`) to filter by Q4 (months 10-12) across arbitrary years. TypeQL has no function to extract month components from datetime values.
+```cypher
+MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)-[:COUNTRY]->(c:Country)
+WHERE (f.begin >= datetime({year: 2000, month: 10, day: 1}) AND f.begin <= datetime({year: 2000, month: 12, day: 31}))
+   OR (f.begin >= datetime({year: 2001, month: 10, day: 1}) AND f.begin <= datetime({year: 2001, month: 12, day: 31}))
+   -- ... repeated for years 2000-2017
+RETURN c.name AS country, COUNT(f) AS filings
+ORDER BY filings DESC
+LIMIT 5
+```
 
 ### Query 434
-**Error:** TypeQL cannot cast string attributes to numeric types. origin_lat and beneficiary_lat are string-typed in the schema, so arithmetic (subtraction, abs) cannot be performed on them.
-
-### Query 477
-**Error:** Unsupported feature: date arithmetic (duration.between) has no TypeQL equivalent
-
-### Query 508
-**Error:** Unsupported feature: date arithmetic (duration.between) is not available in TypeQL
-
-### Query 542
-**Error:** Unsupported: date arithmetic (duration.between) has no TypeQL equivalent
+**Reason:** Same as Query 20 — requires `toFloat()` for string-to-numeric casting and `abs()` on computed latitude differences. Schema stores lat/lon as strings.
+```cypher
+MATCH (f:Filing)
+WITH f,
+     toFloat(f.origin_lat) AS origin_lat,
+     toFloat(f.beneficiary_lat) AS beneficiary_lat,
+     abs(toFloat(f.origin_lat) - toFloat(f.beneficiary_lat)) AS lat_diff
+ORDER BY lat_diff DESC
+LIMIT 3
+RETURN f.sar_id AS filing_id, lat_diff
+```
 
 ### Query 550
-**Error:** Cypher uses substring() to extract and compare month portions of two string attributes. TypeQL has no substring function or equivalent string slicing capability.
+**Reason:** Requires `substring()` to extract and compare month portions of two string attributes. TypeQL has no substring or string slicing functions.
+```cypher
+MATCH (f:Filing)
+WHERE f.begin_date_format STARTS WITH '2015' AND f.end_date_format STARTS WITH '2015'
+  AND substring(f.begin_date_format, 5, 2) = substring(f.end_date_format, 5, 2)
+RETURN f
+```
 
-### Query 566
-**Error:** Unsupported: date arithmetic (duration.inSeconds) has no TypeQL equivalent
+## Conversion Notes
 
-### Query 577
-**Error:** Unsupported: date arithmetic (duration.between) has no TypeQL equivalent
+### Queries converted with TypeDB 3.8 datetime arithmetic (25 queries)
 
-### Query 611
-**Error:** Unsupported: date arithmetic (duration.between) has no TypeQL equivalent
-
-### Query 612
-**Error:** Unsupported: date arithmetic (duration.inDays between two dates) not available in TypeQL
+Queries 6, 23, 48, 52, 75, 87, 116, 145, 149, 167, 187, 205, 222, 226, 242, 319, 354, 427, 477, 508, 542, 566, 577, 611, 612 used Cypher `duration.between()` / `duration.inSeconds()` / `duration.inDays()` to compute filing duration. Converted using TypeDB 3.8 datetime subtraction: `let $diff = $period_end - $period_begin;` with `sort $diff` for ordering by duration.
 

@@ -159,6 +159,16 @@ limit 3;
 fetch {
   ""name"": $namep
 };"
+13,List all people who have produced a movie and acted in another.,"MATCH (p:Person)-[:PRODUCED]->(:Movie)
+WHERE exists{ (p)-[:ACTED_IN]->(:Movie) }
+RETURN p.name","match
+  $p isa person;
+  produced (producer: $p, film: $m1);
+  acted_in (actor: $p, film: $m2);
+  $p has name $name;
+fetch {
+  ""name"": $name
+};"
 14,What are the top 5 most recent movies in the database?,"MATCH (m:Movie)
 RETURN m.title, m.released
 ORDER BY m.released DESC
@@ -286,6 +296,18 @@ RETURN m.title AS movie","match
 fetch {
   ""movie"": $titlem
 };"
+24,What are the first 3 movies with a tagline containing the word 'limits'?,"MATCH (m:Movie)
+WHERE m.tagline CONTAINS 'limits'
+RETURN m.title
+LIMIT 3","match
+  $m isa movie;
+  $m has tagline $tagline;
+  $tagline like "".*limits.*"";
+  $m has title $title;
+limit 3;
+fetch {
+  ""title"": $title
+};"
 25,Who are the first 3 actors in the movie titled 'Speed Racer'?,"MATCH (m:Movie {title: 'Speed Racer'})<-[:ACTED_IN]-(p:Person)
 RETURN p.name
 LIMIT 3","match
@@ -296,6 +318,16 @@ LIMIT 3","match
 limit 3;
 fetch {
   ""name"": $namep
+};"
+26,List all the relationships a person named 'Keanu Reeves' has with movies.,"MATCH (p:Person {name: 'Keanu Reeves'})-[r]->(m:Movie)
+RETURN type(r) AS relationship, m.title AS movie","match
+  $p isa person, has name ""Keanu Reeves"";
+  $rel isa $rel_type ($p, $m);
+  $m isa movie, has title $t;
+  { $rel_type label acted_in; } or { $rel_type label directed; } or { $rel_type label produced; } or { $rel_type label wrote; } or { $rel_type label reviewed; };
+fetch {
+  ""relationship"": $rel_type,
+  ""movie"": $t
 };"
 27,Show the top 5 movies by the number of reviews they received.,"MATCH (m:Movie)<-[r:REVIEWED]-(:Person)
 RETURN m.title AS movie, count(r) AS numReviews
@@ -321,6 +353,18 @@ RETURN p.name AS person, m.title AS movie","match
 fetch {
   ""person"": $namep,
   ""movie"": $titlem
+};"
+29,List the first 3 people who have directed and written the same movie.,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:WROTE]-(p)
+RETURN p.name AS person
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  directed (director: $p, film: $m);
+  wrote (writer: $p, film: $m);
+  $p has name $namep;
+limit 3;
+fetch {
+  ""person"": $namep
 };"
 30,What are the birth years of people who have acted in movies released before 1980?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
 WHERE m.released < 1980
@@ -422,6 +466,18 @@ limit 5;
 fetch {
   ""movie"": $t,
   ""roleCount"": $roleCount
+};"
+37,"Which person has acted in, directed, and produced the same movie?","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
+WHERE exists{ (p)-[:PRODUCED]->(m) }
+RETURN p.name AS person, m.title AS movie","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  directed (director: $p, film: $m);
+  produced (producer: $p, film: $m);
+fetch {
+  ""person"": $p.name,
+  ""movie"": $m.title
 };"
 38,List the first 3 movies with a tagline containing the word 'football'.,"MATCH (m:Movie)
 WHERE m.tagline CONTAINS 'football'
@@ -560,6 +616,28 @@ fetch {
   ""person1"": $n1,
   ""person2"": $n2
 };"
+48,Which people have reviewed and also produced the movie titled 'The Matrix Revolutions'?,"MATCH (p:Person)-[:REVIEWED]->(m:Movie {title: 'The Matrix Revolutions'})<-[:PRODUCED]-(p)
+RETURN p.name","match
+  $p isa person;
+  $m isa movie, has title ""The Matrix Revolutions"";
+  (reviewer: $p, film: $m) isa reviewed;
+  (producer: $p, film: $m) isa produced;
+  $p has name $namep;
+fetch {
+  ""name"": $namep
+};"
+49,List the first 3 movies that have been acted in and directed by the same person.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN m.title
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  directed (director: $p, film: $m);
+  $m has title $title;
+limit 3;
+fetch {
+  ""title"": $title
+};"
 50,What are the first 3 movies with a released year of 2008?,"MATCH (m:Movie)
 WHERE m.released = 2008
 RETURN m.title
@@ -587,6 +665,16 @@ fetch {
   ""reviewer"": $namep,
   ""movie"": $titlem,
   ""rating"": $ratingr
+};"
+52,List all movies with more than one role listed in the 'ACTED_IN' relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WHERE size(r.roles) > 1
+RETURN m.title, r.roles","match
+  $m isa movie, has title $t;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r1, has roles $r2;
+  $r1 != $r2;
+fetch {
+  ""title"": $t,
+  ""roles"": [ $ai.roles ]
 };"
 53,Find the first 3 people who acted in a movie released in the 1990s.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
 WHERE m.released >= 1990 AND m.released < 2000
@@ -662,6 +750,16 @@ fetch {
   ""director"": $namep,
   ""num_directed"": $num_directed
 };"
+58,Which person has the most roles in a single movie?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+RETURN p.name AS person, m.title AS movie, size(r.roles) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 1","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+  $m has title $t;
+reduce $count = count($r) groupby $n, $t;
+sort $count desc;
+limit 1;"
 59,"List the first 3 movies with a review summary of 'Fun, but a little far fetched'.","MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.summary = 'Fun, but a little far fetched'
 RETURN m.title
@@ -705,6 +803,20 @@ RETURN m.title","match
   $m has title $titlem;
 fetch {
   ""title"": $titlem
+};"
+63,What are the top 5 movies with the most roles listed in their 'ACTED_IN' relationship?,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+RETURN m.title, size(r.roles) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 5","match
+  $m isa movie, has title $t;
+  $a isa acted_in (actor: $p, film: $m);
+  $a has roles $r;
+reduce $roleCount = count($r) groupby $t;
+sort $roleCount desc;
+limit 5;
+fetch {
+  ""movie"": $t,
+  ""roleCount"": $roleCount
 };"
 64,Show the first 3 people born in 1980 who have reviewed a movie.,"MATCH (p:Person)-[:REVIEWED]->(m:Movie)
 WHERE p.born = 1980
@@ -818,6 +930,20 @@ limit 3;
 fetch {
   ""title"": $titlem
 };"
+72,Who are the top 5 oldest directors in the database?,"MATCH (p:Person)-[:DIRECTED]->(:Movie)
+RETURN p.name, p.born
+ORDER BY p.born
+LIMIT 5","match
+  $p isa person;
+  $p has name $namep;
+  $p has born $bornp;
+  directed (director: $p, film: $m);
+sort $bornp asc;
+limit 5;
+fetch {
+  ""name"": $namep,
+  ""born"": $bornp
+};"
 73,List all movies with a rating of exactly 85 in the 'REVIEWED' relationship.,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.rating = 85
 RETURN m.title AS movie","match
@@ -826,6 +952,21 @@ RETURN m.title AS movie","match
 fetch {
   ""movie"": $t
 };"
+74,Find the first 3 people who have written and directed the same movie.,"MATCH (p:Person)-[:WROTE]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN p.name AS person, m.title AS movie
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  wrote (writer: $p, film: $m);
+  directed (director: $p, film: $m);
+  $p has name $name;
+  $m has title $title;
+limit 3;
+fetch {
+  ""person"": $name,
+  ""movie"": $title
+};
+"
 75,Who are the first 3 actors in the movie with the tagline 'Speed has no limits'?,"MATCH (m:Movie {tagline: 'Speed has no limits'})<-[:ACTED_IN]-(p:Person)
 RETURN p.name
 LIMIT 3","match
@@ -933,6 +1074,19 @@ LIMIT 3","match
 limit 3;
 fetch {
   ""title"": $titlem
+};"
+83,Name the first 5 people who directed a movie with a tagline containing the word 'limits'.,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)
+WHERE m.tagline CONTAINS 'limits'
+RETURN p.name
+LIMIT 5","match
+  $p isa person;
+  $m isa movie, has tagline $t;
+  directed (director: $p, film: $m);
+  $t like "".*limits.*"";
+  $p has name $name;
+limit 5;
+fetch {
+  ""name"": $name
 };"
 84,What are the first 3 movies produced by someone born before 1960?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
 WHERE p.born < 1960
@@ -1066,6 +1220,17 @@ fetch {
   ""birthYear"": $bornp,
   ""movie"": $titlem,
   ""releaseYear"": $releasedm
+};"
+93,"List the first 3 movies reviewed with a summary 'Silly, but fun' and a tagline containing 'world'.","MATCH (m:Movie)<-[:REVIEWED]-(p:Person)
+WHERE m.tagline CONTAINS 'world' AND exists{(p)-[:REVIEWED]->(m) WHERE m.summary = 'Silly, but fun'}
+RETURN m.title
+LIMIT 3","match
+  $m isa movie, has tagline $tagline, has title $title;
+  $tagline like "".*world.*"";
+  $rev isa reviewed (reviewer: $p, film: $m), has summary ""Silly, but fun"";
+limit 3;
+fetch {
+  ""title"": $title
 };"
 94,What are the first 3 movies where someone born in 1996 acted?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
 WHERE p.born = 1996
@@ -1242,6 +1407,30 @@ limit 3;
 fetch {
   ""title"": $titlem
 };"
+106,Name the top 5 people who followed and were followed by 'Laurence Fishburne'.,"MATCH (p:Person)-[:FOLLOWS]->(laurence:Person {name: 'Laurence Fishburne'})<-[:FOLLOWS]-(p)
+RETURN p.name
+LIMIT 5","match
+  $p isa person;
+  $laurence isa person, has name ""Laurence Fishburne"";
+  follows (follower: $p, followed: $laurence);
+  follows (follower: $laurence, followed: $p);
+  $p has name $name;
+limit 5;
+fetch {
+  ""name"": $name
+};"
+107,What are the first 3 movies where someone born in 1965 directed a person born in 1952?,"MATCH (director:Person {born: 1965})-[:DIRECTED]->(movie:Movie)<-[:ACTED_IN]-(actor:Person {born: 1952})
+RETURN movie.title
+LIMIT 3","match
+  $director isa person, has born 1965;
+  $actor isa person, has born 1952;
+  $movie isa movie, has title $title;
+  directed (director: $director, film: $movie);
+  acted_in (actor: $actor, film: $movie);
+limit 3;
+fetch {
+  ""title"": $title
+};"
 108,List the first 5 people born before 1980 who wrote a movie with a tagline mentioning 'speed'.,"MATCH (p:Person)-[:WROTE]->(m:Movie)
 WHERE p.born < 1980 AND m.tagline CONTAINS 'speed'
 RETURN p.name, m.title, m.tagline
@@ -1260,6 +1449,35 @@ fetch {
   ""name"": $namep,
   ""title"": $titlem,
   ""tagline"": $taglinem
+};"
+109,Who are the top 3 actors with the most roles in movies released before 1990?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WHERE m.released < 1990
+WITH p, count(r) AS numRoles
+ORDER BY numRoles DESC
+LIMIT 3
+RETURN p.name AS actor, numRoles","match
+  $p isa person, has name $n;
+  $rel isa acted_in (actor: $p, film: $m);
+  $m has released $r;
+  $r < 1990;
+reduce $numRoles = count($rel) groupby $n;
+sort $numRoles desc;
+limit 3;
+fetch {
+  ""actor"": $n,
+  ""numRoles"": $numRoles
+};"
+110,List the first 3 people who produced and acted in the same movie.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:PRODUCED]-(p)
+RETURN p.name AS person, m.title AS movie
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  produced (producer: $p, film: $m);
+limit 3;
+fetch {
+  ""person"": $p.name,
+  ""movie"": $m.title
 };"
 111,What are the top 5 movies with a tagline containing 'football' that were produced by someone born after 1960?,"MATCH (m:Movie)<-[:PRODUCED]-(p:Person)
 WHERE m.tagline CONTAINS 'football' AND p.born > 1960
@@ -1283,6 +1501,18 @@ fetch {
   ""tagline"": $taglinem,
   ""released"": $releasedm,
   ""name"": $namep
+};"
+112,Which 3 people born after 1970 reviewed a movie with a summary 'An amazing journey'?,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
+WHERE p.born > 1970 AND r.summary = 'An amazing journey'
+RETURN p.name
+LIMIT 3","match
+$p isa person, has name $name, has born $b;
+$m isa movie;
+$r isa reviewed (reviewer: $p, film: $m), has summary ""An amazing journey"";
+$b > 1970;
+limit 3;
+fetch {
+  ""name"": $name
 };"
 113,Name the first 5 people who directed a movie with votes less than 50.,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)
 WHERE m.votes < 50
@@ -1327,6 +1557,19 @@ fetch {
   ""movie"": $titlem,
   ""person"": $namep
 };"
+116,Who are the first 3 people to review a movie with a summary 'Pretty funny at times'?,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
+WHERE r.summary = 'Pretty funny at times'
+RETURN p.name
+ORDER BY r.rating DESC
+LIMIT 3","match
+$p isa person, has name $name;
+$m isa movie;
+$r isa reviewed (reviewer: $p, film: $m), has summary ""Pretty funny at times"", has rating $rating;
+sort $rating desc;
+limit 3;
+fetch {
+  ""name"": $name
+};"
 117,Find the first 3 actors who acted in a movie with a tagline containing 'Robin Williams'.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
 WHERE m.tagline CONTAINS 'Robin Williams'
 RETURN p.name
@@ -1340,6 +1583,23 @@ LIMIT 3","match
 limit 3;
 fetch {
   ""name"": $namep
+};"
+118,"Which 3 movies reviewed with a summary 'Dark, but compelling' were produced by someone born before 1960?","MATCH (m:Movie)<-[:REVIEWED {summary: 'Dark, but compelling'}]-()
+MATCH (m)<-[:PRODUCED]-(p:Person)
+WHERE p.born < 1960
+RETURN m.title
+LIMIT 3","match
+  $m isa movie;
+  $r isa reviewed (reviewer: $reviewer, film: $m);
+  $r has summary ""Dark, but compelling"";
+  $p isa person;
+  produced (producer: $p, film: $m);
+  $p has born $bornp;
+  $bornp < 1960;
+  $m has title $titlem;
+limit 3;
+fetch {
+  ""title"": $titlem
 };"
 119,Name the top 5 directors of movies that have a tagline mentioning 'Real World'.,"MATCH (m:Movie)
 WHERE m.tagline CONTAINS 'Real World'
@@ -1377,6 +1637,50 @@ limit 3;
 fetch {
   ""title"": $titlem
 };"
+121,List the top 5 movies where the director and the main actor were born in the same decade.,"MATCH (actor:Person)-[:ACTED_IN]->(movie:Movie)<-[:DIRECTED]-(director:Person)
+WHERE actor.born / 10 = director.born / 10
+WITH movie, actor, director
+ORDER BY movie.votes DESC
+LIMIT 5
+RETURN movie.title AS movie, actor.name AS actor, director.name AS director","match
+  $actor isa person, has born $actor_born, has name $actor_name;
+  $director isa person, has born $director_born, has name $director_name;
+  $movie isa movie, has title $movie_title, has votes $votes;
+  acted_in (actor: $actor, film: $movie);
+  directed (director: $director, film: $movie);
+let $actor_decade = $actor_born / 10;
+let $director_decade = $director_born / 10;
+match $actor_decade == $director_decade;
+sort $votes desc;
+limit 5;
+fetch {
+  ""movie"": $movie_title,
+  ""actor"": $actor_name,
+  ""director"": $director_name
+};
+"
+122,Who are the first 3 actors born after 1980 who acted in a movie produced by someone born before 1950?,"MATCH (a:Person)-[:ACTED_IN]->(m:Movie)<-[:PRODUCED]-(p:Person)
+WHERE a.born > 1980 AND p.born < 1950
+RETURN a.name AS actor, m.title AS movie
+ORDER BY a.born
+LIMIT 3","match
+  $a isa person;
+  $m isa movie;
+  $p isa person;
+  (actor: $a, film: $m) isa acted_in;
+  (producer: $p, film: $m) isa produced;
+  $a has born $borna;
+  $borna > 1980;
+  $p has born $bornp;
+  $bornp < 1950;
+  $a has name $namea;
+  $m has title $titlem;
+sort $borna asc;
+limit 3;
+fetch {
+  ""actor"": $namea,
+  ""movie"": $titlem
+};"
 123,Find the first 3 movies produced by 'Lana Wachowski'.,"MATCH (p:Person {name: 'Lana Wachowski'})-[:PRODUCED]->(m:Movie)
 RETURN m.title
 LIMIT 3","match
@@ -1388,6 +1692,50 @@ limit 3;
 fetch {
   ""title"": $titlem
 };"
+124,List the first 5 people who followed someone with the same birth year.,"MATCH (p1:Person)-[:FOLLOWS]->(p2:Person)
+WHERE p1.born = p2.born
+RETURN p1.name AS follower, p2.name AS followed
+LIMIT 5","match
+  $p1 isa person, has born $born;
+  $p2 isa person, has born $born;
+  follows (follower: $p1, followed: $p2);
+limit 5;
+fetch {
+  ""follower"": $p1.name,
+  ""followed"": $p2.name
+};"
+125,Which 3 people born before 1950 acted in a movie with a tagline containing 'limits'?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
+WHERE p.born < 1950 AND m.tagline CONTAINS 'limits'
+RETURN p.name
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  $p has born $bornp;
+  $bornp < 1950;
+  $m has tagline $tag;
+  $tag like "".*limits.*"";
+limit 3;
+fetch {
+  ""name"": $p.name
+};"
+126,Name the top 5 directors who also reviewed the movies they directed.,"MATCH (d:Person)-[:DIRECTED]->(m:Movie)<-[:REVIEWED]-(d)
+RETURN d.name AS director, count(*) AS num_reviewed
+ORDER BY num_reviewed DESC
+LIMIT 5","match
+  $d isa person;
+  $m isa movie;
+  directed (director: $d, film: $m);
+  reviewed (reviewer: $d, film: $m);
+  $d has name $named;
+reduce $num_reviewed = count($m) groupby $named;
+sort $num_reviewed desc;
+limit 5;
+fetch {
+  ""director"": $named,
+  ""num_reviewed"": $num_reviewed
+};
+"
 127,What are the first 3 movies where someone named 'Keanu Reeves' was the producer?,"MATCH (p:Person {name: 'Keanu Reeves'})-[:PRODUCED]->(m:Movie)
 RETURN m.title
 LIMIT 3","match
@@ -1399,6 +1747,25 @@ limit 3;
 fetch {
   ""title"": $titlem
 };"
+128,List the top 5 actors who acted in movies reviewed with a summary 'Slapstick redeemed only by the Robin Williams and '.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[r:REVIEWED]-(reviewer:Person)
+WHERE r.summary = 'Slapstick redeemed only by the Robin Williams and '
+RETURN p.name AS actor, count(m) AS movie_count
+ORDER BY movie_count DESC
+LIMIT 5","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  $rev isa reviewed (reviewer: $reviewer, film: $m);
+  $rev has summary ""Slapstick redeemed only by the Robin Williams and "";
+  $p has name $actor_name;
+reduce $movie_count = count($m) groupby $actor_name;
+sort $movie_count desc;
+limit 5;
+fetch {
+  ""actor"": $actor_name,
+  ""movie_count"": $movie_count
+};
+"
 129,Who are the first 3 people born after 1975 who wrote a movie released after 2005?,"MATCH (p:Person)-[:WROTE]->(m:Movie)
 WHERE p.born > 1975 AND m.released > 2005
 RETURN p.name
@@ -1518,6 +1885,24 @@ fetch {
   ""reviewer"": $namep,
   ""rating"": $ratingr
 };"
+138,Which person has produced the most movies and what are those movies?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
+WITH p, collect(m) AS movies, count(m) AS movieCount
+ORDER BY movieCount DESC
+LIMIT 1
+RETURN p.name AS producer, [movie IN movies | movie.title] AS producedMovies","match
+  $p isa person;
+  produced (producer: $p, film: $m);
+reduce $count = count($m) groupby $p;
+sort $count desc;
+limit 1;
+match
+  produced (producer: $p, film: $movie);
+  $movie has title $t;
+  $p has name $n;
+fetch {
+  ""producer"": $n,
+  ""title"": $t
+};"
 139,What are the top 5 movies with the highest average review rating?,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WITH m, avg(r.rating) AS avgRating
 ORDER BY avgRating DESC
@@ -1558,6 +1943,26 @@ $summary == ""Dark, but compelling"";
 fetch {
   ""title"": $title
 };"
+142,Which movies have been both written and directed by the same person and what are their titles?,"MATCH (p:Person)-[:WROTE]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN m.title","match
+  $p isa person;
+  $m isa movie;
+  wrote (writer: $p, film: $m);
+  directed (director: $p, film: $m);
+  $m has title $title;
+fetch {
+  ""title"": $title
+};"
+143,How many different people have reviewed movies released before 1990?,"MATCH (p:Person)-[:REVIEWED]->(m:Movie)
+WHERE m.released < 1990
+RETURN count(distinct p) AS num_reviewers","match
+  $p isa person;
+  reviewed (reviewer: $p, film: $m);
+  $m has released $r;
+  $r < 1990;
+select $p;
+distinct;
+reduce $count = count;"
 144,What are the first 3 most recent movies that have a tagline?,"MATCH (m:Movie)
 WHERE m.tagline IS NOT NULL
 RETURN m.title, m.tagline, m.released
@@ -1574,6 +1979,11 @@ fetch {
   ""tagline"": $taglinem,
   ""released"": $releasedm
 };"
+145,Which person has acted in the most movies and what are those movies titles?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
+WITH p, collect(m.title) AS movies, count(m) AS numMovies
+ORDER BY numMovies DESC
+LIMIT 1
+RETURN p.name AS person, movies","with fun movie_count($p: person) -> integer: match acted_in (actor: $p); return count; match $p isa person; let $count = movie_count($p); sort $count desc; limit 1; match acted_in (actor: $p, film: $m); fetch { ""person"": $p.name, ""movie_title"": $m.title };"
 146,List 3 movies Laurence Fishburne has reviewed and their corresponding ratings.,"MATCH (p:Person {name: 'Laurence Fishburne'})-[r:REVIEWED]->(m:Movie)
 RETURN m.title AS movie, r.rating AS rating
 LIMIT 3","match
@@ -1585,6 +1995,19 @@ limit 3;
 fetch {
   ""movie"": $titlem,
   ""rating"": $ratingr
+};"
+147,Who are the top 5 youngest producers in the database?,"MATCH (p:Person)-[:PRODUCED]->(:Movie)
+RETURN p.name AS producer, p.born AS birthYear
+ORDER BY p.born DESC
+LIMIT 5","match
+  $p isa person;
+  produced (producer: $p, film: $m);
+  $p has born $bornp;
+sort $bornp desc;
+limit 5;
+fetch {
+  ""producer"": $p.name,
+  ""birthYear"": $bornp
 };"
 148,Which movies have a tagline containing the word 'real' and were released in the 2000s?,"MATCH (m:Movie)
 WHERE m.tagline CONTAINS 'real' AND m.released >= 2000 AND m.released < 2010
@@ -1627,6 +2050,31 @@ limit 5;
 fetch {
   ""actor"": $n,
   ""movie"": $t
+};"
+151,Which people follow Keanu Reeves and have also acted in a movie with him?,"MATCH (follower:Person)-[:FOLLOWS]->(keanu:Person {name: 'Keanu Reeves'}),
+      (follower)-[:ACTED_IN]->(movie:Movie)<-[:ACTED_IN]-(keanu)
+RETURN follower.name AS follower, movie.title AS movie","match
+  $follower isa person;
+  $keanu isa person, has name ""Keanu Reeves"";
+  follows (follower: $follower, followed: $keanu);
+  $movie isa movie;
+  acted_in (actor: $follower, film: $movie);
+  acted_in (actor: $keanu, film: $movie);
+fetch {
+  ""follower"": $follower.name,
+  ""movie"": $movie.title
+};"
+152,"What are the names of the first 3 people who have produced, directed, and written the same movie?","MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)-[:WROTE]->(m)
+RETURN p.name
+LIMIT 3","match
+  $p isa person, has name $name;
+  $m isa movie;
+  produced (producer: $p, film: $m);
+  directed (director: $p, film: $m);
+  wrote (writer: $p, film: $m);
+limit 3;
+fetch {
+  ""name"": $name
 };"
 153,What is the average rating of movies reviewed by people born after 1980?,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
 WHERE p.born > 1980
@@ -1686,6 +2134,22 @@ fetch {
   ""released"": $releasedm,
   ""votes"": $votesm
 };"
+157,Which people have reviewed the same movie and what were their review summaries?,"MATCH (p1:Person)-[r1:REVIEWED]->(m:Movie)<-[r2:REVIEWED]-(p2:Person)
+WHERE p1 <> p2
+RETURN p1.name AS Reviewer1, r1.summary AS Review1, p2.name AS Reviewer2, r2.summary AS Review2, m.title AS Movie","match
+  $p1 isa person, has name $name1;
+  $p2 isa person, has name $name2;
+  $m isa movie, has title $title;
+  $r1 isa reviewed (reviewer: $p1, film: $m), has summary $summary1;
+  $r2 isa reviewed (reviewer: $p2, film: $m), has summary $summary2;
+  not { $name1 == $name2; };
+fetch {
+  ""Reviewer1"": $name1,
+  ""Review1"": $summary1,
+  ""Reviewer2"": $name2,
+  ""Review2"": $summary2,
+  ""Movie"": $title
+};"
 158,List the first 3 movies that Keanu Reeves has acted in with their release years.,"MATCH (p:Person {name: 'Keanu Reeves'})-[:ACTED_IN]->(m:Movie)
 RETURN m.title AS movie, m.released AS year
 ORDER BY m.released
@@ -1732,6 +2196,33 @@ limit 3;
 fetch {
   ""tagline"": $taglinem
 };"
+161,List the top 5 people who have produced the most number of movies with their birth years.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
+WHERE p.born IS NOT NULL
+RETURN p.name AS producer, p.born AS birthYear, count(m) AS numberOfMovies
+ORDER BY numberOfMovies DESC
+LIMIT 5","match
+  $p isa person, has name $name, has born $birth;
+  produced (producer: $p, film: $m);
+reduce $numberOfMovies = count($m) groupby $p;
+sort $numberOfMovies desc;
+limit 5;
+fetch {
+  ""producer"": $p.name,
+  ""birthYear"": $p.born,
+  ""numberOfMovies"": $numberOfMovies
+};"
+162,"Which movies have been reviewed with a summary 'Fun, but a little far fetched' and what were their ratings?","MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
+WHERE r.summary = 'Fun, but a little far fetched'
+RETURN m.title AS movie, r.rating AS rating","match
+$m isa movie, has title $title;
+$p isa person;
+$r isa reviewed (reviewer: $p, film: $m), has summary ""Fun, but a little far fetched"", has rating $rating;
+
+fetch {
+  ""movie"": $title,
+  ""rating"": $rating
+};
+"
 163,What is the average number of votes for movies released in the 1980s?,"MATCH (m:Movie)
 WHERE m.released >= 1980 AND m.released < 1990
 RETURN avg(m.votes) AS average_votes_1980s","match
@@ -1826,6 +2317,47 @@ fetch {
   ""movie"": $titlem,
   ""review"": $summaryr
 };"
+170,What are the top 5 movies with the most actors involved and their release years?,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
+WITH m, count(p) AS actorCount, m.released AS releaseYear
+RETURN m.title AS movie, releaseYear, actorCount
+ORDER BY actorCount DESC
+LIMIT 5","match
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+reduce $actorCount = count($p) groupby $m;
+sort $actorCount desc;
+limit 5;
+fetch {
+  ""movie"": $m.title,
+  ""releaseYear"": $m.released,
+  ""actorCount"": $actorCount
+};"
+171,List the first 3 movies that have been produced and directed by the same person.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN m.title
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  produced (producer: $p, film: $m);
+  directed (director: $p, film: $m);
+limit 3;
+fetch {
+  ""title"": $m.title
+};
+"
+172,What are the roles of Keanu Reeves in movies he reviewed with a rating above 90?,"MATCH (p:Person {name: 'Keanu Reeves'})-[r:REVIEWED]->(m:Movie)
+WHERE r.rating > 90
+MATCH (p)-[a:ACTED_IN]->(m)
+RETURN m.title AS movie, a.roles AS roles","match
+  $p isa person, has name ""Keanu Reeves"";
+  $m isa movie, has title $title;
+  $rev isa reviewed (reviewer: $p, film: $m), has rating $rating;
+  $rating > 90;
+  $act isa acted_in (actor: $p, film: $m), has roles $roles;
+fetch {
+  ""movie"": $title,
+  ""roles"": $roles
+};
+"
 173,List the movies that have been reviewed and also have a tagline including the word 'journey'.,"MATCH (m:Movie)
 WHERE m.tagline CONTAINS 'journey' AND exists{(m)<-[:REVIEWED]-()}
 RETURN m.title","match
@@ -1855,6 +2387,23 @@ fetch {
   ""movie"": $titlem,
   ""rating"": $ratingr
 };"
+175,List the first 3 movies with roles that include 'Captain' and their actors.,"MATCH (m:Movie)<-[ai:ACTED_IN]-(p:Person)
+WHERE exists{ (m)<-[ai2:ACTED_IN]-() WHERE any(role IN ai2.roles WHERE role CONTAINS 'Captain') }
+RETURN m.title AS movie, collect(p.name) AS actors
+LIMIT 3","match
+  $m isa movie, has title $title;
+  $ai isa acted_in (film: $m), has roles $roles;
+  $roles like "".*Captain.*"";
+select $m, $title;
+distinct;
+limit 3;
+match
+  acted_in (film: $m, actor: $actor);
+  $actor has name $actor_name;
+fetch {
+  ""movie"": $title,
+  ""actor"": $actor_name
+};"
 176,What are the names of the first 3 movies directed by a person born in 1949?,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)
 WHERE p.born = 1949
 RETURN m.title
@@ -1867,6 +2416,57 @@ LIMIT 3","match
 limit 3;
 fetch {
   ""title"": $titlem
+};"
+177,Who are the first 3 people to have reviewed and also produced the same movie?,"MATCH (p:Person)-[:REVIEWED]->(m:Movie)<-[:PRODUCED]-(p)
+RETURN p.name
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  reviewed (reviewer: $p, film: $m);
+  produced (producer: $p, film: $m);
+limit 3;
+fetch {
+  ""name"": $p.name
+};"
+178,What is the average age of directors of the top 5 voted movies?,"MATCH (m:Movie)<-[:DIRECTED]-(d:Person)
+WITH m, d
+ORDER BY m.votes DESC
+LIMIT 5
+RETURN avg(date().year - d.born) AS averageDirectorAge","match
+  $m isa movie, has votes $v;
+  directed (director: $d, film: $m);
+  $d has born $b;
+  let $age = 2026 - $b;
+sort $v desc;
+limit 5;
+reduce $avg_age = mean($age);"
+179,List the top 3 actors who have acted in movies with a tagline including the word 'limits'.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
+WHERE m.tagline CONTAINS 'limits'
+RETURN p.name AS actor, count(*) AS movie_count
+ORDER BY movie_count DESC
+LIMIT 3","match
+  $p isa person, has name $name;
+  $m isa movie, has tagline $tag;
+  $tag like "".*limits.*"";
+  acted_in (actor: $p, film: $m);
+reduce $movie_count = count($m) groupby $name;
+sort $movie_count desc;
+limit 3;
+fetch {
+  ""actor"": $name,
+  ""movie_count"": $movie_count
+};
+"
+180,Which movies have a role listed as 'Hero' and who are the actors?,"MATCH (m:Movie)<-[ai:ACTED_IN]-(p:Person)
+WHERE 'Hero' IN ai.roles
+RETURN m.title AS movie, p.name AS actor","match
+  $m isa movie, has title $titlem;
+  $p isa person, has name $namep;
+  $ai isa acted_in (actor: $p, film: $m), has roles $rolesai;
+  $rolesai == ""Hero"";
+fetch {
+  ""movie"": $titlem,
+  ""actor"": $namep
 };"
 181,What are the first 3 movies with the highest ratings reviewed by people born after 1980?,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
 WHERE p.born > 1980
@@ -1884,6 +2484,50 @@ fetch {
   ""movie"": $t,
   ""rating"": $r
 };"
+182,List the top 5 movies by the number of roles and their respective actors.,"MATCH (m:Movie)<-[ai:ACTED_IN]-(p:Person)
+RETURN m.title AS movie, collect(p.name) AS actors, size(ai.roles) AS numRoles
+ORDER BY numRoles DESC
+LIMIT 5","with fun role_count($m: movie) -> integer:
+  match
+    $ai isa acted_in (film: $m);
+    $ai has roles $r;
+  return count;
+match
+  $m isa movie, has title $t;
+  let $count = role_count($m);
+sort $count desc;
+limit 5;
+fetch {
+  ""movie"": $t,
+  ""numRoles"": $count
+};"
+183,Who are the first 3 youngest actors to have directed a movie?,"MATCH (p:Person)-[:ACTED_IN]->(:Movie)
+WHERE exists{ (p)-[:DIRECTED]->(:Movie) }
+RETURN p.name AS name, p.born AS birthYear
+ORDER BY p.born DESC
+LIMIT 3","match
+  $p isa person;
+  acted_in (actor: $p, film: $m1);
+  directed (director: $p, film: $m2);
+  $p has name $namep;
+  $p has born $bornp;
+sort $bornp desc;
+limit 3;
+fetch {
+  ""name"": $namep,
+  ""birthYear"": $bornp
+};"
+184,What are the first 3 movies where Keanu Reeves and Laurence Fishburne acted together?,"MATCH (keanu:Person {name: 'Keanu Reeves'})-[:ACTED_IN]->(movie)<-[:ACTED_IN]-(laurence:Person {name: 'Laurence Fishburne'})
+RETURN movie.title
+LIMIT 3","match
+  $keanu isa person, has name ""Keanu Reeves"";
+  $laurence isa person, has name ""Laurence Fishburne"";
+  acted_in (actor: $keanu, film: $movie);
+  acted_in (actor: $laurence, film: $movie);
+limit 3;
+fetch {
+  ""title"": $movie.title
+};"
 185,Which movies have been directed by a person born in 1970 and what are their titles?,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)
 WHERE p.born = 1970
 RETURN m.title","match
@@ -1894,6 +2538,27 @@ RETURN m.title","match
   $m has title $titlem;
 fetch {
   ""title"": $titlem
+};"
+186,List the roles of actors in the 3 movies with the highest number of actors involved.,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
+WITH m, collect(p) AS actors
+ORDER BY size(actors) DESC
+LIMIT 3
+UNWIND actors AS actor
+MATCH (actor)-[r:ACTED_IN]->(m)
+RETURN m.title AS movie, actor.name AS actor, r.roles AS roles","match
+  $m isa movie, has title $t;
+  acted_in (actor: $actor, film: $m);
+reduce $count = count($actor) groupby $m;
+sort $count desc;
+limit 3;
+match
+  $ai isa acted_in (actor: $a, film: $m), has roles $roles;
+  $a has name $n;
+  $m has title $t;
+fetch {
+  ""movie"": $t,
+  ""actor"": $n,
+  ""roles"": $roles
 };"
 187,What are the first 3 movies reviewed by people with a review summary 'Pretty funny at times' and their ratings?,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
 WHERE r.summary = 'Pretty funny at times'
@@ -1927,6 +2592,24 @@ fetch {
   ""director"": $n,
   ""movie"": $t
 };"
+189,What are the names of the top 3 oldest actors and the movies they have produced?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
+WITH p, m
+ORDER BY p.born
+LIMIT 3
+RETURN p.name AS actor, collect(m.title) AS produced_movies","match
+  $p isa person, has born $b;
+  acted_in (actor: $p);
+  produced (producer: $p);
+select $p, $b;
+distinct;
+sort $b asc;
+limit 3;
+match
+  produced (producer: $p, film: $m);
+fetch {
+  ""actor"": $p.name,
+  ""produced_movies"": [ $m.title ]
+};"
 190,List the first 3 movies with a tagline including the word 'world' and their release years.,"MATCH (m:Movie)
 WHERE m.tagline CONTAINS 'world'
 RETURN m.title, m.released
@@ -1942,6 +2625,18 @@ limit 3;
 fetch {
   ""title"": $titlem,
   ""released"": $releasedm
+};"
+191,Which movies released before 2000 have a person who both acted and directed in them?,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)-[:DIRECTED]->(m)
+WHERE m.released < 2000
+RETURN m.title AS movie, p.name AS person","match
+  $m isa movie, has released $released, has title $title;
+  $p isa person, has name $name;
+  acted_in (actor: $p, film: $m);
+  directed (director: $p, film: $m);
+  $released < 2000;
+fetch {
+  ""movie"": $title,
+  ""person"": $name
 };"
 192,What are the first 3 movies where Nancy Meyers was involved as a writer and their release years?,"MATCH (p:Person {name: 'Nancy Meyers'})-[:WROTE]->(m:Movie)
 RETURN m.title AS movie, m.released AS year
@@ -1974,6 +2669,19 @@ fetch {
   ""name"": $n,
   ""movieCount"": $movieCount
 };"
+194,List the first 3 movies with at least one role listed as 'Villain' and their actors.,"MATCH (m:Movie)<-[ai:ACTED_IN]-(p:Person)
+WHERE 'Villain' IN ai.roles
+RETURN m.title AS movie, collect(p.name) AS actors
+LIMIT 3","match
+  $m isa movie, has title $title;
+  $ai isa acted_in (actor: $p, film: $m), has roles ""Villain"";
+  $p has name $name;
+limit 3;
+fetch {
+  ""movie"": $title,
+  ""actors"": $name
+};
+"
 195,What are the first 3 movies produced by people born in the 1950s?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
 WHERE p.born >= 1950 AND p.born < 1960
 RETURN m.title
@@ -1989,6 +2697,19 @@ limit 3;
 fetch {
   ""title"": $titlem
 };"
+196,Which movies have been reviewed with a summary 'The coolest football movie ever' and who reviewed them?,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
+WHERE r.summary = 'The coolest football movie ever'
+RETURN m.title AS movie, p.name AS reviewer","match
+$m isa movie, has title $title;
+$p isa person, has name $name;
+$r isa reviewed (reviewer: $p, film: $m), has summary $summary;
+$summary == ""The coolest football movie ever"";
+
+fetch {
+  ""movie"": $title,
+  ""reviewer"": $name
+};
+"
 197,What is the average number of votes for movies directed by people born before 1950?,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)
 WHERE p.born < 1950
 RETURN avg(m.votes) AS average_votes","match
@@ -2000,6 +2721,37 @@ reduce $average_votes = mean($v);
 fetch {
   ""average_votes"": $average_votes
 };"
+198,Who are the first 3 people to have written and directed the same movie and what are those movies?,"MATCH (p:Person)-[:WROTE]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN p.name AS person, m.title AS movie
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  wrote (writer: $p, film: $m);
+  directed (director: $p, film: $m);
+limit 3;
+fetch {
+  ""person"": $p.name,
+  ""movie"": $m.title
+};"
+199,List the top 5 movies with roles including 'Doctor' and the actors who played them.,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
+WHERE any(role IN p.roles WHERE role CONTAINS 'Doctor')
+RETURN m.title AS movie, p.name AS actor
+ORDER BY m.votes DESC
+LIMIT 5","match
+  $m isa movie;
+  $p isa person;
+  $ai isa acted_in (actor: $p, film: $m);
+  $ai has roles $r;
+  $r like "".*Doctor.*"";
+  $m has title $titlem;
+  $p has name $namep;
+  $m has votes $votesm;
+sort $votesm desc;
+limit 5;
+fetch {
+  ""movie"": $titlem,
+  ""actor"": $namep
+};"
 200,Which movies have a person who both produced and reviewed them and what are their titles?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:REVIEWED]-(p)
 RETURN m.title","match
   $p isa person;
@@ -2009,6 +2761,18 @@ RETURN m.title","match
   $m has title $titlem;
 fetch {
   ""title"": $titlem
+};"
+201,What are the first 3 movies where the directors were also actors and their titles?,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:ACTED_IN]-(p)
+RETURN m.title
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  directed (director: $p, film: $m);
+  acted_in (actor: $p, film: $m);
+  $m has title $title;
+limit 3;
+fetch {
+  ""title"": $title
 };"
 202,List the top 5 movies with the highest number of different actors involved.,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
 RETURN m.title AS movie, count(p) AS num_actors
@@ -2054,6 +2818,23 @@ limit 3;
 fetch {
   ""title"": $title,
   ""rating"": $rating
+};"
+205,List the roles of actors in the first 3 movies produced by a person born after 1980.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[ai:ACTED_IN]-(a:Person)
+WHERE p.born > 1980
+WITH m, ai
+ORDER BY m.released
+LIMIT 3
+RETURN m.title AS movie, ai.roles AS roles","match
+  $p isa person, has born $bornp;
+  $bornp > 1980;
+  $m isa movie, has released $releasedm;
+  produced (producer: $p, film: $m);
+  $ai isa acted_in (actor: $a, film: $m), has roles $rolesai;
+sort $releasedm asc;
+limit 3;
+fetch {
+  ""movie"": $m.title,
+  ""roles"": $rolesai
 };"
 206,What are the top 5 movies directed by people born in the 1960s and their release years?,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)
 WHERE p.born >= 1960 AND p.born < 1970
@@ -2283,6 +3064,23 @@ fetch {
   ""actor"": $n,
   ""numMovies"": $numMovies
 };"
+220,What are the first 3 movies produced by persons born before 1960 with a rating over 90?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[r:REVIEWED]-(reviewer:Person)
+WHERE p.born < 1960 AND r.rating > 90
+RETURN m.title
+ORDER BY m.released
+LIMIT 3","match
+  $p isa person, has born $born;
+  $born < 1960;
+  produced (producer: $p, film: $m);
+  $rev isa reviewed (film: $m), has rating $rating;
+  $rating > 90;
+  $m has title $title;
+  $m has released $released;
+sort $released asc;
+limit 3;
+fetch {
+  ""title"": $title
+};"
 221,Name the first 3 movies with a tagline that includes the word 'real' and were released before 2000.,"MATCH (m:Movie)
 WHERE m.tagline CONTAINS 'real' AND m.released < 2000
 RETURN m.title
@@ -2330,6 +3128,39 @@ fetch {
   ""released"": $releasedm,
   ""votes"": $votesm
 };"
+224,List the first 3 people who have written and directed the same movie released after 2000.,"MATCH (p:Person)-[:WROTE]->(m:Movie)<-[:DIRECTED]-(p)
+WHERE m.released > 2000
+RETURN p.name, m.title
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  wrote (writer: $p, film: $m);
+  directed (director: $p, film: $m);
+  $m has released $released;
+  $released > 2000;
+limit 3;
+fetch {
+  ""name"": $p.name,
+  ""title"": $m.title
+};"
+225,Who are the top 3 actors with roles in the most diverse genres (based on taglines)?,"MATCH (a:Person)-[:ACTED_IN]->(m:Movie)
+WITH a, count(DISTINCT m.tagline) AS num_genres
+ORDER BY num_genres DESC
+LIMIT 3
+RETURN a.name AS actor, num_genres","match
+  $a isa person, has name $n;
+  acted_in (actor: $a, film: $m);
+  $m has tagline $tag;
+select $n, $tag;
+distinct;
+reduce $num_genres = count groupby $n;
+sort $num_genres desc;
+limit 3;
+fetch {
+  ""actor"": $n,
+  ""num_genres"": $num_genres
+};
+"
 226,Which movies have been reviewed with a summary containing 'amazing journey' and have a rating less than 80?,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.summary CONTAINS 'amazing journey' AND r.rating < 80
 RETURN m.title AS movie, r.rating AS rating","match
@@ -2419,6 +3250,14 @@ RETURN p.name AS actor","match
   $p has name $namep;
 fetch {
   ""actor"": $namep
+};"
+233,Which movies have a tagline containing the word 'limit'?,"MATCH (m:Movie)
+WHERE m.tagline CONTAINS 'limit'
+RETURN m.title","match
+  $m isa movie, has tagline $tagline;
+  $tagline like "".*limit.*"";
+fetch {
+  ""title"": $m.title
 };"
 234,List all movies produced by Joel Silver.,"MATCH (p:Person {name: 'Joel Silver'})-[:PRODUCED]->(m:Movie)
 RETURN m.title","match
@@ -2536,6 +3375,29 @@ fetch {
   ""title"": $titlem,
   ""tagline"": $taglinem
 };"
+244,Which movies have been both acted in and directed by the same person?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN m.title AS movie, p.name AS person","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  directed (director: $p, film: $m);
+fetch {
+  ""movie"": $m.title,
+  ""person"": $p.name
+};"
+245,List the top 5 movies with the most roles listed in ACTED_IN relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+RETURN m.title AS movie, size(r.roles) AS roleCount
+ORDER BY roleCount DESC
+LIMIT 5","match
+  $m isa movie, has title $t;
+  $ai isa acted_in (film: $m), has roles $r;
+reduce $roleCount = count($r) groupby $t;
+sort $roleCount desc;
+limit 5;
+fetch {
+  ""movie"": $t,
+  ""roleCount"": $roleCount
+};"
 246,Who are the people that Keanu Reeves follows?,"MATCH (keanu:Person {name: 'Keanu Reeves'})-[:FOLLOWS]->(person:Person)
 RETURN person.name","match
   $keanu isa person, has name ""Keanu Reeves"";
@@ -2559,6 +3421,18 @@ fetch {
   ""movie"": $titlem,
   ""rating"": $ratingr
 };"
+248,"Who has produced, directed, and acted in the same movie?","MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)
+WHERE exists{ (p)-[:ACTED_IN]->(m) }
+RETURN p.name AS person, m.title AS movie","match
+  $p isa person;
+  $m isa movie;
+  (producer: $p, film: $m) isa produced;
+  (director: $p, film: $m) isa directed;
+  (actor: $p, film: $m) isa acted_in;
+fetch {
+  ""person"": $p.name,
+  ""movie"": $m.title
+};"
 249,"Find all movies with a summary 'Dark, but compelling'.","MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.summary = 'Dark, but compelling'
 RETURN m","match
@@ -2578,6 +3452,22 @@ RETURN m.title, m.votes","match
 fetch {
   ""title"": $titlem,
   ""votes"": $votesm
+};"
+251,Who are the top 3 youngest directors in the database?,"MATCH (p:Person)-[:DIRECTED]->(:Movie)
+RETURN p.name AS director, p.born AS birthYear
+ORDER BY p.born DESC
+LIMIT 3","match
+  $p isa person;
+  directed (director: $p, film: $m);
+  $p has name $namep;
+  $p has born $bornp;
+select $p, $namep, $bornp;
+distinct;
+sort $bornp desc;
+limit 3;
+fetch {
+  ""director"": $namep,
+  ""birthYear"": $bornp
 };"
 252,What are the distinct summaries available for movie reviews?,"MATCH (:Person)-[r:REVIEWED]->(:Movie)
 RETURN DISTINCT r.summary","match
@@ -2613,6 +3503,33 @@ limit 5;
 fetch {
   ""title"": $titlem,
   ""released"": $releasedm
+};"
+255,Who has acted in movies directed by Lana Wachowski?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(d:Person {name: 'Lana Wachowski'})
+RETURN p.name AS actor, m.title AS movie","match
+  $p isa person;
+  $m isa movie;
+  $d isa person, has name ""Lana Wachowski"";
+  acted_in (actor: $p, film: $m);
+  directed (director: $d, film: $m);
+fetch {
+  ""actor"": $p.name,
+  ""movie"": $m.title
+};"
+256,List the top 3 oldest actors in the database.,"MATCH (p:Person)
+RETURN p.name, p.born
+ORDER BY p.born
+LIMIT 3","match
+  $p isa person;
+  $p has name $namep;
+  $p has born $bornp;
+  acted_in (actor: $p, film: $m);
+select $p, $namep, $bornp;
+distinct;
+sort $bornp asc;
+limit 3;
+fetch {
+  ""name"": $namep,
+  ""born"": $bornp
 };"
 257,What roles are available in the ACTED_IN relationship for movies released before 2000?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
 WHERE m.released < 2000
@@ -2650,6 +3567,32 @@ RETURN p.name","match
 fetch {
   ""name"": $namep
 };"
+260,Who has the most roles in a single movie?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+RETURN p.name AS person, m.title AS movie, size(r.roles) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 1","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+  $m isa movie, has title $t;
+reduce $count = count($r) groupby $p, $m, $n, $t;
+sort $count desc;
+limit 1;
+fetch {
+  ""person"": $n,
+  ""movie"": $t,
+  ""num_roles"": $count
+};
+"
+261,List all movies where the same person has acted and produced.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:PRODUCED]-(p)
+RETURN m.title AS movie, p.name AS person","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  produced (producer: $p, film: $m);
+fetch {
+  ""movie"": $m.title,
+  ""person"": $p.name
+};"
 262,Which movies have been reviewed with a rating of 100?,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.rating = 100
 RETURN m.title","match
@@ -2657,6 +3600,17 @@ RETURN m.title","match
   $rev isa reviewed (reviewer: $p, film: $m), has rating 100;
 fetch {
   ""title"": $t
+};"
+263,"List the persons who have written, directed, and produced the same movie.","MATCH (p:Person)-[:WROTE]->(m:Movie)<-[:DIRECTED]-(p)-[:PRODUCED]->(m)
+RETURN p.name AS person, m.title AS movie","match
+  $p isa person;
+  $m isa movie;
+  wrote (writer: $p, film: $m);
+  directed (director: $p, film: $m);
+  produced (producer: $p, film: $m);
+fetch {
+  ""person"": $p.name,
+  ""movie"": $m.title
 };"
 264,Who are the top 5 persons with the most reviews written?,"MATCH (p:Person)-[r:REVIEWED]->()
 RETURN p.name AS name, count(r) AS num_reviews
@@ -2670,6 +3624,23 @@ limit 5;
 fetch {
   ""name"": $n,
   ""num_reviews"": $num_reviews
+};"
+265,What are the most common roles played by actors in movies from the 1990s?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WHERE m.released >= 1990 AND m.released < 2000
+UNWIND r.roles AS role
+RETURN role, count(*) AS frequency
+ORDER BY frequency DESC
+LIMIT 10","match
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+  $m has released $rel;
+  $rel >= 1990;
+  $rel < 2000;
+reduce $count = count groupby $r;
+sort $count desc;
+limit 10;
+fetch {
+  ""role"": $r,
+  ""frequency"": $count
 };"
 266,Which people were born in the 1960s and have acted in movies?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
 WHERE p.born >= 1960 AND p.born < 1970
@@ -2686,6 +3657,18 @@ fetch {
   ""person"": $namep,
   ""movies"": $titlem
 };"
+268,Which movies have a tagline ending with 'world'?,"MATCH (m:Movie)
+WHERE m.tagline IS NOT NULL AND m.tagline =~ '.*world$'
+RETURN m.title, m.tagline","match
+  $m isa movie;
+  $m has tagline $tagline;
+  $tagline like "".*world"";
+  $m has title $title;
+fetch {
+  ""title"": $title,
+  ""tagline"": $tagline
+};
+"
 269,Find the top 5 movies with the lowest ratings in REVIEWS.,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 RETURN m.title AS movie, avg(r.rating) AS averageRating
 ORDER BY averageRating
@@ -2698,6 +3681,24 @@ limit 5;
 fetch {
   ""movie"": $t,
   ""averageRating"": $averageRating
+};"
+270,Who are the actors in the movie with the highest number of votes?,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
+WHERE m.votes IS NOT NULL
+WITH m, p
+ORDER BY m.votes DESC
+LIMIT 1
+RETURN m.title AS movie, collect(p.name) AS actors","with fun max_votes() -> integer:
+  match $m isa movie, has votes $v;
+  return max($v);
+match
+  $m isa movie, has votes $v, has title $title;
+  let $max = max_votes();
+  $v == $max;
+  acted_in (actor: $p, film: $m);
+  $p has name $name;
+fetch {
+  ""movie"": $title,
+  ""actor"": $name
 };"
 271,List all persons who have produced more than 3 movies.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
 WITH p, count(m) AS num_produced
@@ -2736,6 +3737,22 @@ fetch {
   ""actor"": $namep,
   ""birthYear"": $bornp
 };"
+274,List the top 3 movies reviewed by the youngest reviewers.,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
+WITH m, p, r
+ORDER BY p.born DESC
+WITH m, collect(r)[0] AS review
+RETURN m.title AS movie, review.rating AS rating
+ORDER BY rating DESC
+LIMIT 3","match
+  $m isa movie, has title $title;
+  $p isa person, has born $born;
+  $r isa reviewed (reviewer: $p, film: $m), has rating $rating;
+sort $born desc;
+limit 3;
+fetch {
+  ""movie"": $title,
+  ""rating"": $rating
+};"
 275,Who has directed the most movies released after 2000?,"MATCH (d:Person)-[:DIRECTED]->(m:Movie)
 WHERE m.released > 2000
 WITH d, count(m) AS num_movies
@@ -2752,6 +3769,48 @@ limit 1;
 fetch {
   ""director"": $n,
   ""num_movies"": $num_movies
+};"
+276,What are the common roles for Keanu Reeves across all his movies?,"MATCH (p:Person {name: 'Keanu Reeves'})-[r:ACTED_IN]->(m:Movie)
+WITH p, collect(r.roles) AS rolesList
+UNWIND rolesList AS roles
+UNWIND roles AS role
+RETURN p.name, role, count(*) AS times_played
+ORDER BY times_played DESC","match
+  $p isa person, has name ""Keanu Reeves"";
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $count = count($m) groupby $r;
+sort $count desc;
+fetch {
+  ""role"": $r,
+  ""times_played"": $count
+};"
+277,List the top 5 movies with the most diverse cast in terms of birth years.,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
+WITH m, collect(p.born) AS birthYears
+RETURN m.title AS movie, size(apoc.coll.toSet(birthYears)) AS numUniqueBirthYears
+ORDER BY numUniqueBirthYears DESC
+LIMIT 5","match
+  $m isa movie, has title $t;
+  acted_in (actor: $p, film: $m);
+  $p has born $b;
+select $b, $m, $t;
+distinct;
+reduce $numUniqueBirthYears = count groupby $m, $t;
+sort $numUniqueBirthYears desc;
+limit 5;
+fetch {
+  ""movie"": $t,
+  ""numUniqueBirthYears"": $numUniqueBirthYears
+};"
+278,Who has reviewed movies directed by Lana Wachowski?,"MATCH (reviewer:Person)-[:REVIEWED]->(movie:Movie)<-[:DIRECTED]-(director:Person {name: 'Lana Wachowski'})
+RETURN reviewer.name AS reviewer, movie.title AS movie","match
+  $reviewer isa person, has name $reviewer_name;
+  $movie isa movie, has title $movie_title;
+  $director isa person, has name ""Lana Wachowski"";
+  directed (director: $director, film: $movie);
+  reviewed (reviewer: $reviewer, film: $movie);
+fetch {
+  ""reviewer"": $reviewer_name,
+  ""movie"": $movie_title
 };"
 279,List the top 3 actors with roles in movies released before 1980.,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
 WHERE m.released < 1980
@@ -2770,6 +3829,16 @@ limit 3;
 fetch {
   ""actor"": $namep,
   ""roles"": $roles
+};"
+280,Which movies have been produced and directed by the same person?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN m.title, p.name","match
+  $p isa person;
+  $m isa movie;
+  produced (producer: $p, film: $m);
+  directed (director: $p, film: $m);
+fetch {
+  ""title"": $m.title,
+  ""name"": $p.name
 };"
 281,"Find all movies with a summary 'Fun, but a little far fetched'.","MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.summary = 'Fun, but a little far fetched'
@@ -3072,6 +4141,27 @@ fetch {
   ""title"": $titlem,
   ""votes"": $votesm
 };"
+305,List 3 actors who also have roles as producers.,"MATCH (p:Person)-[:ACTED_IN]->(:Movie)
+WHERE exists{ (p)-[:PRODUCED]->(:Movie) }
+RETURN p.name AS actor_producer
+LIMIT 3","match
+  $p isa person;
+  acted_in (actor: $p, film: $m1);
+  produced (producer: $p, film: $m2);
+  $p has name $name;
+limit 3;
+fetch {
+  ""actor_producer"": $name
+};"
+306,Which movies have a tagline containing the word 'limit'?,"MATCH (m:Movie)
+WHERE m.tagline CONTAINS 'limit'
+RETURN m.title","match
+  $m isa movie;
+  $m has tagline $tagline;
+  $tagline like "".*limit.*"";
+fetch {
+  ""title"": $m.title
+};"
 307,Who reviewed the movie with the highest rating and what was the summary?,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
 WITH p, m, r
 ORDER BY r.rating DESC
@@ -3089,6 +4179,41 @@ fetch {
   ""movie"": $titlem,
   ""review_summary"": $summaryr
 };"
+308,List movies that have been both acted in and directed by the same person.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN m.title AS movie, p.name AS person","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  directed (director: $p, film: $m);
+fetch {
+  ""movie"": $m.title,
+  ""person"": $p.name
+};
+"
+309,Who are the top 3 youngest producers in the database?,"MATCH (p:Person)-[:PRODUCED]->(:Movie)
+RETURN p.name, p.born
+ORDER BY p.born DESC
+LIMIT 3","match
+  $p isa person;
+  produced (producer: $p, film: $m);
+  $p has name $name;
+  $p has born $born;
+sort $born desc;
+limit 3;
+fetch {
+  ""name"": $name,
+  ""born"": $born
+};"
+310,List 3 movies with the tagline including the word 'real'.,"MATCH (m:Movie)
+WHERE toLower(m.tagline) CONTAINS 'real'
+RETURN m.title
+LIMIT 3","match
+  $m isa movie, has tagline $tag;
+  $tag like "".*[Rr][Ee][Aa][Ll].*"";
+limit 3;
+fetch {
+  ""title"": $m.title
+};"
 311,What are the roles played by actors in 'Speed Racer'?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie {title: 'Speed Racer'})
 RETURN p.name AS actor, r.roles AS roles","match
   $p isa person;
@@ -3098,6 +4223,23 @@ RETURN p.name AS actor, r.roles AS roles","match
 fetch {
   ""actor"": $namep,
   ""roles"": $rolesr
+};"
+312,Name 3 persons who have reviewed a movie and also acted in a different movie.,"MATCH (p:Person)-[:REVIEWED]->(:Movie)
+WHERE exists {
+  (p)-[:ACTED_IN]->(:Movie)
+}
+RETURN p.name
+LIMIT 3","match
+  $p isa person;
+  $m1 isa movie;
+  $m2 isa movie;
+  reviewed (reviewer: $p, film: $m1);
+  acted_in (actor: $p, film: $m2);
+  not { $m1 is $m2; };
+  $p has name $name;
+limit 3;
+fetch {
+  ""name"": $name
 };"
 313,How many people have directed more than two movies?,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)
 WITH p, count(m) AS num_directed
@@ -3110,6 +4252,18 @@ match $num_directed > 2;
 reduce $num_people_directed_more_than_two = count($n);
 fetch {
   ""num_people_directed_more_than_two"": $num_people_directed_more_than_two
+};"
+314,List the movies that have been produced and directed by the same person.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN m.title AS movie, p.name AS person","match
+  $p isa person;
+  $m isa movie;
+  produced (producer: $p, film: $m);
+  directed (director: $p, film: $m);
+  $m has title $title;
+  $p has name $name;
+fetch {
+  ""movie"": $title,
+  ""person"": $name
 };"
 315,Name 3 movies that Keanu Reeves has acted in.,"MATCH (p:Person {name: 'Keanu Reeves'})-[:ACTED_IN]->(m:Movie)
 RETURN m.title
@@ -3349,6 +4503,33 @@ fetch {
   ""producer"": $namep,
   ""movieCount"": $movieCount
 };"
+332,List the first 5 people who wrote a movie with a rating of at least 80 in a review.,"MATCH (p:Person)-[:WROTE]->(m:Movie)<-[r:REVIEWED]-(reviewer:Person)
+WHERE r.rating >= 80
+RETURN p.name AS writer, m.title AS movie, r.rating AS rating
+LIMIT 5","match
+  $p isa person, has name $namep;
+  $m isa movie, has title $titlem;
+  wrote (writer: $p, film: $m);
+  $r isa reviewed (reviewer: $reviewer, film: $m), has rating $ratingr;
+  $ratingr >= 80;
+limit 5;
+fetch {
+  ""writer"": $namep,
+  ""movie"": $titlem,
+  ""rating"": $ratingr
+};"
+333,Which movies released between 2005 and 2010 have the tagline 'Speed has no limits'?,"MATCH (m:Movie)
+WHERE m.released >= 2005 AND m.released <= 2010
+  AND m.tagline = 'Speed has no limits'
+RETURN m.title","match
+  $m isa movie;
+  $m has released $released;
+  $released >= 2005;
+  $released <= 2010;
+  $m has tagline ""Speed has no limits"";
+fetch {
+  ""title"": $m.title
+};"
 334,Name the first 3 people born before 1970 who produced a movie released after 2000.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
 WHERE p.born < 1970 AND m.released > 2000
 RETURN p.name
@@ -3429,6 +4610,23 @@ limit 3;
 fetch {
   ""title"": $titlem
 };"
+339,Who are the top 3 persons who have both directed and produced the same movie?,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:PRODUCED]-(p)
+WITH p, count(m) AS num_movies
+ORDER BY num_movies DESC
+LIMIT 3
+RETURN p.name AS person, num_movies","match
+  $p isa person;
+  $m isa movie;
+  directed (director: $p, film: $m);
+  produced (producer: $p, film: $m);
+  $p has name $name;
+reduce $num_movies = count($m) groupby $name;
+sort $num_movies desc;
+limit 3;
+fetch {
+  ""person"": $name,
+  ""num_movies"": $num_movies
+};"
 340,List the top 5 movies with a tagline mentioning 'compelling' and having more than 50 votes.,"MATCH (m:Movie)
 WHERE m.tagline CONTAINS 'compelling' AND m.votes > 50
 RETURN m.title, m.tagline, m.votes
@@ -3477,6 +4675,23 @@ fetch {
   ""movie"": $titlem,
   ""person"": $namep
 };"
+343,List the first 5 movies that have been acted in by someone with the role 'Captain' and reviewed with a rating below 60.,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
+WHERE 'Captain' IN p.roles
+WITH m
+MATCH (m)<-[r:REVIEWED]-()
+WHERE r.rating < 60
+RETURN m.title
+LIMIT 5","match
+  $m isa movie;
+  $acted isa acted_in (actor: $p, film: $m);
+  $acted has roles ""Captain"";
+  $rev isa reviewed (film: $m);
+  $rev has rating $r;
+  $r < 60;
+limit 5;
+fetch {
+  ""title"": $m.title
+};"
 344,Who are the top 3 people born after 1960 who have directed a movie titled 'V for Vendetta'?,"MATCH (p:Person)-[:DIRECTED]->(m:Movie {title: 'V for Vendetta'})
 WHERE p.born > 1960
 RETURN p.name
@@ -3492,6 +4707,21 @@ sort $bornp asc;
 limit 3;
 fetch {
   ""name"": $namep
+};"
+345,List the first 3 movies with a tagline containing 'limits' and released after 2005.,"MATCH (m:Movie)
+WHERE m.tagline CONTAINS 'limits' AND m.released > 2005
+RETURN m.title, m.tagline, m.released
+LIMIT 3","match
+  $m isa movie;
+  $m has tagline $taglinem;
+  $taglinem like "".*limits.*"";
+  $m has released $releasedm;
+  $releasedm > 2005;
+limit 3;
+fetch {
+  ""title"": $m.title,
+  ""tagline"": $taglinem,
+  ""released"": $releasedm
 };"
 346,What are the names of the top 5 people who have followed more than three other persons?,"MATCH (p:Person)-[:FOLLOWS]->(otherPerson:Person)
 WITH p, count(otherPerson) AS followCount
@@ -3509,6 +4739,22 @@ sort $followCount desc;
 limit 5;
 fetch {
   ""name"": $namep
+};"
+347,List the top 5 persons who reviewed movies with a summary stating 'An amazing journey' and a rating above 80.,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
+WHERE r.summary = 'An amazing journey' AND r.rating > 80
+RETURN p.name AS reviewer, m.title AS movie
+ORDER BY r.rating DESC
+LIMIT 5","match
+$m isa movie;
+$p isa person, has name $name;
+$r isa reviewed (reviewer: $p, film: $m), has summary $summary, has rating $rating;
+$summary == ""An amazing journey"";
+$rating > 80;
+sort $rating desc;
+limit 5;
+fetch {
+  ""reviewer"": $name,
+  ""rating"": $rating
 };"
 348,Who are the top 3 people who have acted in at least two movies with more than 100 votes each?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
 WHERE m.votes > 100
@@ -3597,6 +4843,23 @@ LIMIT 3","match
 limit 3;
 fetch {
   ""name"": $namep
+};"
+353,Who are the top 3 directors of movies that have been reviewed with a summary stating 'Pretty funny at times'?,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:REVIEWED]-(r:Person)
+WHERE r.summary = 'Pretty funny at times'
+RETURN p.name AS director, count(*) AS num_movies
+ORDER BY num_movies DESC
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  (director: $p, film: $m) isa directed;
+  $rev isa reviewed (reviewer: $r, film: $m);
+  $rev has summary ""Pretty funny at times"";
+reduce $num_movies = count($m) groupby $p;
+sort $num_movies desc;
+limit 3;
+fetch {
+  ""director"": $p.name,
+  ""num_movies"": $num_movies
 };"
 354,List the top 5 movies that have been directed by someone born in 1967.,"MATCH (m:Movie)<-[:DIRECTED]-(d:Person)
 WHERE d.born = 1967
@@ -3901,6 +5164,34 @@ fetch {
   ""movie"": $titlem,
   ""roles"": $rolesr
 };"
+378,"List top 3 people who have directed, produced, and acted in the same movie.","MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:PRODUCED]-(p)-[:ACTED_IN]->(m)
+WITH p, count(m) AS movieCount
+ORDER BY movieCount DESC
+LIMIT 3
+RETURN p.name AS person, movieCount","match
+  $p isa person;
+  $m isa movie;
+  (director: $p, film: $m) isa directed;
+  (producer: $p, film: $m) isa produced;
+  (actor: $p, film: $m) isa acted_in;
+  $p has name $namep;
+reduce $movieCount = count($m) groupby $namep;
+sort $movieCount desc;
+limit 3;
+fetch {
+  ""person"": $namep,
+  ""movieCount"": $movieCount
+};"
+379,Which movies have taglines longer than 30 characters?,"MATCH (m:Movie)
+WHERE m.tagline IS NOT NULL AND size(m.tagline) > 30
+RETURN m.title, m.tagline","match
+$m isa movie, has tagline $t;
+let $len = len($t);
+$len > 30;
+fetch {
+  ""title"": $m.title,
+  ""tagline"": $t
+};"
 380,List all relationships of Lana Wachowski.,"MATCH (p:Person {name: 'Lana Wachowski'})-[r]->(m)
 RETURN type(r) as relationship, m.title as movie","match
   $p isa person, has name ""Lana Wachowski"";
@@ -3921,6 +5212,18 @@ RETURN m.title, m.votes","match
 fetch {
   ""title"": $titlem,
   ""votes"": $votesm
+};"
+382,List all movies that were both acted in and directed by the same person.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN m.title AS movie, p.name AS person","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  directed (director: $p, film: $m);
+  $m has title $titlem;
+  $p has name $namep;
+fetch {
+  ""movie"": $titlem,
+  ""person"": $namep
 };"
 383,"Which movies have been reviewed with the summary 'Dark, but compelling'?","MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.summary = 'Dark, but compelling'
@@ -3965,6 +5268,29 @@ fetch {
   ""movie"": $titlem,
   ""review"": $summaryr
 };"
+387,"Who has acted in, directed, and produced the same movie?","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
+WHERE exists{ (p)-[:PRODUCED]->(m) }
+RETURN p.name AS person, m.title AS movie","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  directed (director: $p, film: $m);
+  produced (producer: $p, film: $m);
+fetch {
+  ""person"": $p.name,
+  ""movie"": $m.title
+};"
+388,List all movies with more than 3 roles listed in their ACTED_IN relationships.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WHERE size(r.roles) > 3
+RETURN m.title, r.roles","match
+  $m isa movie, has title $t;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $count = count($r) groupby $ai, $t;
+match $count > 3;
+fetch {
+  ""title"": $t,
+  ""role_count"": $count
+};"
 389,Who has produced movies but never acted in any?,"MATCH (p:Person)
 WHERE exists{ (p)-[:PRODUCED]->(:Movie) }
   AND NOT exists{ (p)-[:ACTED_IN]->(:Movie) }
@@ -4001,6 +5327,20 @@ fetch {
   ""movie"": $titlem,
   ""actors"": $namep
 };"
+392,Who are the top 5 youngest producers?,"MATCH (p:Person)-[:PRODUCED]->(:Movie)
+RETURN p.name, p.born
+ORDER BY p.born DESC
+LIMIT 5","match
+  $p isa person;
+  $p has name $namep;
+  $p has born $bornp;
+  produced (producer: $p, film: $m);
+sort $bornp desc;
+limit 5;
+fetch {
+  ""name"": $namep,
+  ""born"": $bornp
+};"
 393,"List all movies that have a 'Fun, but a little far fetched' review summary.","MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.summary = 'Fun, but a little far fetched'
 RETURN m.title","match
@@ -4021,6 +5361,30 @@ RETURN m.title","match
   $p has born $bornp;
   $bornp > 1960;
   $m has title $titlem;
+fetch {
+  ""title"": $titlem
+};"
+395,Who has the most roles in a single movie?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+RETURN p.name AS person, m.title AS movie, size(r.roles) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 1","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+  $m has title $t;
+reduce $count = count($r) groupby $p, $n, $m, $t;
+sort $count desc;
+limit 1;
+fetch {
+  ""person"": $n,
+  ""movie"": $t,
+  ""num_roles"": $count
+};"
+396,List all movie titles with exactly one word in the title.,"MATCH (m:Movie)
+WHERE m.title =~ '^[\\w]+$'
+RETURN m.title","match
+  $m isa movie;
+  $m has title $titlem;
+  not { $titlem like "".* .*""; };
 fetch {
   ""title"": $titlem
 };"
@@ -4049,6 +5413,20 @@ RETURN m.title","match
   $m has title $titlem;
 fetch {
   ""title"": $titlem
+};"
+399,Who are the top 3 youngest directors?,"MATCH (p:Person)-[:DIRECTED]->(:Movie)
+RETURN p.name AS director, p.born AS birthYear
+ORDER BY p.born DESC
+LIMIT 3","match
+  $p isa person;
+  $p has name $namep;
+  $p has born $bornp;
+  directed (director: $p, film: $m);
+sort $bornp desc;
+limit 3;
+fetch {
+  ""director"": $namep,
+  ""birthYear"": $bornp
 };"
 400,List all persons who have not reviewed any movies.,"MATCH (p:Person)
 WHERE NOT exists { (p)-[:REVIEWED]->(:Movie) }
@@ -4148,6 +5526,18 @@ fetch {
   ""director"": $namedirector,
   ""movies"": $titlemovie
 };"
+408,Who has the longest name among all actors?,"MATCH (p:Person)-[:ACTED_IN]->(:Movie)
+RETURN p.name AS name
+ORDER BY size(p.name) DESC
+LIMIT 1","match
+$p isa person, has name $n;
+acted_in (actor: $p, film: $m);
+let $len = len($n);
+sort $len desc;
+limit 1;
+fetch {
+  ""name"": $n
+};"
 409,List the top 5 movies with the lowest votes.,"MATCH (m:Movie)
 WHERE m.votes IS NOT NULL
 RETURN m.title, m.votes
@@ -4161,6 +5551,18 @@ limit 5;
 fetch {
   ""title"": $titlem,
   ""votes"": $votesm
+};"
+410,Who has produced and written the same movie?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:WROTE]-(p)
+RETURN p.name AS person, m.title AS movie","match
+  $p isa person;
+  $m isa movie;
+  produced (producer: $p, film: $m);
+  wrote (writer: $p, film: $m);
+  $p has name $namep;
+  $m has title $titlem;
+fetch {
+  ""person"": $namep,
+  ""movie"": $titlem
 };"
 411,Find the youngest person who has reviewed a movie released before 1990.,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
 WHERE m.released < 1990
@@ -4205,6 +5607,18 @@ limit 1;
 fetch {
   ""actor"": $n,
   ""num_movies"": $num_movies
+};"
+413,List all movies where the producer and director are the same person.,"MATCH (m:Movie)<-[:DIRECTED]-(p:Person)-[:PRODUCED]->(m)
+RETURN m.title AS movie, p.name AS person","match
+  $m isa movie;
+  $p isa person;
+  directed (director: $p, film: $m);
+  produced (producer: $p, film: $m);
+  $m has title $title;
+  $p has name $name;
+fetch {
+  ""movie"": $title,
+  ""person"": $name
 };"
 414,Which person reviewed 'The Matrix Revolutions' and what was their summary?,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie {title: 'The Matrix Revolutions'})
 RETURN p.name AS reviewer, r.summary AS review_summary","match
@@ -4254,6 +5668,17 @@ fetch {
   ""movie"": $titlem,
   ""year"": $releasedm
 };"
+418,List all movies with taglines that start with 'The'.,"MATCH (m:Movie)
+WHERE m.tagline STARTS WITH 'The'
+RETURN m.title, m.tagline","match
+  $m isa movie;
+  $m has title $titlem;
+  $m has tagline $taglinem;
+  $taglinem like ""^The.*"";
+fetch {
+  ""title"": $titlem,
+  ""tagline"": $taglinem
+};"
 419,List top 5 movies reviewed by persons born before 1970.,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
 WHERE p.born < 1970
 RETURN m.title AS movie, r.rating AS rating
@@ -4288,6 +5713,16 @@ fetch {
   ""name"": $n,
   ""num_movies"": $num_movies
 };"
+421,List all movies where the same person has acted and produced.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:PRODUCED]-(p)
+RETURN m.title AS movie, p.name AS person","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  produced (producer: $p, film: $m);
+fetch {
+  ""movie"": $m.title,
+  ""person"": $p.name
+};"
 422,Which movies have been reviewed by persons following Keanu Reeves?,"MATCH (follower:Person)-[:FOLLOWS]->(:Person {name: 'Keanu Reeves'}),
       (follower)-[:REVIEWED]->(movie:Movie)
 RETURN movie.title AS movie, follower.name AS reviewer","match
@@ -4313,6 +5748,32 @@ RETURN p.name AS person, m.title AS movie","match
 fetch {
   ""person"": $namep,
   ""movie"": $titlem
+};"
+424,List the movies with exactly two roles in their ACTED_IN relationships.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WHERE size(r.roles) = 2
+RETURN m.title","match
+  $rel isa acted_in (actor: $p, film: $m);
+  $m has title $t;
+  $rel has roles $r;
+reduce $count = count($r) groupby $rel, $t;
+match $count == 2;
+fetch {
+  ""title"": $t
+};"
+425,"Who has the most movies with a 'Silly, but fun' review summary?","MATCH (p:Person)-[:REVIEWED]->(m:Movie)
+WHERE p.name IS NOT NULL
+WITH p, count(CASE WHEN m.summary = 'Silly, but fun' THEN 1 END) AS silly_reviews
+RETURN p.name AS name, silly_reviews
+ORDER BY silly_reviews DESC
+LIMIT 1","match
+  $p isa person, has name $n;
+  $rev isa reviewed (reviewer: $p, film: $m), has summary ""Silly, but fun"";
+reduce $silly_reviews = count($rev) groupby $n;
+sort $silly_reviews desc;
+limit 1;
+fetch {
+  ""name"": $n,
+  ""silly_reviews"": $silly_reviews
 };"
 426,List all persons who have produced at least three movies.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
 WITH p, count(m) AS num_produced
@@ -4344,6 +5805,27 @@ limit 1;
 fetch {
   ""movie"": $titlem,
   ""votes"": $votesm
+};"
+428,Who has acted in movies directed by Lana Wachowski?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(d:Person {name: 'Lana Wachowski'})
+RETURN p.name AS actor, m.title AS movie","match
+  $p isa person;
+  $m isa movie;
+  $d isa person, has name ""Lana Wachowski"";
+  acted_in (actor: $p, film: $m);
+  directed (director: $d, film: $m);
+fetch {
+  ""actor"": $p.name,
+  ""movie"": $m.title
+};"
+429,List all movies that have been reviewed and produced by the same person.,"MATCH (p:Person)-[:REVIEWED]->(m:Movie)<-[:PRODUCED]-(p)
+RETURN m.title AS movie","match
+  $p isa person;
+  $m isa movie;
+  reviewed (reviewer: $p, film: $m);
+  produced (producer: $p, film: $m);
+  $m has title $title;
+fetch {
+  ""movie"": $title
 };"
 430,Who are the top 3 actors with the most diverse roles?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
 WITH p, size(collect(distinct r.roles)) AS num_roles
@@ -4654,6 +6136,20 @@ limit 3;
 fetch {
   ""name"": $namep
 };"
+452,Identify 3 movies that were both produced and directed by the same person.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN m.title, p.name
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  produced (producer: $p, film: $m);
+  directed (director: $p, film: $m);
+  $m has title $titlem;
+  $p has name $namep;
+limit 3;
+fetch {
+  ""title"": $titlem,
+  ""name"": $namep
+};"
 453,What are the top 3 movies by release year with a tagline containing 'freedom'?,"MATCH (m:Movie)
 WHERE m.tagline CONTAINS 'freedom'
 RETURN m.title, m.released
@@ -4669,6 +6165,36 @@ limit 3;
 fetch {
   ""title"": $titlem,
   ""released"": $releasedm
+};"
+454,Which 3 people have the smallest age difference between them?,"MATCH (p1:Person), (p2:Person)
+WHERE p1 <> p2 AND p1.born IS NOT NULL AND p2.born IS NOT NULL
+WITH p1, p2, abs(p1.born - p2.born) AS ageDiff
+ORDER BY ageDiff
+LIMIT 3
+RETURN p1.name AS person1, p2.name AS person2, ageDiff","match
+  $p1 isa person, has name $n1, has born $b1;
+  $p2 isa person, has name $n2, has born $b2;
+  not { $p1 is $p2; };
+let $ageDiff = abs($b1 - $b2);
+sort $ageDiff asc;
+limit 3;
+fetch {
+  ""person1"": $n1,
+  ""person2"": $n2,
+  ""ageDiff"": $ageDiff
+};"
+455,List 3 movies with the most roles listed in the ACTED_IN relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+RETURN m.title AS movie, size(r.roles) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 3","match
+  $m isa movie, has title $t;
+  $rel isa acted_in (film: $m), has roles $r;
+reduce $num_roles = count($r) groupby $t;
+sort $num_roles desc;
+limit 3;
+fetch {
+  ""movie"": $t,
+  ""num_roles"": $num_roles
 };"
 456,"Name 3 actors who have acted in a movie with the tagline 'Dark, but compelling'.","MATCH (p:Person)-[:ACTED_IN]->(m:Movie {tagline: 'Dark, but compelling'})
 RETURN p.name
@@ -4713,6 +6239,19 @@ fetch {
   ""movie"": $titlem,
   ""votes"": $votesm
 };"
+459,Which 3 movies have the longest taglines?,"MATCH (m:Movie)
+WHERE m.tagline IS NOT NULL
+RETURN m.title, m.tagline
+ORDER BY size(m.tagline) DESC
+LIMIT 3","match
+$m isa movie, has tagline $t;
+let $len = len($t);
+sort $len desc;
+limit 3;
+fetch {
+  ""title"": $m.title,
+  ""tagline"": $t
+};"
 460,"List 3 persons who have acted in, directed, and produced at least one movie each.","MATCH (p:Person)
 WHERE exists{ (p)-[:ACTED_IN]->(:Movie) }
   AND exists{ (p)-[:DIRECTED]->(:Movie) } 
@@ -4727,6 +6266,28 @@ LIMIT 3","match
 limit 3;
 fetch {
   ""name"": $namep
+};"
+461,What are the common movies acted in by people who were born in the same decade?,"MATCH (p1:Person)-[:ACTED_IN]->(m:Movie)<-[:ACTED_IN]-(p2:Person)
+WHERE p1 <> p2 AND p1.born >= 1920 AND p1.born < 2000 AND p2.born >= 1920 AND p2.born < 2000
+      AND floor(p1.born / 10) = floor(p2.born / 10)
+RETURN p1.name AS person1, p2.name AS person2, collect(m.title) AS common_movies","match
+  $p1 isa person, has name $name1, has born $born1;
+  $p2 isa person, has name $name2, has born $born2;
+  $m isa movie, has title $title;
+  acted_in (actor: $p1, film: $m);
+  acted_in (actor: $p2, film: $m);
+  $born1 >= 1920;
+  $born1 < 2000;
+  $born2 >= 1920;
+  $born2 < 2000;
+  not { $p1 is $p2; };
+let $decade1 = $born1 / 10;
+let $decade2 = $born2 / 10;
+match $decade1 == $decade2;
+fetch {
+  ""person1"": $name1,
+  ""person2"": $name2,
+  ""common_movie"": $title
 };"
 462,Name 3 movies with taglines that contain the word 'Speed'.,"MATCH (m:Movie)
 WHERE m.tagline CONTAINS 'Speed'
@@ -4767,6 +6328,36 @@ limit 3;
 fetch {
   ""name"": $namep
 };"
+465,What are the top 3 movies with the most diverse roles in the ACTED_IN relationship?,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WITH m, size(collect(distinct r.roles)) AS role_diversity
+RETURN m.title AS movie, role_diversity
+ORDER BY role_diversity DESC
+LIMIT 3","match
+  $m isa movie, has title $t;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+select $t, $r;
+distinct;
+reduce $role_diversity = count groupby $t;
+sort $role_diversity desc;
+limit 3;
+fetch {
+  ""movie"": $t,
+  ""role_diversity"": $role_diversity
+};"
+466,Who are the first 3 people to act in and review the same movie?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:REVIEWED]-(p)
+RETURN p.name AS person, m.title AS movie
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  reviewed (reviewer: $p, film: $m);
+  $p has name $namep;
+  $m has title $titlem;
+limit 3;
+fetch {
+  ""person"": $namep,
+  ""movie"": $titlem
+};"
 467,List 3 movies reviewed with the summary 'An amazing journey'.,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.summary = 'An amazing journey'
 RETURN m.title
@@ -4793,6 +6384,47 @@ limit 3;
 fetch {
   ""director"": $n,
   ""avg_rating"": $avg_rating
+};"
+469,Name 3 persons who have produced movies but have not directed any.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
+WHERE NOT EXISTS { (p)-[:DIRECTED]->() }
+RETURN p.name
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  produced (producer: $p, film: $m);
+  not { directed (director: $p); };
+  $p has name $namep;
+limit 3;
+fetch {
+  ""name"": $namep
+};"
+470,List the names of 3 persons who have the name starting with 'L'.,"MATCH (p:Person)
+WHERE p.name STARTS WITH 'L'
+RETURN p.name
+LIMIT 3","match
+  $p isa person;
+  $p has name $namep;
+  $namep like ""L.*"";
+limit 3;
+fetch {
+  ""name"": $namep
+};"
+471,What are the top 3 movies by the number of roles available in the ACTED_IN relationship?,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+RETURN m.title AS movie, size(r.roles) AS numRoles
+ORDER BY numRoles DESC
+LIMIT 3","with fun role_count($m: movie) -> integer:
+  match
+    $ai isa acted_in (film: $m);
+    $ai has roles $r;
+  return count;
+match
+  $m isa movie, has title $t;
+  let $count = role_count($m);
+sort $count desc;
+limit 3;
+fetch {
+  ""movie"": $t,
+  ""numRoles"": $count
 };"
 472,Which 3 persons have reviewed the most movies?,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
 WITH p, count(r) AS num_reviews
@@ -4838,6 +6470,20 @@ limit 3;
 fetch {
   ""title"": $titlem
 };"
+475,Who are the first 3 persons to have directed and acted in the same movie?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN p.name AS person, m.title AS movie
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  directed (director: $p, film: $m);
+  $p has name $namep;
+  $m has title $titlem;
+limit 3;
+fetch {
+  ""person"": $namep,
+  ""movie"": $titlem
+};"
 476,What are the 3 oldest movies in the database?,"MATCH (m:Movie)
 RETURN m.title, m.released
 ORDER BY m.released
@@ -4865,6 +6511,22 @@ limit 3;
 fetch {
   ""name"": $namep,
   ""movie_count"": $movie_count
+};"
+478,List 3 movies with exactly 3 roles in the ACTED_IN relationship.,"MATCH (m:Movie)<-[ai:ACTED_IN]-(p:Person)
+WHERE size(ai.roles) = 3
+RETURN m.title
+LIMIT 3","with fun role_count($m: movie) -> integer:
+  match
+    $ai isa acted_in (film: $m);
+    $ai has roles $r;
+  return count;
+match
+  $m isa movie, has title $t;
+  let $count = role_count($m);
+  $count == 3;
+limit 3;
+fetch {
+  ""movie"": $t
 };"
 479,What are the top 5 movies by vote count that have a tagline mentioning 'real'?,"MATCH (m:Movie)
 WHERE m.tagline CONTAINS 'real'
@@ -4966,6 +6628,22 @@ fetch {
   ""title"": $titlem,
   ""released"": $releasedm
 };"
+488,"Which 3 persons have acted in, directed, and produced the same movie?","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
+WHERE exists{ (p)-[:PRODUCED]->(m) }
+RETURN p.name AS person, m.title AS movie
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  directed (director: $p, film: $m);
+  produced (producer: $p, film: $m);
+  $p has name $namep;
+  $m has title $titlem;
+limit 3;
+fetch {
+  ""person"": $namep,
+  ""movie"": $titlem
+};"
 489,Name the first 3 movies to be reviewed with a rating of exactly 75.,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.rating = 75
 RETURN m.title
@@ -5006,6 +6684,18 @@ fetch {
   ""producer"": $namep,
   ""movie_count"": $movie_count
 };"
+492,Name 3 persons who have directed a movie with a tagline containing 'limits'.,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)
+WHERE m.tagline CONTAINS 'limits'
+RETURN p.name
+LIMIT 3","match
+  $p isa person, has name $name;
+  $m isa movie, has tagline $tagline;
+  $tagline like "".*limits.*"";
+  directed (director: $p, film: $m);
+limit 3;
+fetch {
+  ""name"": $name
+};"
 493,List the top 5 actors by the variety of roles they played in movies.,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
 WITH p, size(collect(distinct r.roles)) as roleCount
 ORDER BY roleCount DESC
@@ -5028,6 +6718,32 @@ LIMIT 3","match
   $p has name $namep;
   $p has born $bornp;
 sort $bornp asc;
+limit 3;
+fetch {
+  ""name"": $namep,
+  ""born"": $bornp
+};"
+495,Name 3 movies with a released year divisible by 3.,"MATCH (m:Movie)
+WHERE m.released % 3 = 0
+RETURN m.title
+LIMIT 3","match
+  $m isa movie, has title $t, has released $r;
+  $r % 3 == 0;
+limit 3;
+fetch {
+  ""title"": $t
+};"
+496,Who are the 3 youngest directors in the database?,"MATCH (p:Person)-[:DIRECTED]->(:Movie)
+RETURN p.name, p.born
+ORDER BY p.born DESC
+LIMIT 3","match
+  $p isa person;
+  $p has name $namep;
+  $p has born $bornp;
+  directed (director: $p, film: $m);
+select $p, $namep, $bornp;
+distinct;
+sort $bornp desc;
 limit 3;
 fetch {
   ""name"": $namep,
@@ -5122,6 +6838,20 @@ fetch {
   ""summary"": $summaryr,
   ""count"": $count
 };"
+503,Name 3 actors who have acted in the least voted movies.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
+WITH p, min(m.votes) AS minVotes
+ORDER BY minVotes
+LIMIT 3
+RETURN p.name AS actor","match
+  $p isa person, has name $n;
+  acted_in (actor: $p, film: $m);
+  $m has votes $v;
+reduce $min_votes = min($v) groupby $n;
+sort $min_votes asc;
+limit 3;
+fetch {
+  ""actor"": $n
+};"
 504,List 3 directors who have never reviewed a movie.,"MATCH (d:Person)
 WHERE (d)-[:DIRECTED]->(:Movie)
   AND NOT EXISTS {
@@ -5195,6 +6925,20 @@ fetch {
   ""movie"": $t,
   ""avgRating"": $avgRating
 };"
+509,Which 3 persons have reviewed and produced the same movie?,"MATCH (p:Person)-[:REVIEWED]->(m:Movie)<-[:PRODUCED]-(p)
+RETURN p.name, m.title
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  reviewed (reviewer: $p, film: $m);
+  produced (producer: $p, film: $m);
+  $p has name $namep;
+  $m has title $titlem;
+limit 3;
+fetch {
+  ""name"": $namep,
+  ""title"": $titlem
+};"
 510,Name 3 movies that have been reviewed with a summary containing 'romp'.,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.summary CONTAINS 'romp'
 RETURN m.title
@@ -5253,6 +6997,35 @@ fetch {
   ""movie"": $titlem,
   ""numActors"": $numActors
 };"
+514,Name the 3 persons who have appeared in the most REVIEWED movies.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:REVIEWED]-(:Person)
+WITH p, count(m) AS reviewedMovies
+ORDER BY reviewedMovies DESC
+LIMIT 3
+RETURN p.name AS name, reviewedMovies","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  reviewed (film: $m);
+  $p has name $name;
+reduce $reviewedMovies = count($m) groupby $name;
+sort $reviewedMovies desc;
+limit 3;
+fetch {
+  ""name"": $name,
+  ""reviewedMovies"": $reviewedMovies
+};"
+515,List the first 3 movies where someone both acted in and directed.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN m.title
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  directed (director: $p, film: $m);
+  $m has title $title;
+limit 3;
+fetch {
+  ""title"": $title
+};"
 516,Which 3 persons follow the most directors?,"MATCH (p:Person)-[:FOLLOWS]->(d:Person)
 WHERE EXISTS {(d)-[:DIRECTED]->(:Movie)}
 WITH p, count(d) AS num_directors
@@ -5280,6 +7053,20 @@ limit 3;
 fetch {
   ""actor"": $n,
   ""movie"": $t
+};"
+518,Name 3 people who have the most combined roles across all their ACTED_IN movies.,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, size(r.roles) AS role_count
+RETURN p.name, sum(role_count) AS total_roles
+ORDER BY total_roles DESC
+LIMIT 3","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $total_roles = count($r) groupby $p, $n;
+sort $total_roles desc;
+limit 3;
+fetch {
+  ""name"": $n,
+  ""total_roles"": $total_roles
 };"
 519,Find 3 movies that were both directed and reviewed by the same person.,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:REVIEWED]-(p)
 RETURN m.title, p.name
@@ -5337,6 +7124,24 @@ fetch {
   ""title"": $titlem,
   ""tagline"": $taglinem
 };"
+523,Name 3 persons who have acted in movies released in consecutive years.,"MATCH (p1:Person)-[:ACTED_IN]->(m1:Movie), 
+      (p2:Person)-[:ACTED_IN]->(m2:Movie),
+      (p3:Person)-[:ACTED_IN]->(m3:Movie)
+WHERE m1.released = m2.released - 1 AND m2.released = m3.released - 1
+      AND p1 <> p2 AND p1 <> p3 AND p2 <> p3
+RETURN p1.name AS person1, p2.name AS person2, p3.name AS person3","match
+  $p isa person;
+  $m1 isa movie, has released $r1;
+  $m2 isa movie, has released $r2;
+  acted_in (actor: $p, film: $m1);
+  acted_in (actor: $p, film: $m2);
+  let $consecutive = $r1 + 1;
+  $r2 == $consecutive;
+limit 3;
+fetch {
+  ""name"": $p.name
+};
+"
 524,List 3 movies that have been followed by the most persons.,"MATCH (m:Movie)<-[:REVIEWED]-(p:Person)
 RETURN m.title AS movie, count(p) AS followers
 ORDER BY followers DESC
@@ -5386,6 +7191,22 @@ fetch {
   ""title"": $titlem,
   ""released"": $releasedm
 };"
+527,List the top 3 movies with roles played by persons born in the 1940s.,"MATCH (p:Person)-[ai:ACTED_IN]->(m:Movie)
+WHERE p.born >= 1940 AND p.born < 1950
+RETURN m.title AS movie, collect(ai.roles) AS roles
+ORDER BY size(roles) DESC
+LIMIT 3","match
+  $p isa person, has born $b;
+  $b >= 1940;
+  $b < 1950;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $count = count($ai) groupby $m;
+sort $count desc;
+limit 3;
+fetch {
+  ""movie"": $m.title,
+  ""role_count"": $count
+};"
 528,Name 3 persons who have acted in movies with the most distinct titles.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
 RETURN p.name, count(distinct m.title) AS num_movies
 ORDER BY num_movies DESC
@@ -5432,6 +7253,23 @@ fetch {
   ""name"": $namep,
   ""produced_count"": $produced_count
 };"
+531,List the 3 movies with the highest number of votes and a tagline mentioning 'limit'.,"MATCH (m:Movie)
+WHERE m.tagline CONTAINS 'limit'
+RETURN m.title, m.tagline, m.votes
+ORDER BY m.votes DESC
+LIMIT 3","match
+  $m isa movie;
+  $m has title $titlem;
+  $m has tagline $taglinem;
+  $taglinem like "".*limit.*"";
+  $m has votes $votesm;
+sort $votesm desc;
+limit 3;
+fetch {
+  ""title"": $titlem,
+  ""tagline"": $taglinem,
+  ""votes"": $votesm
+};"
 532,Which 3 persons have the most diverse roles across movies they acted in?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
 WITH p, size(collect(distinct r.roles)) AS num_roles
 ORDER BY num_roles DESC
@@ -5460,6 +7298,17 @@ fetch {
   ""tagline"": $taglinem,
   ""tagline_count"": $tagline_count
 };"
+534,Name 3 directors who have directed movies with the least number of votes.,"MATCH (d:Person)-[:DIRECTED]->(m:Movie)
+WITH d, min(m.votes) AS minVotes
+ORDER BY minVotes
+LIMIT 3
+RETURN d.name AS director","match
+  $d isa person, has name $n;
+  directed (director: $d, film: $m);
+  $m has votes $v;
+reduce $minVotes = min($v) groupby $n;
+sort $minVotes asc;
+limit 3;"
 535,List the first 3 movies to have been reviewed with a summary containing 'slapstick'.,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.summary CONTAINS 'slapstick'
 RETURN m.title
@@ -5597,6 +7446,21 @@ RETURN m.title","match
 fetch {
   ""title"": $titlem
 };"
+546,"Show top 3 persons who directed, produced, and acted in the same movie.","MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:PRODUCED]-(p)-[:ACTED_IN]->(m)
+RETURN p.name AS person, m.title AS movie
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  (director: $p, film: $m) isa directed;
+  (producer: $p, film: $m) isa produced;
+  (actor: $p, film: $m) isa acted_in;
+  $p has name $namep;
+  $m has title $titlem;
+limit 3;
+fetch {
+  ""person"": $namep,
+  ""movie"": $titlem
+};"
 547,List all reviewers of 'Speed Racer' and the ratings they gave.,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie {title: 'Speed Racer'})
 RETURN p.name AS reviewer, r.rating AS rating","match
   $p isa person;
@@ -5651,6 +7515,16 @@ fetch {
   ""name"": $namep,
   ""born"": $bornp
 };"
+552,List the movies that were written and directed by the same person.,"MATCH (p:Person)-[:WROTE]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN m.title AS movie, p.name AS person","match
+  $p isa person;
+  $m isa movie;
+  wrote (writer: $p, film: $m);
+  directed (director: $p, film: $m);
+fetch {
+  ""movie"": $m.title,
+  ""person"": $p.name
+};"
 553,Who are the top 3 followers of Keanu Reeves?,"MATCH (keanu:Person {name: 'Keanu Reeves'})<-[f:FOLLOWS]-(follower:Person)
 RETURN follower.name
 ORDER BY follower.born DESC
@@ -5691,6 +7565,33 @@ RETURN p.name","match
   not { (actor: $p, film: $m2) isa acted_in; };
 fetch {
   ""name"": $n
+};"
+556,List all the movies where the roles list contains more than 4 characters.,"MATCH (m:Movie)<-[ai:ACTED_IN]-(p:Person)
+WHERE EXISTS {
+  (m)<-[ai2:ACTED_IN]-(p2:Person)
+  WHERE size(ai2.roles) > 4
+}
+RETURN m.title AS movie, collect(p.name) AS actors","with fun role_count($m: movie) -> integer:
+  match
+    $ai isa acted_in (film: $m);
+    $ai has roles $r;
+  return count;
+match
+  $m isa movie, has title $t;
+  let $count = role_count($m);
+  $count > 4;
+fetch {
+  ""movie"": $t
+};"
+557,Who are the producers of movies with a tagline containing 'limits'?,"MATCH (m:Movie)<-[:PRODUCED]-(p:Person)
+WHERE m.tagline CONTAINS 'limits'
+RETURN p.name AS producer","match
+  $m isa movie, has tagline $t;
+  $t like "".*limits.*"";
+  $p isa person, has name $name;
+  produced (producer: $p, film: $m);
+fetch {
+  ""producer"": $name
 };"
 558,Which movies released between 1990 and 2000 have been reviewed?,"MATCH (m:Movie)
 WHERE m.released >= 1990 AND m.released <= 2000
@@ -5754,6 +7655,15 @@ RETURN p.name AS person","match
   $p has name $namep;
 fetch {
   ""person"": $namep
+};"
+563,List all movies with a release year divisible by 5.,"MATCH (m:Movie)
+WHERE m.released % 5 = 0
+RETURN m.title, m.released","match
+  $m isa movie, has title $t, has released $r;
+  $r % 5 == 0;
+fetch {
+  ""title"": $t,
+  ""released"": $r
 };"
 564,Who has reviewed the most number of movies?,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
 WITH p, count(r) AS num_reviews
@@ -5923,6 +7833,23 @@ fetch {
   ""tagline"": $taglinem,
   ""released"": $releasedm
 };"
+576,What are the first 3 movies with the longest role lists in 'ACTED_IN' relationships?,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+RETURN m.title AS movie, size(r.roles) AS roleCount
+ORDER BY roleCount DESC
+LIMIT 3","with fun role_count($m: movie) -> integer:
+  match
+    $ai isa acted_in (film: $m);
+    $ai has roles $r;
+  return count;
+match
+  $m isa movie, has title $t;
+  let $count = role_count($m);
+sort $count desc;
+limit 3;
+fetch {
+  ""movie"": $t,
+  ""roleCount"": $count
+};"
 577,Which persons have reviewed movies with a rating of 100?,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
 WHERE r.rating = 100
 RETURN p.name AS reviewer, m.title AS movie","match
@@ -5960,6 +7887,32 @@ limit 5;
 fetch {
   ""follower"": $namep
 };"
+580,What are the most common roles in movies released before 1980?,"MATCH (p:Person)-[ai:ACTED_IN]->(m:Movie)
+WHERE m.released < 1980
+UNWIND ai.roles AS role
+RETURN role, count(*) AS frequency
+ORDER BY frequency DESC
+LIMIT 10","match
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+  $m has released $rel;
+  $rel < 1980;
+reduce $count = count groupby $r;
+sort $count desc;
+limit 10;
+fetch {
+  ""role"": $r,
+  ""frequency"": $count
+};"
+581,Which persons have acted in and directed the same movie?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN p.name AS person, m.title AS movie","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  directed (director: $p, film: $m);
+fetch {
+  ""person"": $p.name,
+  ""movie"": $m.title
+};"
 582,List the roles of Keanu Reeves in 'The Matrix'.,"MATCH (p:Person {name: 'Keanu Reeves'})-[r:ACTED_IN]->(m:Movie {title: 'The Matrix'})
 RETURN r.roles","match
   $p isa person, has name ""Keanu Reeves"";
@@ -5983,6 +7936,17 @@ fetch {
   ""producer"": $namep,
   ""num_movies_produced"": $num_movies_produced
 };"
+584,List all movies with exactly 5 roles in the 'ACTED_IN' relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WHERE size(r.roles) = 5
+RETURN m.title","match
+  $m isa movie, has title $t;
+  $rel isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $role_count = count($r) groupby $rel, $t;
+match $role_count == 5;
+fetch {
+  ""title"": $t
+};
+"
 585,Who are the top 3 producers of movies released before 1990?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
 WHERE m.released < 1990
 WITH p, count(m) AS num_movies
@@ -6046,6 +8010,32 @@ fetch {
   ""name"": $namep,
   ""born"": $bornp
 };"
+589,What are the roles list sizes for each movie Keanu Reeves has acted in?,"MATCH (p:Person {name: 'Keanu Reeves'})-[r:ACTED_IN]->(m:Movie)
+RETURN m.title, size(r.roles) AS roleCount","match
+  $p isa person, has name ""Keanu Reeves"";
+  $m isa movie, has title $t;
+  $ai isa acted_in (film: $m, actor: $p);
+  $ai has roles $r;
+reduce $count = count($r) groupby $m, $t;
+fetch {
+  ""movie"": $t,
+  ""roleCount"": $count
+};"
+590,List the top 3 pairs of persons who follow each other.,"MATCH (p1:Person)-[:FOLLOWS]->(p2:Person)-[:FOLLOWS]->(p1)
+RETURN p1.name AS person1, p2.name AS person2
+LIMIT 3","match
+  $p1 isa person;
+  $p2 isa person;
+  follows (follower: $p1, followed: $p2);
+  follows (follower: $p2, followed: $p1);
+  $p1 has name $namep1;
+  $p2 has name $namep2;
+  $namep1 < $namep2;
+limit 3;
+fetch {
+  ""person1"": $namep1,
+  ""person2"": $namep2
+};"
 591,Who has directed the most movies with a release after 1995?,"MATCH (d:Person)-[:DIRECTED]->(m:Movie)
 WHERE m.released > 1995
 WITH d, count(m) AS num_movies
@@ -6084,6 +8074,20 @@ RETURN m.title, m.tagline","match
 fetch {
   ""title"": $titlem,
   ""tagline"": $taglinem
+};"
+594,Who are the top 3 youngest directors in the graph?,"MATCH (p:Person)-[:DIRECTED]->(:Movie)
+RETURN p.name AS director, p.born AS birthYear
+ORDER BY p.born DESC
+LIMIT 3","match
+  $p isa person;
+  $p has name $namep;
+  $p has born $bornp;
+  directed (director: $p, film: $m);
+sort $bornp desc;
+limit 3;
+fetch {
+  ""director"": $namep,
+  ""birthYear"": $bornp
 };"
 595,What are the first 3 movies with a released year divisible by 10 and votes over 500?,"MATCH (m:Movie)
 WHERE m.released % 10 = 0 AND m.votes > 500
@@ -6189,6 +8193,23 @@ reduce $average_rating = mean($r);
 fetch {
   ""average_rating"": $average_rating
 };"
+603,Show the first 3 movies with the most complex role lists in the 'ACTED_IN' relationship.,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+RETURN m.title, r.roles
+ORDER BY size(r.roles) DESC
+LIMIT 3","with fun role_count($m: movie) -> integer:
+  match
+    $ai isa acted_in (film: $m);
+    $ai has roles $r;
+  return count;
+match
+  $m isa movie, has title $t;
+  let $count = role_count($m);
+sort $count desc;
+limit 3;
+fetch {
+  ""movie"": $t,
+  ""roleCount"": $count
+};"
 604,Who are the followers of persons who have directed more than 3 movies?,"MATCH (director:Person)-[:DIRECTED]->(movie:Movie)
 WITH director, count(movie) AS num_directed_movies
 WHERE num_directed_movies > 3
@@ -6203,6 +8224,20 @@ match $num_directed_movies > 3;
 fetch {
   ""director"": $dn,
   ""follower"": $fn
+};"
+605,List the top 5 movies by number of roles in the 'ACTED_IN' relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+RETURN m.title AS movie, size(r.roles) AS numRoles
+ORDER BY numRoles DESC
+LIMIT 5","match
+  $m isa movie, has title $t;
+  $rel isa acted_in (actor: $p, film: $m);
+  $rel has roles $r;
+reduce $roleCount = count($r) groupby $t;
+sort $roleCount desc;
+limit 5;
+fetch {
+  ""movie"": $t,
+  ""roleCount"": $roleCount
 };"
 606,Which movies have been reviewed with a rating exactly at 75?,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.rating = 75
@@ -6345,6 +8380,80 @@ fetch {
   ""name"": $namep,
   ""born"": $bornp
 };"
+616,What are the roles of Keanu Reeves in movies with a released year divisible by 5?,"MATCH (p:Person {name: 'Keanu Reeves'})-[r:ACTED_IN]->(m:Movie)
+WHERE m.released % 5 = 0
+RETURN m.title, r.roles","match
+  $p isa person, has name ""Keanu Reeves"";
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+  $m has title $t, has released $rel;
+  $rel % 5 == 0;
+fetch {
+  ""title"": $t,
+  ""roles"": $r
+};"
+617,List all movies produced by persons who have also directed a movie with the same title.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
+WHERE EXISTS {
+  (p)-[:DIRECTED]->(m2:Movie)
+  WHERE m.title = m2.title
+}
+RETURN m.title AS movie","match
+  $p isa person;
+  $m isa movie;
+  produced (producer: $p, film: $m);
+  directed (director: $p, film: $m);
+  $m has title $title;
+fetch {
+  ""movie"": $title
+};"
+618,What are the top 3 shortest role lists in movies reviewed by persons born before 1960?,"MATCH (p:Person)-[:REVIEWED]->(m:Movie)<-[ai:ACTED_IN]-(a:Person)
+WHERE p.born < 1960
+RETURN m.title, ai.roles
+ORDER BY size(ai.roles)
+LIMIT 3","with fun role_count($m: movie) -> integer:
+  match
+    $ai isa acted_in (film: $m);
+    $ai has roles $r;
+  return count;
+match
+  $p isa person, has born $b;
+  $b < 1960;
+  reviewed (reviewer: $p, film: $m);
+  $m isa movie, has title $t;
+  let $count = role_count($m);
+sort $count asc;
+limit 3;
+fetch {
+  ""movie"": $t,
+  ""roleCount"": $count
+};"
+619,Which movie has the most roles in the 'ACTED_IN' relationship and what are those roles?,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WITH m, r
+ORDER BY size(r.roles) DESC
+LIMIT 1
+RETURN m.title AS movie, r.roles AS roles","with fun role_count($m: movie) -> integer:
+  match
+    $ai isa acted_in (film: $m);
+    $ai has roles $r;
+  return count;
+match
+  $m isa movie, has title $t;
+  let $count = role_count($m);
+sort $count desc;
+limit 1;
+fetch {
+  ""movie"": $t,
+  ""roleCount"": $count
+};"
+620,List the movies that have been both directed and produced by the same person.,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:PRODUCED]-(p)
+RETURN m.title AS movie","match
+  $p isa person;
+  $m isa movie;
+  directed (director: $p, film: $m);
+  produced (producer: $p, film: $m);
+  $m has title $titlem;
+fetch {
+  ""movie"": $titlem
+};"
 621,List all movies that have been reviewed with a summary including 'amazing journey'.,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.summary CONTAINS 'amazing journey'
 RETURN m.title","match
@@ -6420,6 +8529,18 @@ LIMIT 3","match
 limit 3;
 fetch {
   ""title"": $titlem
+};"
+627,Which person has both acted in and directed the same movie?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN p.name AS person, m.title AS movie","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  directed (director: $p, film: $m);
+  $p has name $namep;
+  $m has title $titlem;
+fetch {
+  ""person"": $namep,
+  ""movie"": $titlem
 };"
 628,Find movies with the tagline 'Welcome to the Real World'.,"MATCH (m:Movie)
 WHERE m.tagline = 'Welcome to the Real World'
@@ -6506,6 +8627,18 @@ limit 3;
 fetch {
   ""name"": $namep
 };"
+635,Which movies have been both produced and directed by the same person?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)
+RETURN m.title AS movie, p.name AS person","match
+  $p isa person;
+  $m isa movie;
+  produced (producer: $p, film: $m);
+  directed (director: $p, film: $m);
+  $m has title $titlem;
+  $p has name $namep;
+fetch {
+  ""movie"": $titlem,
+  ""person"": $namep
+};"
 636,List all persons born before 1950.,"MATCH (p:Person)
 WHERE p.born < 1950
 RETURN p","match
@@ -6517,6 +8650,16 @@ fetch {
   ""name"": $namep,
   ""born"": $bornp
 };"
+637,What are the most common roles in the movie 'The Matrix Revolutions'?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie {title: 'The Matrix Revolutions'})
+UNWIND r.roles AS role
+RETURN role, count(*) AS frequency
+ORDER BY frequency DESC
+LIMIT 5","match
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+  $m has title ""The Matrix Revolutions"";
+reduce $frequency = count($ai) groupby $r;
+sort $frequency desc;
+limit 5;"
 638,Find movies that were released between 1990 and 2000.,"MATCH (m:Movie)
 WHERE m.released >= 1990 AND m.released <= 2000
 RETURN m","match
@@ -6628,6 +8771,32 @@ RETURN DISTINCT role","match
 fetch {
   ""role"": $r
 };"
+647,List the movies with taglines that start with 'Everything'.,"MATCH (m:Movie)
+WHERE m.tagline STARTS WITH 'Everything'
+RETURN m.title, m.tagline","match
+  $m isa movie;
+  $m has title $titlem;
+  $m has tagline $taglinem;
+  $taglinem like ""Everything.*"";
+fetch {
+  ""title"": $titlem,
+  ""tagline"": $taglinem
+};"
+648,Who has the most roles in a single movie?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+RETURN p.name AS person, m.title AS movie, size(r.roles) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 1","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+  $m has title $t;
+reduce $count = count($r) groupby $p, $m, $n, $t;
+sort $count desc;
+limit 1;
+fetch {
+  ""person"": $n,
+  ""movie"": $t,
+  ""num_roles"": $count
+};"
 649,What are the movies directed by Lana Wachowski?,"MATCH (p:Person {name: 'Lana Wachowski'})-[:DIRECTED]->(m:Movie)
 RETURN m.title","match
   $p isa person, has name ""Lana Wachowski"";
@@ -6691,6 +8860,25 @@ reduce $average_votes = mean($v);
 fetch {
   ""average_votes"": $average_votes
 };"
+654,List the movies where the tagline contains the word 'limits'.,"MATCH (m:Movie)
+WHERE m.tagline CONTAINS 'limits'
+RETURN m.title","match
+  $m isa movie;
+  $m has tagline $tagline;
+  $tagline like "".*limits.*"";
+fetch {
+  ""title"": $m.title
+};"
+655,Who are the people that have both written and produced the same movie?,"MATCH (p:Person)-[:WROTE]->(m:Movie)<-[:PRODUCED]-(p)
+RETURN p.name AS person, m.title AS movie","match
+  $p isa person;
+  $m isa movie;
+  wrote (writer: $p, film: $m);
+  produced (producer: $p, film: $m);
+fetch {
+  ""person"": $p.name,
+  ""movie"": $m.title
+};"
 656,Name the people who have directed more than two movies.,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)
 WITH p, count(m) AS num_directed
 WHERE num_directed > 2
@@ -6704,6 +8892,22 @@ match $num_directed > 2;
 fetch {
   ""director"": $namep
 };"
+657,What are the top 5 reviewed movies by summary 'An amazing journey'?,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
+WHERE r.summary = 'An amazing journey'
+RETURN m.title, count(r) AS reviews
+ORDER BY reviews DESC
+LIMIT 5","match
+$m isa movie, has title $title;
+$p isa person;
+$r isa reviewed (reviewer: $p, film: $m), has summary ""An amazing journey"";
+reduce $reviews = count($r) groupby $m, $title;
+sort $reviews desc;
+limit 5;
+fetch {
+  ""title"": $title,
+  ""reviews"": $reviews
+};
+"
 658,"Which movies have been reviewed with a summary stating 'Dark, but compelling'?","MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.summary = 'Dark, but compelling'
 RETURN m.title","match
@@ -6714,6 +8918,18 @@ $summary == ""Dark, but compelling"";
 
 fetch {
   ""title"": $title
+};"
+659,List the movies that were both acted in and produced by the same person.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:PRODUCED]-(p)
+RETURN m.title AS movie, p.name AS person","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  produced (producer: $p, film: $m);
+  $m has title $title;
+  $p has name $name;
+fetch {
+  ""movie"": $title,
+  ""person"": $name
 };"
 660,Who are the top 3 actors in terms of the diversity of roles played?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
 WITH p, size(collect(distinct r.roles)) AS num_roles
@@ -6872,6 +9088,16 @@ limit 3;
 fetch {
   ""reviewer"": $n,
   ""avg_rating"": $avg_rating
+};"
+673,Name the movies that have been both reviewed and produced by the same person.,"MATCH (p:Person)-[:REVIEWED]->(m:Movie)<-[:PRODUCED]-(p)
+RETURN m.title","match
+  $p isa person;
+  $m isa movie;
+  reviewed (reviewer: $p, film: $m);
+  produced (producer: $p, film: $m);
+  $m has title $title;
+fetch {
+  ""title"": $title
 };"
 674,List the first 3 persons who were born after 1950 and have directed a movie.,"MATCH (p:Person)
 WHERE p.born > 1950 AND exists{ (p)-[:DIRECTED]->(:Movie) }
@@ -7058,6 +9284,23 @@ fetch {
   ""producer"": $namep,
   ""num_movies_produced"": $num_movies_produced
 };"
+687,Name the people who have the role of both actor and director in the most movies.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
+WITH p, count(m) AS num_actor_director_movies
+ORDER BY num_actor_director_movies DESC
+LIMIT 1
+RETURN p.name AS person, num_actor_director_movies","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  directed (director: $p, film: $m);
+  $p has name $namep;
+reduce $num_actor_director_movies = count($m) groupby $namep;
+sort $num_actor_director_movies desc;
+limit 1;
+fetch {
+  ""person"": $namep,
+  ""num_actor_director_movies"": $num_actor_director_movies
+};"
 688,What are the top 5 movies with the least votes?,"MATCH (m:Movie)
 RETURN m.title, m.votes
 ORDER BY m.votes
@@ -7097,6 +9340,28 @@ fetch {
   ""actor"": $namep,
   ""movie"": $titlem,
   ""roles"": $rolesai
+};"
+691,Name the first 3 people who have produced and acted in the same movie.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:PRODUCED]-(p)
+RETURN p.name
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  acted_in (actor: $p, film: $m);
+  produced (producer: $p, film: $m);
+  $p has name $name;
+limit 3;
+fetch {
+  ""name"": $name
+};"
+692,What is the average number of roles per actor in 'The Matrix'?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie {title: 'The Matrix'})
+RETURN avg(size(r.roles)) AS avg_roles_per_actor","match
+  $rel isa acted_in (actor: $p, film: $m);
+  $m has title ""The Matrix"";
+  $rel has roles $role;
+reduce $role_count = count($role) groupby $p;
+reduce $avg = mean($role_count);
+fetch {
+  ""avg_roles_per_actor"": $avg
 };"
 693,List the movies produced by a person born in the 1950s.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
 WHERE p.born >= 1950 AND p.born < 1960
@@ -7241,6 +9506,18 @@ fetch {
   ""title"": $titlem,
   ""votes"": $votesm
 };"
+703,List the first three people who directed a movie with a tagline containing the word 'real'.,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)
+WHERE toLower(m.tagline) CONTAINS 'real'
+RETURN p.name
+LIMIT 3","match
+  $p isa person, has name $name;
+  $m isa movie, has tagline $tagline;
+  directed (director: $p, film: $m);
+  $tagline like "".*[Rr][Ee][Aa][Ll].*"";
+limit 3;
+fetch {
+  ""name"": $name
+};"
 704,Find the first three movies reviewed with a rating above 90.,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE r.rating > 90
 RETURN m.title, r.rating, r.summary
@@ -7362,6 +9639,22 @@ fetch {
   ""tagline"": $taglinem,
   ""released"": $releasedm
 };"
+711,Which top five movies have been both produced and directed by the same person?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)
+WITH m, p
+ORDER BY m.votes DESC
+LIMIT 5
+RETURN m.title AS movie, p.name AS person","match
+  $p isa person;
+  $m isa movie;
+  produced (producer: $p, film: $m);
+  directed (director: $p, film: $m);
+  $m has votes $votesm;
+sort $votesm desc;
+limit 5;
+fetch {
+  ""movie"": $m.title,
+  ""person"": $p.name
+};"
 712,List the first three actors who acted in a movie released after 2010 and have a born year after 1980.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
 WHERE m.released > 2010 AND p.born > 1980
 RETURN p.name
@@ -7389,6 +9682,23 @@ $summary == ""Dark, but compelling"";
 limit 3;
 fetch {
   ""title"": $title
+};"
+714,"Who are the top five actors with the most diverse range of roles, having acted in at least five different movies?","MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WHERE m.title IS NOT NULL
+WITH p, size(collect(distinct r.roles)) AS num_roles, count(distinct m) AS num_movies
+WHERE num_movies >= 5
+RETURN p.name AS actor, num_roles AS number_of_distinct_roles
+ORDER BY num_roles DESC
+LIMIT 5","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $num_movies = count($m), $num_roles = count($r) groupby $p, $n;
+match $num_movies >= 5;
+sort $num_roles desc;
+limit 5;
+fetch {
+  ""actor"": $n,
+  ""number_of_distinct_roles"": $num_roles
 };"
 715,Find the first three people who produced a movie and have a name starting with 'J'.,"MATCH (p:Person)-[:PRODUCED]->(:Movie)
 WHERE p.name STARTS WITH 'J'
@@ -7421,6 +9731,19 @@ limit 5;
 fetch {
   ""title"": $titlem,
   ""votes"": $votesm
+};"
+717,List the first three movies that were produced by someone with a name ending in 'son' and released after 2000.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
+WHERE p.name ENDS WITH 'son' AND m.released > 2000
+RETURN m.title
+LIMIT 3","match
+  $p isa person, has name $name;
+  $m isa movie, has released $released;
+  produced (producer: $p, film: $m);
+  $name like "".*son"";
+  $released > 2000;
+limit 3;
+fetch {
+  ""title"": $m.title
 };"
 718,Retrieve the top five people who have reviewed a movie with a rating less than 50.,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
 WHERE r.rating < 50
@@ -7484,6 +9807,21 @@ LIMIT 3","match
 limit 3;
 fetch {
   ""title"": $titlem
+};"
+722,List the first three people who wrote a movie and also acted in a different movie.,"MATCH (p:Person)-[:WROTE]->(:Movie)
+WHERE EXISTS {
+  (p)-[:ACTED_IN]->(:Movie)
+}
+RETURN p.name
+LIMIT 3","match
+  $p isa person;
+  wrote (writer: $p, film: $m1);
+  acted_in (actor: $p, film: $m2);
+  not { $m1 is $m2; };
+  $p has name $namep;
+limit 3;
+fetch {
+  ""name"": $namep
 };"
 723,Retrieve the top five oldest directors of movies released after 1990.,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)
 WHERE m.released > 1990
@@ -7557,6 +9895,20 @@ fetch {
   ""tagline"": $taglinem,
   ""votes"": $votesm
 };"
+727,List the first three people who followed someone at least 20 years their junior.,"MATCH (p1:Person)-[:FOLLOWS]->(p2:Person)
+WHERE p1.born - p2.born >= 20
+RETURN p1.name AS follower, p2.name AS followed
+LIMIT 3","match
+  $p1 isa person, has born $born1, has name $name1;
+  $p2 isa person, has born $born2, has name $name2;
+  follows (follower: $p1, followed: $p2);
+  let $age_diff = $born2 - $born1;
+  $age_diff >= 20;
+limit 3;
+fetch {
+  ""follower"": $name1,
+  ""followed"": $name2
+};"
 728,Retrieve the top five movies released before 1985 that were reviewed with a rating above 85.,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
 WHERE m.released < 1985 AND r.rating > 85
 RETURN m.title, r.rating
@@ -7574,2321 +9926,4 @@ limit 5;
 fetch {
   ""title"": $titlem,
   ""rating"": $ratingr
-};"
-13,List all people who have produced a movie and acted in another.,"MATCH (p:Person)-[:PRODUCED]->(:Movie)
-WHERE exists{ (p)-[:ACTED_IN]->(:Movie) }
-RETURN p.name","match
-  $p isa person;
-  produced (producer: $p, film: $m1);
-  acted_in (actor: $p, film: $m2);
-  $p has name $name;
-fetch {
-  ""name"": $name
-};"
-24,What are the first 3 movies with a tagline containing the word 'limits'?,"MATCH (m:Movie)
-WHERE m.tagline CONTAINS 'limits'
-RETURN m.title
-LIMIT 3","match
-  $m isa movie;
-  $m has tagline $tagline;
-  $tagline like "".*limits.*"";
-  $m has title $title;
-limit 3;
-fetch {
-  ""title"": $title
-};"
-26,List all the relationships a person named 'Keanu Reeves' has with movies.,"MATCH (p:Person {name: 'Keanu Reeves'})-[r]->(m:Movie)
-RETURN type(r) AS relationship, m.title AS movie","match
-  $p isa person, has name ""Keanu Reeves"";
-  $rel isa $rel_type ($p, $m);
-  $m isa movie, has title $t;
-  { $rel_type label acted_in; } or { $rel_type label directed; } or { $rel_type label produced; } or { $rel_type label wrote; } or { $rel_type label reviewed; };
-fetch {
-  ""relationship"": $rel_type,
-  ""movie"": $t
-};"
-29,List the first 3 people who have directed and written the same movie.,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:WROTE]-(p)
-RETURN p.name AS person
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  directed (director: $p, film: $m);
-  wrote (writer: $p, film: $m);
-  $p has name $namep;
-limit 3;
-fetch {
-  ""person"": $namep
-};"
-37,"Which person has acted in, directed, and produced the same movie?","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
-WHERE exists{ (p)-[:PRODUCED]->(m) }
-RETURN p.name AS person, m.title AS movie","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  directed (director: $p, film: $m);
-  produced (producer: $p, film: $m);
-fetch {
-  ""person"": $p.name,
-  ""movie"": $m.title
-};"
-48,Which people have reviewed and also produced the movie titled 'The Matrix Revolutions'?,"MATCH (p:Person)-[:REVIEWED]->(m:Movie {title: 'The Matrix Revolutions'})<-[:PRODUCED]-(p)
-RETURN p.name","match
-  $p isa person;
-  $m isa movie, has title ""The Matrix Revolutions"";
-  (reviewer: $p, film: $m) isa reviewed;
-  (producer: $p, film: $m) isa produced;
-  $p has name $namep;
-fetch {
-  ""name"": $namep
-};"
-49,List the first 3 movies that have been acted in and directed by the same person.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN m.title
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  directed (director: $p, film: $m);
-  $m has title $title;
-limit 3;
-fetch {
-  ""title"": $title
-};"
-52,List all movies with more than one role listed in the 'ACTED_IN' relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
-WHERE size(r.roles) > 1
-RETURN m.title, r.roles","match
-  $m isa movie, has title $t;
-  $ai isa acted_in (actor: $p, film: $m), has roles $r1, has roles $r2;
-  $r1 != $r2;
-fetch {
-  ""title"": $t,
-  ""roles"": [ $ai.roles ]
-};"
-58,Which person has the most roles in a single movie?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
-RETURN p.name AS person, m.title AS movie, size(r.roles) AS num_roles
-ORDER BY num_roles DESC
-LIMIT 1","match
-  $p isa person, has name $n;
-  $ai isa acted_in (actor: $p, film: $m), has roles $r;
-  $m has title $t;
-reduce $count = count($r) groupby $n, $t;
-sort $count desc;
-limit 1;"
-63,What are the top 5 movies with the most roles listed in their 'ACTED_IN' relationship?,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
-RETURN m.title, size(r.roles) AS num_roles
-ORDER BY num_roles DESC
-LIMIT 5","match
-  $m isa movie, has title $t;
-  $a isa acted_in (actor: $p, film: $m);
-  $a has roles $r;
-reduce $roleCount = count($r) groupby $t;
-sort $roleCount desc;
-limit 5;
-fetch {
-  ""movie"": $t,
-  ""roleCount"": $roleCount
-};"
-72,Who are the top 5 oldest directors in the database?,"MATCH (p:Person)-[:DIRECTED]->(:Movie)
-RETURN p.name, p.born
-ORDER BY p.born
-LIMIT 5","match
-  $p isa person;
-  $p has name $namep;
-  $p has born $bornp;
-  directed (director: $p, film: $m);
-sort $bornp asc;
-limit 5;
-fetch {
-  ""name"": $namep,
-  ""born"": $bornp
-};"
-74,Find the first 3 people who have written and directed the same movie.,"MATCH (p:Person)-[:WROTE]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN p.name AS person, m.title AS movie
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  wrote (writer: $p, film: $m);
-  directed (director: $p, film: $m);
-  $p has name $name;
-  $m has title $title;
-limit 3;
-fetch {
-  ""person"": $name,
-  ""movie"": $title
-};
-"
-83,Name the first 5 people who directed a movie with a tagline containing the word 'limits'.,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)
-WHERE m.tagline CONTAINS 'limits'
-RETURN p.name
-LIMIT 5","match
-  $p isa person;
-  $m isa movie, has tagline $t;
-  directed (director: $p, film: $m);
-  $t like "".*limits.*"";
-  $p has name $name;
-limit 5;
-fetch {
-  ""name"": $name
-};"
-93,"List the first 3 movies reviewed with a summary 'Silly, but fun' and a tagline containing 'world'.","MATCH (m:Movie)<-[:REVIEWED]-(p:Person)
-WHERE m.tagline CONTAINS 'world' AND exists{(p)-[:REVIEWED]->(m) WHERE m.summary = 'Silly, but fun'}
-RETURN m.title
-LIMIT 3","match
-  $m isa movie, has tagline $tagline, has title $title;
-  $tagline like "".*world.*"";
-  $rev isa reviewed (reviewer: $p, film: $m), has summary ""Silly, but fun"";
-limit 3;
-fetch {
-  ""title"": $title
-};"
-106,Name the top 5 people who followed and were followed by 'Laurence Fishburne'.,"MATCH (p:Person)-[:FOLLOWS]->(laurence:Person {name: 'Laurence Fishburne'})<-[:FOLLOWS]-(p)
-RETURN p.name
-LIMIT 5","match
-  $p isa person;
-  $laurence isa person, has name ""Laurence Fishburne"";
-  follows (follower: $p, followed: $laurence);
-  follows (follower: $laurence, followed: $p);
-  $p has name $name;
-limit 5;
-fetch {
-  ""name"": $name
-};"
-107,What are the first 3 movies where someone born in 1965 directed a person born in 1952?,"MATCH (director:Person {born: 1965})-[:DIRECTED]->(movie:Movie)<-[:ACTED_IN]-(actor:Person {born: 1952})
-RETURN movie.title
-LIMIT 3","match
-  $director isa person, has born 1965;
-  $actor isa person, has born 1952;
-  $movie isa movie, has title $title;
-  directed (director: $director, film: $movie);
-  acted_in (actor: $actor, film: $movie);
-limit 3;
-fetch {
-  ""title"": $title
-};"
-109,Who are the top 3 actors with the most roles in movies released before 1990?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
-WHERE m.released < 1990
-WITH p, count(r) AS numRoles
-ORDER BY numRoles DESC
-LIMIT 3
-RETURN p.name AS actor, numRoles","match
-  $p isa person, has name $n;
-  $rel isa acted_in (actor: $p, film: $m);
-  $m has released $r;
-  $r < 1990;
-reduce $numRoles = count($rel) groupby $n;
-sort $numRoles desc;
-limit 3;
-fetch {
-  ""actor"": $n,
-  ""numRoles"": $numRoles
-};"
-110,List the first 3 people who produced and acted in the same movie.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:PRODUCED]-(p)
-RETURN p.name AS person, m.title AS movie
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  produced (producer: $p, film: $m);
-limit 3;
-fetch {
-  ""person"": $p.name,
-  ""movie"": $m.title
-};"
-112,Which 3 people born after 1970 reviewed a movie with a summary 'An amazing journey'?,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
-WHERE p.born > 1970 AND r.summary = 'An amazing journey'
-RETURN p.name
-LIMIT 3","match
-$p isa person, has name $name, has born $b;
-$m isa movie;
-$r isa reviewed (reviewer: $p, film: $m), has summary ""An amazing journey"";
-$b > 1970;
-limit 3;
-fetch {
-  ""name"": $name
-};"
-116,Who are the first 3 people to review a movie with a summary 'Pretty funny at times'?,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
-WHERE r.summary = 'Pretty funny at times'
-RETURN p.name
-ORDER BY r.rating DESC
-LIMIT 3","match
-$p isa person, has name $name;
-$m isa movie;
-$r isa reviewed (reviewer: $p, film: $m), has summary ""Pretty funny at times"", has rating $rating;
-sort $rating desc;
-limit 3;
-fetch {
-  ""name"": $name
-};"
-118,"Which 3 movies reviewed with a summary 'Dark, but compelling' were produced by someone born before 1960?","MATCH (m:Movie)<-[:REVIEWED {summary: 'Dark, but compelling'}]-()
-MATCH (m)<-[:PRODUCED]-(p:Person)
-WHERE p.born < 1960
-RETURN m.title
-LIMIT 3","match
-  $m isa movie;
-  $r isa reviewed (reviewer: $reviewer, film: $m);
-  $r has summary ""Dark, but compelling"";
-  $p isa person;
-  produced (producer: $p, film: $m);
-  $p has born $bornp;
-  $bornp < 1960;
-  $m has title $titlem;
-limit 3;
-fetch {
-  ""title"": $titlem
-};"
-121,List the top 5 movies where the director and the main actor were born in the same decade.,"MATCH (actor:Person)-[:ACTED_IN]->(movie:Movie)<-[:DIRECTED]-(director:Person)
-WHERE actor.born / 10 = director.born / 10
-WITH movie, actor, director
-ORDER BY movie.votes DESC
-LIMIT 5
-RETURN movie.title AS movie, actor.name AS actor, director.name AS director","match
-  $actor isa person, has born $actor_born, has name $actor_name;
-  $director isa person, has born $director_born, has name $director_name;
-  $movie isa movie, has title $movie_title, has votes $votes;
-  acted_in (actor: $actor, film: $movie);
-  directed (director: $director, film: $movie);
-let $actor_decade = $actor_born / 10;
-let $director_decade = $director_born / 10;
-match $actor_decade == $director_decade;
-sort $votes desc;
-limit 5;
-fetch {
-  ""movie"": $movie_title,
-  ""actor"": $actor_name,
-  ""director"": $director_name
-};
-"
-122,Who are the first 3 actors born after 1980 who acted in a movie produced by someone born before 1950?,"MATCH (a:Person)-[:ACTED_IN]->(m:Movie)<-[:PRODUCED]-(p:Person)
-WHERE a.born > 1980 AND p.born < 1950
-RETURN a.name AS actor, m.title AS movie
-ORDER BY a.born
-LIMIT 3","match
-  $a isa person;
-  $m isa movie;
-  $p isa person;
-  (actor: $a, film: $m) isa acted_in;
-  (producer: $p, film: $m) isa produced;
-  $a has born $borna;
-  $borna > 1980;
-  $p has born $bornp;
-  $bornp < 1950;
-  $a has name $namea;
-  $m has title $titlem;
-sort $borna asc;
-limit 3;
-fetch {
-  ""actor"": $namea,
-  ""movie"": $titlem
-};"
-124,List the first 5 people who followed someone with the same birth year.,"MATCH (p1:Person)-[:FOLLOWS]->(p2:Person)
-WHERE p1.born = p2.born
-RETURN p1.name AS follower, p2.name AS followed
-LIMIT 5","match
-  $p1 isa person, has born $born;
-  $p2 isa person, has born $born;
-  follows (follower: $p1, followed: $p2);
-limit 5;
-fetch {
-  ""follower"": $p1.name,
-  ""followed"": $p2.name
-};"
-125,Which 3 people born before 1950 acted in a movie with a tagline containing 'limits'?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
-WHERE p.born < 1950 AND m.tagline CONTAINS 'limits'
-RETURN p.name
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  $p has born $bornp;
-  $bornp < 1950;
-  $m has tagline $tag;
-  $tag like "".*limits.*"";
-limit 3;
-fetch {
-  ""name"": $p.name
-};"
-126,Name the top 5 directors who also reviewed the movies they directed.,"MATCH (d:Person)-[:DIRECTED]->(m:Movie)<-[:REVIEWED]-(d)
-RETURN d.name AS director, count(*) AS num_reviewed
-ORDER BY num_reviewed DESC
-LIMIT 5","match
-  $d isa person;
-  $m isa movie;
-  directed (director: $d, film: $m);
-  reviewed (reviewer: $d, film: $m);
-  $d has name $named;
-reduce $num_reviewed = count($m) groupby $named;
-sort $num_reviewed desc;
-limit 5;
-fetch {
-  ""director"": $named,
-  ""num_reviewed"": $num_reviewed
-};
-"
-128,List the top 5 actors who acted in movies reviewed with a summary 'Slapstick redeemed only by the Robin Williams and '.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[r:REVIEWED]-(reviewer:Person)
-WHERE r.summary = 'Slapstick redeemed only by the Robin Williams and '
-RETURN p.name AS actor, count(m) AS movie_count
-ORDER BY movie_count DESC
-LIMIT 5","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  $rev isa reviewed (reviewer: $reviewer, film: $m);
-  $rev has summary ""Slapstick redeemed only by the Robin Williams and "";
-  $p has name $actor_name;
-reduce $movie_count = count($m) groupby $actor_name;
-sort $movie_count desc;
-limit 5;
-fetch {
-  ""actor"": $actor_name,
-  ""movie_count"": $movie_count
-};
-"
-138,Which person has produced the most movies and what are those movies?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
-WITH p, collect(m) AS movies, count(m) AS movieCount
-ORDER BY movieCount DESC
-LIMIT 1
-RETURN p.name AS producer, [movie IN movies | movie.title] AS producedMovies","match
-  $p isa person;
-  produced (producer: $p, film: $m);
-reduce $count = count($m) groupby $p;
-sort $count desc;
-limit 1;
-match
-  produced (producer: $p, film: $movie);
-  $movie has title $t;
-  $p has name $n;
-fetch {
-  ""producer"": $n,
-  ""title"": $t
-};"
-142,Which movies have been both written and directed by the same person and what are their titles?,"MATCH (p:Person)-[:WROTE]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN m.title","match
-  $p isa person;
-  $m isa movie;
-  wrote (writer: $p, film: $m);
-  directed (director: $p, film: $m);
-  $m has title $title;
-fetch {
-  ""title"": $title
-};"
-143,How many different people have reviewed movies released before 1990?,"MATCH (p:Person)-[:REVIEWED]->(m:Movie)
-WHERE m.released < 1990
-RETURN count(distinct p) AS num_reviewers","match
-  $p isa person;
-  reviewed (reviewer: $p, film: $m);
-  $m has released $r;
-  $r < 1990;
-select $p;
-distinct;
-reduce $count = count;"
-145,Which person has acted in the most movies and what are those movies titles?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
-WITH p, collect(m.title) AS movies, count(m) AS numMovies
-ORDER BY numMovies DESC
-LIMIT 1
-RETURN p.name AS person, movies","with fun movie_count($p: person) -> integer: match acted_in (actor: $p); return count; match $p isa person; let $count = movie_count($p); sort $count desc; limit 1; match acted_in (actor: $p, film: $m); fetch { ""person"": $p.name, ""movie_title"": $m.title };"
-147,Who are the top 5 youngest producers in the database?,"MATCH (p:Person)-[:PRODUCED]->(:Movie)
-RETURN p.name AS producer, p.born AS birthYear
-ORDER BY p.born DESC
-LIMIT 5","match
-  $p isa person;
-  produced (producer: $p, film: $m);
-  $p has born $bornp;
-sort $bornp desc;
-limit 5;
-fetch {
-  ""producer"": $p.name,
-  ""birthYear"": $bornp
-};"
-151,Which people follow Keanu Reeves and have also acted in a movie with him?,"MATCH (follower:Person)-[:FOLLOWS]->(keanu:Person {name: 'Keanu Reeves'}),
-      (follower)-[:ACTED_IN]->(movie:Movie)<-[:ACTED_IN]-(keanu)
-RETURN follower.name AS follower, movie.title AS movie","match
-  $follower isa person;
-  $keanu isa person, has name ""Keanu Reeves"";
-  follows (follower: $follower, followed: $keanu);
-  $movie isa movie;
-  acted_in (actor: $follower, film: $movie);
-  acted_in (actor: $keanu, film: $movie);
-fetch {
-  ""follower"": $follower.name,
-  ""movie"": $movie.title
-};"
-152,"What are the names of the first 3 people who have produced, directed, and written the same movie?","MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)-[:WROTE]->(m)
-RETURN p.name
-LIMIT 3","match
-  $p isa person, has name $name;
-  $m isa movie;
-  produced (producer: $p, film: $m);
-  directed (director: $p, film: $m);
-  wrote (writer: $p, film: $m);
-limit 3;
-fetch {
-  ""name"": $name
-};"
-157,Which people have reviewed the same movie and what were their review summaries?,"MATCH (p1:Person)-[r1:REVIEWED]->(m:Movie)<-[r2:REVIEWED]-(p2:Person)
-WHERE p1 <> p2
-RETURN p1.name AS Reviewer1, r1.summary AS Review1, p2.name AS Reviewer2, r2.summary AS Review2, m.title AS Movie","match
-  $p1 isa person, has name $name1;
-  $p2 isa person, has name $name2;
-  $m isa movie, has title $title;
-  $r1 isa reviewed (reviewer: $p1, film: $m), has summary $summary1;
-  $r2 isa reviewed (reviewer: $p2, film: $m), has summary $summary2;
-  not { $name1 == $name2; };
-fetch {
-  ""Reviewer1"": $name1,
-  ""Review1"": $summary1,
-  ""Reviewer2"": $name2,
-  ""Review2"": $summary2,
-  ""Movie"": $title
-};"
-161,List the top 5 people who have produced the most number of movies with their birth years.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
-WHERE p.born IS NOT NULL
-RETURN p.name AS producer, p.born AS birthYear, count(m) AS numberOfMovies
-ORDER BY numberOfMovies DESC
-LIMIT 5","match
-  $p isa person, has name $name, has born $birth;
-  produced (producer: $p, film: $m);
-reduce $numberOfMovies = count($m) groupby $p;
-sort $numberOfMovies desc;
-limit 5;
-fetch {
-  ""producer"": $p.name,
-  ""birthYear"": $p.born,
-  ""numberOfMovies"": $numberOfMovies
-};"
-162,"Which movies have been reviewed with a summary 'Fun, but a little far fetched' and what were their ratings?","MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
-WHERE r.summary = 'Fun, but a little far fetched'
-RETURN m.title AS movie, r.rating AS rating","match
-$m isa movie, has title $title;
-$p isa person;
-$r isa reviewed (reviewer: $p, film: $m), has summary ""Fun, but a little far fetched"", has rating $rating;
-
-fetch {
-  ""movie"": $title,
-  ""rating"": $rating
-};
-"
-170,What are the top 5 movies with the most actors involved and their release years?,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
-WITH m, count(p) AS actorCount, m.released AS releaseYear
-RETURN m.title AS movie, releaseYear, actorCount
-ORDER BY actorCount DESC
-LIMIT 5","match
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-reduce $actorCount = count($p) groupby $m;
-sort $actorCount desc;
-limit 5;
-fetch {
-  ""movie"": $m.title,
-  ""releaseYear"": $m.released,
-  ""actorCount"": $actorCount
-};"
-171,List the first 3 movies that have been produced and directed by the same person.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN m.title
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  produced (producer: $p, film: $m);
-  directed (director: $p, film: $m);
-limit 3;
-fetch {
-  ""title"": $m.title
-};
-"
-172,What are the roles of Keanu Reeves in movies he reviewed with a rating above 90?,"MATCH (p:Person {name: 'Keanu Reeves'})-[r:REVIEWED]->(m:Movie)
-WHERE r.rating > 90
-MATCH (p)-[a:ACTED_IN]->(m)
-RETURN m.title AS movie, a.roles AS roles","match
-  $p isa person, has name ""Keanu Reeves"";
-  $m isa movie, has title $title;
-  $rev isa reviewed (reviewer: $p, film: $m), has rating $rating;
-  $rating > 90;
-  $act isa acted_in (actor: $p, film: $m), has roles $roles;
-fetch {
-  ""movie"": $title,
-  ""roles"": $roles
-};
-"
-175,List the first 3 movies with roles that include 'Captain' and their actors.,"MATCH (m:Movie)<-[ai:ACTED_IN]-(p:Person)
-WHERE exists{ (m)<-[ai2:ACTED_IN]-() WHERE any(role IN ai2.roles WHERE role CONTAINS 'Captain') }
-RETURN m.title AS movie, collect(p.name) AS actors
-LIMIT 3","match
-  $m isa movie, has title $title;
-  $ai isa acted_in (film: $m), has roles $roles;
-  $roles like "".*Captain.*"";
-select $m, $title;
-distinct;
-limit 3;
-match
-  acted_in (film: $m, actor: $actor);
-  $actor has name $actor_name;
-fetch {
-  ""movie"": $title,
-  ""actor"": $actor_name
-};"
-177,Who are the first 3 people to have reviewed and also produced the same movie?,"MATCH (p:Person)-[:REVIEWED]->(m:Movie)<-[:PRODUCED]-(p)
-RETURN p.name
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  reviewed (reviewer: $p, film: $m);
-  produced (producer: $p, film: $m);
-limit 3;
-fetch {
-  ""name"": $p.name
-};"
-178,What is the average age of directors of the top 5 voted movies?,"MATCH (m:Movie)<-[:DIRECTED]-(d:Person)
-WITH m, d
-ORDER BY m.votes DESC
-LIMIT 5
-RETURN avg(date().year - d.born) AS averageDirectorAge","match
-  $m isa movie, has votes $v;
-  directed (director: $d, film: $m);
-  $d has born $b;
-  let $age = 2026 - $b;
-sort $v desc;
-limit 5;
-reduce $avg_age = mean($age);"
-179,List the top 3 actors who have acted in movies with a tagline including the word 'limits'.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
-WHERE m.tagline CONTAINS 'limits'
-RETURN p.name AS actor, count(*) AS movie_count
-ORDER BY movie_count DESC
-LIMIT 3","match
-  $p isa person, has name $name;
-  $m isa movie, has tagline $tag;
-  $tag like "".*limits.*"";
-  acted_in (actor: $p, film: $m);
-reduce $movie_count = count($m) groupby $name;
-sort $movie_count desc;
-limit 3;
-fetch {
-  ""actor"": $name,
-  ""movie_count"": $movie_count
-};
-"
-180,Which movies have a role listed as 'Hero' and who are the actors?,"MATCH (m:Movie)<-[ai:ACTED_IN]-(p:Person)
-WHERE 'Hero' IN ai.roles
-RETURN m.title AS movie, p.name AS actor","match
-  $m isa movie, has title $titlem;
-  $p isa person, has name $namep;
-  $ai isa acted_in (actor: $p, film: $m), has roles $rolesai;
-  $rolesai == ""Hero"";
-fetch {
-  ""movie"": $titlem,
-  ""actor"": $namep
-};"
-183,Who are the first 3 youngest actors to have directed a movie?,"MATCH (p:Person)-[:ACTED_IN]->(:Movie)
-WHERE exists{ (p)-[:DIRECTED]->(:Movie) }
-RETURN p.name AS name, p.born AS birthYear
-ORDER BY p.born DESC
-LIMIT 3","match
-  $p isa person;
-  acted_in (actor: $p, film: $m1);
-  directed (director: $p, film: $m2);
-  $p has name $namep;
-  $p has born $bornp;
-sort $bornp desc;
-limit 3;
-fetch {
-  ""name"": $namep,
-  ""birthYear"": $bornp
-};"
-184,What are the first 3 movies where Keanu Reeves and Laurence Fishburne acted together?,"MATCH (keanu:Person {name: 'Keanu Reeves'})-[:ACTED_IN]->(movie)<-[:ACTED_IN]-(laurence:Person {name: 'Laurence Fishburne'})
-RETURN movie.title
-LIMIT 3","match
-  $keanu isa person, has name ""Keanu Reeves"";
-  $laurence isa person, has name ""Laurence Fishburne"";
-  acted_in (actor: $keanu, film: $movie);
-  acted_in (actor: $laurence, film: $movie);
-limit 3;
-fetch {
-  ""title"": $movie.title
-};"
-186,List the roles of actors in the 3 movies with the highest number of actors involved.,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
-WITH m, collect(p) AS actors
-ORDER BY size(actors) DESC
-LIMIT 3
-UNWIND actors AS actor
-MATCH (actor)-[r:ACTED_IN]->(m)
-RETURN m.title AS movie, actor.name AS actor, r.roles AS roles","match
-  $m isa movie, has title $t;
-  acted_in (actor: $actor, film: $m);
-reduce $count = count($actor) groupby $m;
-sort $count desc;
-limit 3;
-match
-  $ai isa acted_in (actor: $a, film: $m), has roles $roles;
-  $a has name $n;
-  $m has title $t;
-fetch {
-  ""movie"": $t,
-  ""actor"": $n,
-  ""roles"": $roles
-};"
-189,What are the names of the top 3 oldest actors and the movies they have produced?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
-WITH p, m
-ORDER BY p.born
-LIMIT 3
-RETURN p.name AS actor, collect(m.title) AS produced_movies","match
-  $p isa person, has born $b;
-  acted_in (actor: $p);
-  produced (producer: $p);
-select $p, $b;
-distinct;
-sort $b asc;
-limit 3;
-match
-  produced (producer: $p, film: $m);
-fetch {
-  ""actor"": $p.name,
-  ""produced_movies"": [ $m.title ]
-};"
-191,Which movies released before 2000 have a person who both acted and directed in them?,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)-[:DIRECTED]->(m)
-WHERE m.released < 2000
-RETURN m.title AS movie, p.name AS person","match
-  $m isa movie, has released $released, has title $title;
-  $p isa person, has name $name;
-  acted_in (actor: $p, film: $m);
-  directed (director: $p, film: $m);
-  $released < 2000;
-fetch {
-  ""movie"": $title,
-  ""person"": $name
-};"
-194,List the first 3 movies with at least one role listed as 'Villain' and their actors.,"MATCH (m:Movie)<-[ai:ACTED_IN]-(p:Person)
-WHERE 'Villain' IN ai.roles
-RETURN m.title AS movie, collect(p.name) AS actors
-LIMIT 3","match
-  $m isa movie, has title $title;
-  $ai isa acted_in (actor: $p, film: $m), has roles ""Villain"";
-  $p has name $name;
-limit 3;
-fetch {
-  ""movie"": $title,
-  ""actors"": $name
-};
-"
-196,Which movies have been reviewed with a summary 'The coolest football movie ever' and who reviewed them?,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
-WHERE r.summary = 'The coolest football movie ever'
-RETURN m.title AS movie, p.name AS reviewer","match
-$m isa movie, has title $title;
-$p isa person, has name $name;
-$r isa reviewed (reviewer: $p, film: $m), has summary $summary;
-$summary == ""The coolest football movie ever"";
-
-fetch {
-  ""movie"": $title,
-  ""reviewer"": $name
-};
-"
-198,Who are the first 3 people to have written and directed the same movie and what are those movies?,"MATCH (p:Person)-[:WROTE]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN p.name AS person, m.title AS movie
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  wrote (writer: $p, film: $m);
-  directed (director: $p, film: $m);
-limit 3;
-fetch {
-  ""person"": $p.name,
-  ""movie"": $m.title
-};"
-199,List the top 5 movies with roles including 'Doctor' and the actors who played them.,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
-WHERE any(role IN p.roles WHERE role CONTAINS 'Doctor')
-RETURN m.title AS movie, p.name AS actor
-ORDER BY m.votes DESC
-LIMIT 5","match
-  $m isa movie;
-  $p isa person;
-  $ai isa acted_in (actor: $p, film: $m);
-  $ai has roles $r;
-  $r like "".*Doctor.*"";
-  $m has title $titlem;
-  $p has name $namep;
-  $m has votes $votesm;
-sort $votesm desc;
-limit 5;
-fetch {
-  ""movie"": $titlem,
-  ""actor"": $namep
-};"
-201,What are the first 3 movies where the directors were also actors and their titles?,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:ACTED_IN]-(p)
-RETURN m.title
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  directed (director: $p, film: $m);
-  acted_in (actor: $p, film: $m);
-  $m has title $title;
-limit 3;
-fetch {
-  ""title"": $title
-};"
-205,List the roles of actors in the first 3 movies produced by a person born after 1980.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[ai:ACTED_IN]-(a:Person)
-WHERE p.born > 1980
-WITH m, ai
-ORDER BY m.released
-LIMIT 3
-RETURN m.title AS movie, ai.roles AS roles","match
-  $p isa person, has born $bornp;
-  $bornp > 1980;
-  $m isa movie, has released $releasedm;
-  produced (producer: $p, film: $m);
-  $ai isa acted_in (actor: $a, film: $m), has roles $rolesai;
-sort $releasedm asc;
-limit 3;
-fetch {
-  ""movie"": $m.title,
-  ""roles"": $rolesai
-};"
-220,What are the first 3 movies produced by persons born before 1960 with a rating over 90?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[r:REVIEWED]-(reviewer:Person)
-WHERE p.born < 1960 AND r.rating > 90
-RETURN m.title
-ORDER BY m.released
-LIMIT 3","match
-  $p isa person, has born $born;
-  $born < 1960;
-  produced (producer: $p, film: $m);
-  $rev isa reviewed (film: $m), has rating $rating;
-  $rating > 90;
-  $m has title $title;
-  $m has released $released;
-sort $released asc;
-limit 3;
-fetch {
-  ""title"": $title
-};"
-224,List the first 3 people who have written and directed the same movie released after 2000.,"MATCH (p:Person)-[:WROTE]->(m:Movie)<-[:DIRECTED]-(p)
-WHERE m.released > 2000
-RETURN p.name, m.title
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  wrote (writer: $p, film: $m);
-  directed (director: $p, film: $m);
-  $m has released $released;
-  $released > 2000;
-limit 3;
-fetch {
-  ""name"": $p.name,
-  ""title"": $m.title
-};"
-225,Who are the top 3 actors with roles in the most diverse genres (based on taglines)?,"MATCH (a:Person)-[:ACTED_IN]->(m:Movie)
-WITH a, count(DISTINCT m.tagline) AS num_genres
-ORDER BY num_genres DESC
-LIMIT 3
-RETURN a.name AS actor, num_genres","match
-  $a isa person, has name $n;
-  acted_in (actor: $a, film: $m);
-  $m has tagline $tag;
-select $n, $tag;
-distinct;
-reduce $num_genres = count groupby $n;
-sort $num_genres desc;
-limit 3;
-fetch {
-  ""actor"": $n,
-  ""num_genres"": $num_genres
-};
-"
-233,Which movies have a tagline containing the word 'limit'?,"MATCH (m:Movie)
-WHERE m.tagline CONTAINS 'limit'
-RETURN m.title","match
-  $m isa movie, has tagline $tagline;
-  $tagline like "".*limit.*"";
-fetch {
-  ""title"": $m.title
-};"
-244,Which movies have been both acted in and directed by the same person?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN m.title AS movie, p.name AS person","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  directed (director: $p, film: $m);
-fetch {
-  ""movie"": $m.title,
-  ""person"": $p.name
-};"
-245,List the top 5 movies with the most roles listed in ACTED_IN relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
-RETURN m.title AS movie, size(r.roles) AS roleCount
-ORDER BY roleCount DESC
-LIMIT 5","match
-  $m isa movie, has title $t;
-  $ai isa acted_in (film: $m), has roles $r;
-reduce $roleCount = count($r) groupby $t;
-sort $roleCount desc;
-limit 5;
-fetch {
-  ""movie"": $t,
-  ""roleCount"": $roleCount
-};"
-248,"Who has produced, directed, and acted in the same movie?","MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)
-WHERE exists{ (p)-[:ACTED_IN]->(m) }
-RETURN p.name AS person, m.title AS movie","match
-  $p isa person;
-  $m isa movie;
-  (producer: $p, film: $m) isa produced;
-  (director: $p, film: $m) isa directed;
-  (actor: $p, film: $m) isa acted_in;
-fetch {
-  ""person"": $p.name,
-  ""movie"": $m.title
-};"
-251,Who are the top 3 youngest directors in the database?,"MATCH (p:Person)-[:DIRECTED]->(:Movie)
-RETURN p.name AS director, p.born AS birthYear
-ORDER BY p.born DESC
-LIMIT 3","match
-  $p isa person;
-  directed (director: $p, film: $m);
-  $p has name $namep;
-  $p has born $bornp;
-select $p, $namep, $bornp;
-distinct;
-sort $bornp desc;
-limit 3;
-fetch {
-  ""director"": $namep,
-  ""birthYear"": $bornp
-};"
-255,Who has acted in movies directed by Lana Wachowski?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(d:Person {name: 'Lana Wachowski'})
-RETURN p.name AS actor, m.title AS movie","match
-  $p isa person;
-  $m isa movie;
-  $d isa person, has name ""Lana Wachowski"";
-  acted_in (actor: $p, film: $m);
-  directed (director: $d, film: $m);
-fetch {
-  ""actor"": $p.name,
-  ""movie"": $m.title
-};"
-256,List the top 3 oldest actors in the database.,"MATCH (p:Person)
-RETURN p.name, p.born
-ORDER BY p.born
-LIMIT 3","match
-  $p isa person;
-  $p has name $namep;
-  $p has born $bornp;
-  acted_in (actor: $p, film: $m);
-select $p, $namep, $bornp;
-distinct;
-sort $bornp asc;
-limit 3;
-fetch {
-  ""name"": $namep,
-  ""born"": $bornp
-};"
-260,Who has the most roles in a single movie?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
-RETURN p.name AS person, m.title AS movie, size(r.roles) AS num_roles
-ORDER BY num_roles DESC
-LIMIT 1","match
-  $p isa person, has name $n;
-  $ai isa acted_in (actor: $p, film: $m), has roles $r;
-  $m isa movie, has title $t;
-reduce $count = count($r) groupby $p, $m, $n, $t;
-sort $count desc;
-limit 1;
-fetch {
-  ""person"": $n,
-  ""movie"": $t,
-  ""num_roles"": $count
-};
-"
-261,List all movies where the same person has acted and produced.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:PRODUCED]-(p)
-RETURN m.title AS movie, p.name AS person","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  produced (producer: $p, film: $m);
-fetch {
-  ""movie"": $m.title,
-  ""person"": $p.name
-};"
-263,"List the persons who have written, directed, and produced the same movie.","MATCH (p:Person)-[:WROTE]->(m:Movie)<-[:DIRECTED]-(p)-[:PRODUCED]->(m)
-RETURN p.name AS person, m.title AS movie","match
-  $p isa person;
-  $m isa movie;
-  wrote (writer: $p, film: $m);
-  directed (director: $p, film: $m);
-  produced (producer: $p, film: $m);
-fetch {
-  ""person"": $p.name,
-  ""movie"": $m.title
-};"
-265,What are the most common roles played by actors in movies from the 1990s?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
-WHERE m.released >= 1990 AND m.released < 2000
-UNWIND r.roles AS role
-RETURN role, count(*) AS frequency
-ORDER BY frequency DESC
-LIMIT 10","match
-  $ai isa acted_in (actor: $p, film: $m), has roles $r;
-  $m has released $rel;
-  $rel >= 1990;
-  $rel < 2000;
-reduce $count = count groupby $r;
-sort $count desc;
-limit 10;
-fetch {
-  ""role"": $r,
-  ""frequency"": $count
-};"
-268,Which movies have a tagline ending with 'world'?,"MATCH (m:Movie)
-WHERE m.tagline IS NOT NULL AND m.tagline =~ '.*world$'
-RETURN m.title, m.tagline","match
-  $m isa movie;
-  $m has tagline $tagline;
-  $tagline like "".*world"";
-  $m has title $title;
-fetch {
-  ""title"": $title,
-  ""tagline"": $tagline
-};
-"
-270,Who are the actors in the movie with the highest number of votes?,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
-WHERE m.votes IS NOT NULL
-WITH m, p
-ORDER BY m.votes DESC
-LIMIT 1
-RETURN m.title AS movie, collect(p.name) AS actors","with fun max_votes() -> integer:
-  match $m isa movie, has votes $v;
-  return max($v);
-match
-  $m isa movie, has votes $v, has title $title;
-  let $max = max_votes();
-  $v == $max;
-  acted_in (actor: $p, film: $m);
-  $p has name $name;
-fetch {
-  ""movie"": $title,
-  ""actor"": $name
-};"
-274,List the top 3 movies reviewed by the youngest reviewers.,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
-WITH m, p, r
-ORDER BY p.born DESC
-WITH m, collect(r)[0] AS review
-RETURN m.title AS movie, review.rating AS rating
-ORDER BY rating DESC
-LIMIT 3","match
-  $m isa movie, has title $title;
-  $p isa person, has born $born;
-  $r isa reviewed (reviewer: $p, film: $m), has rating $rating;
-sort $born desc;
-limit 3;
-fetch {
-  ""movie"": $title,
-  ""rating"": $rating
-};"
-276,What are the common roles for Keanu Reeves across all his movies?,"MATCH (p:Person {name: 'Keanu Reeves'})-[r:ACTED_IN]->(m:Movie)
-WITH p, collect(r.roles) AS rolesList
-UNWIND rolesList AS roles
-UNWIND roles AS role
-RETURN p.name, role, count(*) AS times_played
-ORDER BY times_played DESC","match
-  $p isa person, has name ""Keanu Reeves"";
-  $ai isa acted_in (actor: $p, film: $m), has roles $r;
-reduce $count = count($m) groupby $r;
-sort $count desc;
-fetch {
-  ""role"": $r,
-  ""times_played"": $count
-};"
-277,List the top 5 movies with the most diverse cast in terms of birth years.,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
-WITH m, collect(p.born) AS birthYears
-RETURN m.title AS movie, size(apoc.coll.toSet(birthYears)) AS numUniqueBirthYears
-ORDER BY numUniqueBirthYears DESC
-LIMIT 5","match
-  $m isa movie, has title $t;
-  acted_in (actor: $p, film: $m);
-  $p has born $b;
-select $b, $m, $t;
-distinct;
-reduce $numUniqueBirthYears = count groupby $m, $t;
-sort $numUniqueBirthYears desc;
-limit 5;
-fetch {
-  ""movie"": $t,
-  ""numUniqueBirthYears"": $numUniqueBirthYears
-};"
-278,Who has reviewed movies directed by Lana Wachowski?,"MATCH (reviewer:Person)-[:REVIEWED]->(movie:Movie)<-[:DIRECTED]-(director:Person {name: 'Lana Wachowski'})
-RETURN reviewer.name AS reviewer, movie.title AS movie","match
-  $reviewer isa person, has name $reviewer_name;
-  $movie isa movie, has title $movie_title;
-  $director isa person, has name ""Lana Wachowski"";
-  directed (director: $director, film: $movie);
-  reviewed (reviewer: $reviewer, film: $movie);
-fetch {
-  ""reviewer"": $reviewer_name,
-  ""movie"": $movie_title
-};"
-280,Which movies have been produced and directed by the same person?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN m.title, p.name","match
-  $p isa person;
-  $m isa movie;
-  produced (producer: $p, film: $m);
-  directed (director: $p, film: $m);
-fetch {
-  ""title"": $m.title,
-  ""name"": $p.name
-};"
-305,List 3 actors who also have roles as producers.,"MATCH (p:Person)-[:ACTED_IN]->(:Movie)
-WHERE exists{ (p)-[:PRODUCED]->(:Movie) }
-RETURN p.name AS actor_producer
-LIMIT 3","match
-  $p isa person;
-  acted_in (actor: $p, film: $m1);
-  produced (producer: $p, film: $m2);
-  $p has name $name;
-limit 3;
-fetch {
-  ""actor_producer"": $name
-};"
-306,Which movies have a tagline containing the word 'limit'?,"MATCH (m:Movie)
-WHERE m.tagline CONTAINS 'limit'
-RETURN m.title","match
-  $m isa movie;
-  $m has tagline $tagline;
-  $tagline like "".*limit.*"";
-fetch {
-  ""title"": $m.title
-};"
-308,List movies that have been both acted in and directed by the same person.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN m.title AS movie, p.name AS person","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  directed (director: $p, film: $m);
-fetch {
-  ""movie"": $m.title,
-  ""person"": $p.name
-};
-"
-309,Who are the top 3 youngest producers in the database?,"MATCH (p:Person)-[:PRODUCED]->(:Movie)
-RETURN p.name, p.born
-ORDER BY p.born DESC
-LIMIT 3","match
-  $p isa person;
-  produced (producer: $p, film: $m);
-  $p has name $name;
-  $p has born $born;
-sort $born desc;
-limit 3;
-fetch {
-  ""name"": $name,
-  ""born"": $born
-};"
-310,List 3 movies with the tagline including the word 'real'.,"MATCH (m:Movie)
-WHERE toLower(m.tagline) CONTAINS 'real'
-RETURN m.title
-LIMIT 3","match
-  $m isa movie, has tagline $tag;
-  $tag like "".*[Rr][Ee][Aa][Ll].*"";
-limit 3;
-fetch {
-  ""title"": $m.title
-};"
-312,Name 3 persons who have reviewed a movie and also acted in a different movie.,"MATCH (p:Person)-[:REVIEWED]->(:Movie)
-WHERE exists {
-  (p)-[:ACTED_IN]->(:Movie)
-}
-RETURN p.name
-LIMIT 3","match
-  $p isa person;
-  $m1 isa movie;
-  $m2 isa movie;
-  reviewed (reviewer: $p, film: $m1);
-  acted_in (actor: $p, film: $m2);
-  not { $m1 is $m2; };
-  $p has name $name;
-limit 3;
-fetch {
-  ""name"": $name
-};"
-314,List the movies that have been produced and directed by the same person.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN m.title AS movie, p.name AS person","match
-  $p isa person;
-  $m isa movie;
-  produced (producer: $p, film: $m);
-  directed (director: $p, film: $m);
-  $m has title $title;
-  $p has name $name;
-fetch {
-  ""movie"": $title,
-  ""person"": $name
-};"
-332,List the first 5 people who wrote a movie with a rating of at least 80 in a review.,"MATCH (p:Person)-[:WROTE]->(m:Movie)<-[r:REVIEWED]-(reviewer:Person)
-WHERE r.rating >= 80
-RETURN p.name AS writer, m.title AS movie, r.rating AS rating
-LIMIT 5","match
-  $p isa person, has name $namep;
-  $m isa movie, has title $titlem;
-  wrote (writer: $p, film: $m);
-  $r isa reviewed (reviewer: $reviewer, film: $m), has rating $ratingr;
-  $ratingr >= 80;
-limit 5;
-fetch {
-  ""writer"": $namep,
-  ""movie"": $titlem,
-  ""rating"": $ratingr
-};"
-333,Which movies released between 2005 and 2010 have the tagline 'Speed has no limits'?,"MATCH (m:Movie)
-WHERE m.released >= 2005 AND m.released <= 2010
-  AND m.tagline = 'Speed has no limits'
-RETURN m.title","match
-  $m isa movie;
-  $m has released $released;
-  $released >= 2005;
-  $released <= 2010;
-  $m has tagline ""Speed has no limits"";
-fetch {
-  ""title"": $m.title
-};"
-339,Who are the top 3 persons who have both directed and produced the same movie?,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:PRODUCED]-(p)
-WITH p, count(m) AS num_movies
-ORDER BY num_movies DESC
-LIMIT 3
-RETURN p.name AS person, num_movies","match
-  $p isa person;
-  $m isa movie;
-  directed (director: $p, film: $m);
-  produced (producer: $p, film: $m);
-  $p has name $name;
-reduce $num_movies = count($m) groupby $name;
-sort $num_movies desc;
-limit 3;
-fetch {
-  ""person"": $name,
-  ""num_movies"": $num_movies
-};"
-343,List the first 5 movies that have been acted in by someone with the role 'Captain' and reviewed with a rating below 60.,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
-WHERE 'Captain' IN p.roles
-WITH m
-MATCH (m)<-[r:REVIEWED]-()
-WHERE r.rating < 60
-RETURN m.title
-LIMIT 5","match
-  $m isa movie;
-  $acted isa acted_in (actor: $p, film: $m);
-  $acted has roles ""Captain"";
-  $rev isa reviewed (film: $m);
-  $rev has rating $r;
-  $r < 60;
-limit 5;
-fetch {
-  ""title"": $m.title
-};"
-345,List the first 3 movies with a tagline containing 'limits' and released after 2005.,"MATCH (m:Movie)
-WHERE m.tagline CONTAINS 'limits' AND m.released > 2005
-RETURN m.title, m.tagline, m.released
-LIMIT 3","match
-  $m isa movie;
-  $m has tagline $taglinem;
-  $taglinem like "".*limits.*"";
-  $m has released $releasedm;
-  $releasedm > 2005;
-limit 3;
-fetch {
-  ""title"": $m.title,
-  ""tagline"": $taglinem,
-  ""released"": $releasedm
-};"
-378,"List top 3 people who have directed, produced, and acted in the same movie.","MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:PRODUCED]-(p)-[:ACTED_IN]->(m)
-WITH p, count(m) AS movieCount
-ORDER BY movieCount DESC
-LIMIT 3
-RETURN p.name AS person, movieCount","match
-  $p isa person;
-  $m isa movie;
-  (director: $p, film: $m) isa directed;
-  (producer: $p, film: $m) isa produced;
-  (actor: $p, film: $m) isa acted_in;
-  $p has name $namep;
-reduce $movieCount = count($m) groupby $namep;
-sort $movieCount desc;
-limit 3;
-fetch {
-  ""person"": $namep,
-  ""movieCount"": $movieCount
-};"
-347,List the top 5 persons who reviewed movies with a summary stating 'An amazing journey' and a rating above 80.,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
-WHERE r.summary = 'An amazing journey' AND r.rating > 80
-RETURN p.name AS reviewer, m.title AS movie
-ORDER BY r.rating DESC
-LIMIT 5","match
-$m isa movie;
-$p isa person, has name $name;
-$r isa reviewed (reviewer: $p, film: $m), has summary $summary, has rating $rating;
-$summary == ""An amazing journey"";
-$rating > 80;
-sort $rating desc;
-limit 5;
-fetch {
-  ""reviewer"": $name,
-  ""rating"": $rating
-};"
-382,List all movies that were both acted in and directed by the same person.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN m.title AS movie, p.name AS person","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  directed (director: $p, film: $m);
-  $m has title $titlem;
-  $p has name $namep;
-fetch {
-  ""movie"": $titlem,
-  ""person"": $namep
-};"
-353,Who are the top 3 directors of movies that have been reviewed with a summary stating 'Pretty funny at times'?,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:REVIEWED]-(r:Person)
-WHERE r.summary = 'Pretty funny at times'
-RETURN p.name AS director, count(*) AS num_movies
-ORDER BY num_movies DESC
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  (director: $p, film: $m) isa directed;
-  $rev isa reviewed (reviewer: $r, film: $m);
-  $rev has summary ""Pretty funny at times"";
-reduce $num_movies = count($m) groupby $p;
-sort $num_movies desc;
-limit 3;
-fetch {
-  ""director"": $p.name,
-  ""num_movies"": $num_movies
-};"
-392,Who are the top 5 youngest producers?,"MATCH (p:Person)-[:PRODUCED]->(:Movie)
-RETURN p.name, p.born
-ORDER BY p.born DESC
-LIMIT 5","match
-  $p isa person;
-  $p has name $namep;
-  $p has born $bornp;
-  produced (producer: $p, film: $m);
-sort $bornp desc;
-limit 5;
-fetch {
-  ""name"": $namep,
-  ""born"": $bornp
-};"
-387,"Who has acted in, directed, and produced the same movie?","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
-WHERE exists{ (p)-[:PRODUCED]->(m) }
-RETURN p.name AS person, m.title AS movie","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  directed (director: $p, film: $m);
-  produced (producer: $p, film: $m);
-fetch {
-  ""person"": $p.name,
-  ""movie"": $m.title
-};"
-395,Who has the most roles in a single movie?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
-RETURN p.name AS person, m.title AS movie, size(r.roles) AS num_roles
-ORDER BY num_roles DESC
-LIMIT 1","match
-  $p isa person, has name $n;
-  $ai isa acted_in (actor: $p, film: $m), has roles $r;
-  $m has title $t;
-reduce $count = count($r) groupby $p, $n, $m, $t;
-sort $count desc;
-limit 1;
-fetch {
-  ""person"": $n,
-  ""movie"": $t,
-  ""num_roles"": $count
-};"
-396,List all movie titles with exactly one word in the title.,"MATCH (m:Movie)
-WHERE m.title =~ '^[\\w]+$'
-RETURN m.title","match
-  $m isa movie;
-  $m has title $titlem;
-  not { $titlem like "".* .*""; };
-fetch {
-  ""title"": $titlem
-};"
-388,List all movies with more than 3 roles listed in their ACTED_IN relationships.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
-WHERE size(r.roles) > 3
-RETURN m.title, r.roles","match
-  $m isa movie, has title $t;
-  $ai isa acted_in (actor: $p, film: $m), has roles $r;
-reduce $count = count($r) groupby $ai, $t;
-match $count > 3;
-fetch {
-  ""title"": $t,
-  ""role_count"": $count
-};"
-418,List all movies with taglines that start with 'The'.,"MATCH (m:Movie)
-WHERE m.tagline STARTS WITH 'The'
-RETURN m.title, m.tagline","match
-  $m isa movie;
-  $m has title $titlem;
-  $m has tagline $taglinem;
-  $taglinem like ""^The.*"";
-fetch {
-  ""title"": $titlem,
-  ""tagline"": $taglinem
-};"
-413,List all movies where the producer and director are the same person.,"MATCH (m:Movie)<-[:DIRECTED]-(p:Person)-[:PRODUCED]->(m)
-RETURN m.title AS movie, p.name AS person","match
-  $m isa movie;
-  $p isa person;
-  directed (director: $p, film: $m);
-  produced (producer: $p, film: $m);
-  $m has title $title;
-  $p has name $name;
-fetch {
-  ""movie"": $title,
-  ""person"": $name
-};"
-399,Who are the top 3 youngest directors?,"MATCH (p:Person)-[:DIRECTED]->(:Movie)
-RETURN p.name AS director, p.born AS birthYear
-ORDER BY p.born DESC
-LIMIT 3","match
-  $p isa person;
-  $p has name $namep;
-  $p has born $bornp;
-  directed (director: $p, film: $m);
-sort $bornp desc;
-limit 3;
-fetch {
-  ""director"": $namep,
-  ""birthYear"": $bornp
-};"
-410,Who has produced and written the same movie?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:WROTE]-(p)
-RETURN p.name AS person, m.title AS movie","match
-  $p isa person;
-  $m isa movie;
-  produced (producer: $p, film: $m);
-  wrote (writer: $p, film: $m);
-  $p has name $namep;
-  $m has title $titlem;
-fetch {
-  ""person"": $namep,
-  ""movie"": $titlem
-};"
-421,List all movies where the same person has acted and produced.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:PRODUCED]-(p)
-RETURN m.title AS movie, p.name AS person","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  produced (producer: $p, film: $m);
-fetch {
-  ""movie"": $m.title,
-  ""person"": $p.name
-};"
-428,Who has acted in movies directed by Lana Wachowski?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(d:Person {name: 'Lana Wachowski'})
-RETURN p.name AS actor, m.title AS movie","match
-  $p isa person;
-  $m isa movie;
-  $d isa person, has name ""Lana Wachowski"";
-  acted_in (actor: $p, film: $m);
-  directed (director: $d, film: $m);
-fetch {
-  ""actor"": $p.name,
-  ""movie"": $m.title
-};"
-429,List all movies that have been reviewed and produced by the same person.,"MATCH (p:Person)-[:REVIEWED]->(m:Movie)<-[:PRODUCED]-(p)
-RETURN m.title AS movie","match
-  $p isa person;
-  $m isa movie;
-  reviewed (reviewer: $p, film: $m);
-  produced (producer: $p, film: $m);
-  $m has title $title;
-fetch {
-  ""movie"": $title
-};"
-425,"Who has the most movies with a 'Silly, but fun' review summary?","MATCH (p:Person)-[:REVIEWED]->(m:Movie)
-WHERE p.name IS NOT NULL
-WITH p, count(CASE WHEN m.summary = 'Silly, but fun' THEN 1 END) AS silly_reviews
-RETURN p.name AS name, silly_reviews
-ORDER BY silly_reviews DESC
-LIMIT 1","match
-  $p isa person, has name $n;
-  $rev isa reviewed (reviewer: $p, film: $m), has summary ""Silly, but fun"";
-reduce $silly_reviews = count($rev) groupby $n;
-sort $silly_reviews desc;
-limit 1;
-fetch {
-  ""name"": $n,
-  ""silly_reviews"": $silly_reviews
-};"
-424,List the movies with exactly two roles in their ACTED_IN relationships.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
-WHERE size(r.roles) = 2
-RETURN m.title","match
-  $rel isa acted_in (actor: $p, film: $m);
-  $m has title $t;
-  $rel has roles $r;
-reduce $count = count($r) groupby $rel, $t;
-match $count == 2;
-fetch {
-  ""title"": $t
-};"
-452,Identify 3 movies that were both produced and directed by the same person.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN m.title, p.name
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  produced (producer: $p, film: $m);
-  directed (director: $p, film: $m);
-  $m has title $titlem;
-  $p has name $namep;
-limit 3;
-fetch {
-  ""title"": $titlem,
-  ""name"": $namep
-};"
-454,Which 3 people have the smallest age difference between them?,"MATCH (p1:Person), (p2:Person)
-WHERE p1 <> p2 AND p1.born IS NOT NULL AND p2.born IS NOT NULL
-WITH p1, p2, abs(p1.born - p2.born) AS ageDiff
-ORDER BY ageDiff
-LIMIT 3
-RETURN p1.name AS person1, p2.name AS person2, ageDiff","match
-  $p1 isa person, has name $n1, has born $b1;
-  $p2 isa person, has name $n2, has born $b2;
-  not { $p1 is $p2; };
-let $ageDiff = abs($b1 - $b2);
-sort $ageDiff asc;
-limit 3;
-fetch {
-  ""person1"": $n1,
-  ""person2"": $n2,
-  ""ageDiff"": $ageDiff
-};"
-455,List 3 movies with the most roles listed in the ACTED_IN relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
-RETURN m.title AS movie, size(r.roles) AS num_roles
-ORDER BY num_roles DESC
-LIMIT 3","match
-  $m isa movie, has title $t;
-  $rel isa acted_in (film: $m), has roles $r;
-reduce $num_roles = count($r) groupby $t;
-sort $num_roles desc;
-limit 3;
-fetch {
-  ""movie"": $t,
-  ""num_roles"": $num_roles
-};"
-461,What are the common movies acted in by people who were born in the same decade?,"MATCH (p1:Person)-[:ACTED_IN]->(m:Movie)<-[:ACTED_IN]-(p2:Person)
-WHERE p1 <> p2 AND p1.born >= 1920 AND p1.born < 2000 AND p2.born >= 1920 AND p2.born < 2000
-      AND floor(p1.born / 10) = floor(p2.born / 10)
-RETURN p1.name AS person1, p2.name AS person2, collect(m.title) AS common_movies","match
-  $p1 isa person, has name $name1, has born $born1;
-  $p2 isa person, has name $name2, has born $born2;
-  $m isa movie, has title $title;
-  acted_in (actor: $p1, film: $m);
-  acted_in (actor: $p2, film: $m);
-  $born1 >= 1920;
-  $born1 < 2000;
-  $born2 >= 1920;
-  $born2 < 2000;
-  not { $p1 is $p2; };
-let $decade1 = $born1 / 10;
-let $decade2 = $born2 / 10;
-match $decade1 == $decade2;
-fetch {
-  ""person1"": $name1,
-  ""person2"": $name2,
-  ""common_movie"": $title
-};"
-470,List the names of 3 persons who have the name starting with 'L'.,"MATCH (p:Person)
-WHERE p.name STARTS WITH 'L'
-RETURN p.name
-LIMIT 3","match
-  $p isa person;
-  $p has name $namep;
-  $namep like ""L.*"";
-limit 3;
-fetch {
-  ""name"": $namep
-};"
-469,Name 3 persons who have produced movies but have not directed any.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
-WHERE NOT EXISTS { (p)-[:DIRECTED]->() }
-RETURN p.name
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  produced (producer: $p, film: $m);
-  not { directed (director: $p); };
-  $p has name $namep;
-limit 3;
-fetch {
-  ""name"": $namep
-};"
-465,What are the top 3 movies with the most diverse roles in the ACTED_IN relationship?,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
-WITH m, size(collect(distinct r.roles)) AS role_diversity
-RETURN m.title AS movie, role_diversity
-ORDER BY role_diversity DESC
-LIMIT 3","match
-  $m isa movie, has title $t;
-  $ai isa acted_in (actor: $p, film: $m), has roles $r;
-select $t, $r;
-distinct;
-reduce $role_diversity = count groupby $t;
-sort $role_diversity desc;
-limit 3;
-fetch {
-  ""movie"": $t,
-  ""role_diversity"": $role_diversity
-};"
-466,Who are the first 3 people to act in and review the same movie?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:REVIEWED]-(p)
-RETURN p.name AS person, m.title AS movie
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  reviewed (reviewer: $p, film: $m);
-  $p has name $namep;
-  $m has title $titlem;
-limit 3;
-fetch {
-  ""person"": $namep,
-  ""movie"": $titlem
-};"
-475,Who are the first 3 persons to have directed and acted in the same movie?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN p.name AS person, m.title AS movie
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  directed (director: $p, film: $m);
-  $p has name $namep;
-  $m has title $titlem;
-limit 3;
-fetch {
-  ""person"": $namep,
-  ""movie"": $titlem
-};"
-488,"Which 3 persons have acted in, directed, and produced the same movie?","MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
-WHERE exists{ (p)-[:PRODUCED]->(m) }
-RETURN p.name AS person, m.title AS movie
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  directed (director: $p, film: $m);
-  produced (producer: $p, film: $m);
-  $p has name $namep;
-  $m has title $titlem;
-limit 3;
-fetch {
-  ""person"": $namep,
-  ""movie"": $titlem
-};"
-492,Name 3 persons who have directed a movie with a tagline containing 'limits'.,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)
-WHERE m.tagline CONTAINS 'limits'
-RETURN p.name
-LIMIT 3","match
-  $p isa person, has name $name;
-  $m isa movie, has tagline $tagline;
-  $tagline like "".*limits.*"";
-  directed (director: $p, film: $m);
-limit 3;
-fetch {
-  ""name"": $name
-};"
-509,Which 3 persons have reviewed and produced the same movie?,"MATCH (p:Person)-[:REVIEWED]->(m:Movie)<-[:PRODUCED]-(p)
-RETURN p.name, m.title
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  reviewed (reviewer: $p, film: $m);
-  produced (producer: $p, film: $m);
-  $p has name $namep;
-  $m has title $titlem;
-limit 3;
-fetch {
-  ""name"": $namep,
-  ""title"": $titlem
-};"
-503,Name 3 actors who have acted in the least voted movies.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
-WITH p, min(m.votes) AS minVotes
-ORDER BY minVotes
-LIMIT 3
-RETURN p.name AS actor","match
-  $p isa person, has name $n;
-  acted_in (actor: $p, film: $m);
-  $m has votes $v;
-reduce $min_votes = min($v) groupby $n;
-sort $min_votes asc;
-limit 3;
-fetch {
-  ""actor"": $n
-};"
-495,Name 3 movies with a released year divisible by 3.,"MATCH (m:Movie)
-WHERE m.released % 3 = 0
-RETURN m.title
-LIMIT 3","match
-  $m isa movie, has title $t, has released $r;
-  $r % 3 == 0;
-limit 3;
-fetch {
-  ""title"": $t
-};"
-496,Who are the 3 youngest directors in the database?,"MATCH (p:Person)-[:DIRECTED]->(:Movie)
-RETURN p.name, p.born
-ORDER BY p.born DESC
-LIMIT 3","match
-  $p isa person;
-  $p has name $namep;
-  $p has born $bornp;
-  directed (director: $p, film: $m);
-select $p, $namep, $bornp;
-distinct;
-sort $bornp desc;
-limit 3;
-fetch {
-  ""name"": $namep,
-  ""born"": $bornp
-};"
-514,Name the 3 persons who have appeared in the most REVIEWED movies.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:REVIEWED]-(:Person)
-WITH p, count(m) AS reviewedMovies
-ORDER BY reviewedMovies DESC
-LIMIT 3
-RETURN p.name AS name, reviewedMovies","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  reviewed (film: $m);
-  $p has name $name;
-reduce $reviewedMovies = count($m) groupby $name;
-sort $reviewedMovies desc;
-limit 3;
-fetch {
-  ""name"": $name,
-  ""reviewedMovies"": $reviewedMovies
-};"
-523,Name 3 persons who have acted in movies released in consecutive years.,"MATCH (p1:Person)-[:ACTED_IN]->(m1:Movie), 
-      (p2:Person)-[:ACTED_IN]->(m2:Movie),
-      (p3:Person)-[:ACTED_IN]->(m3:Movie)
-WHERE m1.released = m2.released - 1 AND m2.released = m3.released - 1
-      AND p1 <> p2 AND p1 <> p3 AND p2 <> p3
-RETURN p1.name AS person1, p2.name AS person2, p3.name AS person3","match
-  $p isa person;
-  $m1 isa movie, has released $r1;
-  $m2 isa movie, has released $r2;
-  acted_in (actor: $p, film: $m1);
-  acted_in (actor: $p, film: $m2);
-  let $consecutive = $r1 + 1;
-  $r2 == $consecutive;
-limit 3;
-fetch {
-  ""name"": $p.name
-};
-"
-518,Name 3 people who have the most combined roles across all their ACTED_IN movies.,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
-WITH p, size(r.roles) AS role_count
-RETURN p.name, sum(role_count) AS total_roles
-ORDER BY total_roles DESC
-LIMIT 3","match
-  $p isa person, has name $n;
-  $ai isa acted_in (actor: $p, film: $m), has roles $r;
-reduce $total_roles = count($r) groupby $p, $n;
-sort $total_roles desc;
-limit 3;
-fetch {
-  ""name"": $n,
-  ""total_roles"": $total_roles
-};"
-527,List the top 3 movies with roles played by persons born in the 1940s.,"MATCH (p:Person)-[ai:ACTED_IN]->(m:Movie)
-WHERE p.born >= 1940 AND p.born < 1950
-RETURN m.title AS movie, collect(ai.roles) AS roles
-ORDER BY size(roles) DESC
-LIMIT 3","match
-  $p isa person, has born $b;
-  $b >= 1940;
-  $b < 1950;
-  $ai isa acted_in (actor: $p, film: $m), has roles $r;
-reduce $count = count($ai) groupby $m;
-sort $count desc;
-limit 3;
-fetch {
-  ""movie"": $m.title,
-  ""role_count"": $count
-};"
-515,List the first 3 movies where someone both acted in and directed.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN m.title
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  directed (director: $p, film: $m);
-  $m has title $title;
-limit 3;
-fetch {
-  ""title"": $title
-};"
-552,List the movies that were written and directed by the same person.,"MATCH (p:Person)-[:WROTE]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN m.title AS movie, p.name AS person","match
-  $p isa person;
-  $m isa movie;
-  wrote (writer: $p, film: $m);
-  directed (director: $p, film: $m);
-fetch {
-  ""movie"": $m.title,
-  ""person"": $p.name
-};"
-546,"Show top 3 persons who directed, produced, and acted in the same movie.","MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:PRODUCED]-(p)-[:ACTED_IN]->(m)
-RETURN p.name AS person, m.title AS movie
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  (director: $p, film: $m) isa directed;
-  (producer: $p, film: $m) isa produced;
-  (actor: $p, film: $m) isa acted_in;
-  $p has name $namep;
-  $m has title $titlem;
-limit 3;
-fetch {
-  ""person"": $namep,
-  ""movie"": $titlem
-};"
-531,List the 3 movies with the highest number of votes and a tagline mentioning 'limit'.,"MATCH (m:Movie)
-WHERE m.tagline CONTAINS 'limit'
-RETURN m.title, m.tagline, m.votes
-ORDER BY m.votes DESC
-LIMIT 3","match
-  $m isa movie;
-  $m has title $titlem;
-  $m has tagline $taglinem;
-  $taglinem like "".*limit.*"";
-  $m has votes $votesm;
-sort $votesm desc;
-limit 3;
-fetch {
-  ""title"": $titlem,
-  ""tagline"": $taglinem,
-  ""votes"": $votesm
-};"
-534,Name 3 directors who have directed movies with the least number of votes.,"MATCH (d:Person)-[:DIRECTED]->(m:Movie)
-WITH d, min(m.votes) AS minVotes
-ORDER BY minVotes
-LIMIT 3
-RETURN d.name AS director","match
-  $d isa person, has name $n;
-  directed (director: $d, film: $m);
-  $m has votes $v;
-reduce $minVotes = min($v) groupby $n;
-sort $minVotes asc;
-limit 3;"
-581,Which persons have acted in and directed the same movie?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN p.name AS person, m.title AS movie","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  directed (director: $p, film: $m);
-fetch {
-  ""person"": $p.name,
-  ""movie"": $m.title
-};"
-580,What are the most common roles in movies released before 1980?,"MATCH (p:Person)-[ai:ACTED_IN]->(m:Movie)
-WHERE m.released < 1980
-UNWIND ai.roles AS role
-RETURN role, count(*) AS frequency
-ORDER BY frequency DESC
-LIMIT 10","match
-  $ai isa acted_in (actor: $p, film: $m), has roles $r;
-  $m has released $rel;
-  $rel < 1980;
-reduce $count = count groupby $r;
-sort $count desc;
-limit 10;
-fetch {
-  ""role"": $r,
-  ""frequency"": $count
-};"
-563,List all movies with a release year divisible by 5.,"MATCH (m:Movie)
-WHERE m.released % 5 = 0
-RETURN m.title, m.released","match
-  $m isa movie, has title $t, has released $r;
-  $r % 5 == 0;
-fetch {
-  ""title"": $t,
-  ""released"": $r
-};"
-557,Who are the producers of movies with a tagline containing 'limits'?,"MATCH (m:Movie)<-[:PRODUCED]-(p:Person)
-WHERE m.tagline CONTAINS 'limits'
-RETURN p.name AS producer","match
-  $m isa movie, has tagline $t;
-  $t like "".*limits.*"";
-  $p isa person, has name $name;
-  produced (producer: $p, film: $m);
-fetch {
-  ""producer"": $name
-};"
-594,Who are the top 3 youngest directors in the graph?,"MATCH (p:Person)-[:DIRECTED]->(:Movie)
-RETURN p.name AS director, p.born AS birthYear
-ORDER BY p.born DESC
-LIMIT 3","match
-  $p isa person;
-  $p has name $namep;
-  $p has born $bornp;
-  directed (director: $p, film: $m);
-sort $bornp desc;
-limit 3;
-fetch {
-  ""director"": $namep,
-  ""birthYear"": $bornp
-};"
-590,List the top 3 pairs of persons who follow each other.,"MATCH (p1:Person)-[:FOLLOWS]->(p2:Person)-[:FOLLOWS]->(p1)
-RETURN p1.name AS person1, p2.name AS person2
-LIMIT 3","match
-  $p1 isa person;
-  $p2 isa person;
-  follows (follower: $p1, followed: $p2);
-  follows (follower: $p2, followed: $p1);
-  $p1 has name $namep1;
-  $p2 has name $namep2;
-  $namep1 < $namep2;
-limit 3;
-fetch {
-  ""person1"": $namep1,
-  ""person2"": $namep2
-};"
-584,List all movies with exactly 5 roles in the 'ACTED_IN' relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
-WHERE size(r.roles) = 5
-RETURN m.title","match
-  $m isa movie, has title $t;
-  $rel isa acted_in (actor: $p, film: $m), has roles $r;
-reduce $role_count = count($r) groupby $rel, $t;
-match $role_count == 5;
-fetch {
-  ""title"": $t
-};
-"
-616,What are the roles of Keanu Reeves in movies with a released year divisible by 5?,"MATCH (p:Person {name: 'Keanu Reeves'})-[r:ACTED_IN]->(m:Movie)
-WHERE m.released % 5 = 0
-RETURN m.title, r.roles","match
-  $p isa person, has name ""Keanu Reeves"";
-  $ai isa acted_in (actor: $p, film: $m), has roles $r;
-  $m has title $t, has released $rel;
-  $rel % 5 == 0;
-fetch {
-  ""title"": $t,
-  ""roles"": $r
-};"
-617,List all movies produced by persons who have also directed a movie with the same title.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
-WHERE EXISTS {
-  (p)-[:DIRECTED]->(m2:Movie)
-  WHERE m.title = m2.title
-}
-RETURN m.title AS movie","match
-  $p isa person;
-  $m isa movie;
-  produced (producer: $p, film: $m);
-  directed (director: $p, film: $m);
-  $m has title $title;
-fetch {
-  ""movie"": $title
-};"
-605,List the top 5 movies by number of roles in the 'ACTED_IN' relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
-RETURN m.title AS movie, size(r.roles) AS numRoles
-ORDER BY numRoles DESC
-LIMIT 5","match
-  $m isa movie, has title $t;
-  $rel isa acted_in (actor: $p, film: $m);
-  $rel has roles $r;
-reduce $roleCount = count($r) groupby $t;
-sort $roleCount desc;
-limit 5;
-fetch {
-  ""movie"": $t,
-  ""roleCount"": $roleCount
-};"
-647,List the movies with taglines that start with 'Everything'.,"MATCH (m:Movie)
-WHERE m.tagline STARTS WITH 'Everything'
-RETURN m.title, m.tagline","match
-  $m isa movie;
-  $m has title $titlem;
-  $m has tagline $taglinem;
-  $taglinem like ""Everything.*"";
-fetch {
-  ""title"": $titlem,
-  ""tagline"": $taglinem
-};"
-635,Which movies have been both produced and directed by the same person?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN m.title AS movie, p.name AS person","match
-  $p isa person;
-  $m isa movie;
-  produced (producer: $p, film: $m);
-  directed (director: $p, film: $m);
-  $m has title $titlem;
-  $p has name $namep;
-fetch {
-  ""movie"": $titlem,
-  ""person"": $namep
-};"
-627,Which person has both acted in and directed the same movie?,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
-RETURN p.name AS person, m.title AS movie","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  directed (director: $p, film: $m);
-  $p has name $namep;
-  $m has title $titlem;
-fetch {
-  ""person"": $namep,
-  ""movie"": $titlem
-};"
-620,List the movies that have been both directed and produced by the same person.,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:PRODUCED]-(p)
-RETURN m.title AS movie","match
-  $p isa person;
-  $m isa movie;
-  directed (director: $p, film: $m);
-  produced (producer: $p, film: $m);
-  $m has title $titlem;
-fetch {
-  ""movie"": $titlem
-};"
-637,What are the most common roles in the movie 'The Matrix Revolutions'?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie {title: 'The Matrix Revolutions'})
-UNWIND r.roles AS role
-RETURN role, count(*) AS frequency
-ORDER BY frequency DESC
-LIMIT 5","match
-  $ai isa acted_in (actor: $p, film: $m), has roles $r;
-  $m has title ""The Matrix Revolutions"";
-reduce $frequency = count($ai) groupby $r;
-sort $frequency desc;
-limit 5;"
-655,Who are the people that have both written and produced the same movie?,"MATCH (p:Person)-[:WROTE]->(m:Movie)<-[:PRODUCED]-(p)
-RETURN p.name AS person, m.title AS movie","match
-  $p isa person;
-  $m isa movie;
-  wrote (writer: $p, film: $m);
-  produced (producer: $p, film: $m);
-fetch {
-  ""person"": $p.name,
-  ""movie"": $m.title
-};"
-654,List the movies where the tagline contains the word 'limits'.,"MATCH (m:Movie)
-WHERE m.tagline CONTAINS 'limits'
-RETURN m.title","match
-  $m isa movie;
-  $m has tagline $tagline;
-  $tagline like "".*limits.*"";
-fetch {
-  ""title"": $m.title
-};"
-659,List the movies that were both acted in and produced by the same person.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:PRODUCED]-(p)
-RETURN m.title AS movie, p.name AS person","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  produced (producer: $p, film: $m);
-  $m has title $title;
-  $p has name $name;
-fetch {
-  ""movie"": $title,
-  ""person"": $name
-};"
-648,Who has the most roles in a single movie?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
-RETURN p.name AS person, m.title AS movie, size(r.roles) AS num_roles
-ORDER BY num_roles DESC
-LIMIT 1","match
-  $p isa person, has name $n;
-  $ai isa acted_in (actor: $p, film: $m), has roles $r;
-  $m has title $t;
-reduce $count = count($r) groupby $p, $m, $n, $t;
-sort $count desc;
-limit 1;
-fetch {
-  ""person"": $n,
-  ""movie"": $t,
-  ""num_roles"": $count
-};"
-657,What are the top 5 reviewed movies by summary 'An amazing journey'?,"MATCH (m:Movie)<-[r:REVIEWED]-(p:Person)
-WHERE r.summary = 'An amazing journey'
-RETURN m.title, count(r) AS reviews
-ORDER BY reviews DESC
-LIMIT 5","match
-$m isa movie, has title $title;
-$p isa person;
-$r isa reviewed (reviewer: $p, film: $m), has summary ""An amazing journey"";
-reduce $reviews = count($r) groupby $m, $title;
-sort $reviews desc;
-limit 5;
-fetch {
-  ""title"": $title,
-  ""reviews"": $reviews
-};
-"
-691,Name the first 3 people who have produced and acted in the same movie.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:PRODUCED]-(p)
-RETURN p.name
-LIMIT 3","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  produced (producer: $p, film: $m);
-  $p has name $name;
-limit 3;
-fetch {
-  ""name"": $name
-};"
-703,List the first three people who directed a movie with a tagline containing the word 'real'.,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)
-WHERE toLower(m.tagline) CONTAINS 'real'
-RETURN p.name
-LIMIT 3","match
-  $p isa person, has name $name;
-  $m isa movie, has tagline $tagline;
-  directed (director: $p, film: $m);
-  $tagline like "".*[Rr][Ee][Aa][Ll].*"";
-limit 3;
-fetch {
-  ""name"": $name
-};"
-673,Name the movies that have been both reviewed and produced by the same person.,"MATCH (p:Person)-[:REVIEWED]->(m:Movie)<-[:PRODUCED]-(p)
-RETURN m.title","match
-  $p isa person;
-  $m isa movie;
-  reviewed (reviewer: $p, film: $m);
-  produced (producer: $p, film: $m);
-  $m has title $title;
-fetch {
-  ""title"": $title
-};"
-687,Name the people who have the role of both actor and director in the most movies.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(p)
-WITH p, count(m) AS num_actor_director_movies
-ORDER BY num_actor_director_movies DESC
-LIMIT 1
-RETURN p.name AS person, num_actor_director_movies","match
-  $p isa person;
-  $m isa movie;
-  acted_in (actor: $p, film: $m);
-  directed (director: $p, film: $m);
-  $p has name $namep;
-reduce $num_actor_director_movies = count($m) groupby $namep;
-sort $num_actor_director_movies desc;
-limit 1;
-fetch {
-  ""person"": $namep,
-  ""num_actor_director_movies"": $num_actor_director_movies
-};"
-692,What is the average number of roles per actor in 'The Matrix'?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie {title: 'The Matrix'})
-RETURN avg(size(r.roles)) AS avg_roles_per_actor","match
-  $rel isa acted_in (actor: $p, film: $m);
-  $m has title ""The Matrix"";
-  $rel has roles $role;
-reduce $role_count = count($role) groupby $p;
-reduce $avg = mean($role_count);
-fetch {
-  ""avg_roles_per_actor"": $avg
-};"
-717,List the first three movies that were produced by someone with a name ending in 'son' and released after 2000.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
-WHERE p.name ENDS WITH 'son' AND m.released > 2000
-RETURN m.title
-LIMIT 3","match
-  $p isa person, has name $name;
-  $m isa movie, has released $released;
-  produced (producer: $p, film: $m);
-  $name like "".*son"";
-  $released > 2000;
-limit 3;
-fetch {
-  ""title"": $m.title
-};"
-711,Which top five movies have been both produced and directed by the same person?,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)<-[:DIRECTED]-(p)
-WITH m, p
-ORDER BY m.votes DESC
-LIMIT 5
-RETURN m.title AS movie, p.name AS person","match
-  $p isa person;
-  $m isa movie;
-  produced (producer: $p, film: $m);
-  directed (director: $p, film: $m);
-  $m has votes $votesm;
-sort $votesm desc;
-limit 5;
-fetch {
-  ""movie"": $m.title,
-  ""person"": $p.name
-};"
-727,List the first three people who followed someone at least 20 years their junior.,"MATCH (p1:Person)-[:FOLLOWS]->(p2:Person)
-WHERE p1.born - p2.born >= 20
-RETURN p1.name AS follower, p2.name AS followed
-LIMIT 3","match
-  $p1 isa person, has born $born1, has name $name1;
-  $p2 isa person, has born $born2, has name $name2;
-  follows (follower: $p1, followed: $p2);
-  let $age_diff = $born2 - $born1;
-  $age_diff >= 20;
-limit 3;
-fetch {
-  ""follower"": $name1,
-  ""followed"": $name2
-};"
-722,List the first three people who wrote a movie and also acted in a different movie.,"MATCH (p:Person)-[:WROTE]->(:Movie)
-WHERE EXISTS {
-  (p)-[:ACTED_IN]->(:Movie)
-}
-RETURN p.name
-LIMIT 3","match
-  $p isa person;
-  wrote (writer: $p, film: $m1);
-  acted_in (actor: $p, film: $m2);
-  not { $m1 is $m2; };
-  $p has name $namep;
-limit 3;
-fetch {
-  ""name"": $namep
-};"
-714,"Who are the top five actors with the most diverse range of roles, having acted in at least five different movies?","MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
-WHERE m.title IS NOT NULL
-WITH p, size(collect(distinct r.roles)) AS num_roles, count(distinct m) AS num_movies
-WHERE num_movies >= 5
-RETURN p.name AS actor, num_roles AS number_of_distinct_roles
-ORDER BY num_roles DESC
-LIMIT 5","match
-  $p isa person, has name $n;
-  $ai isa acted_in (actor: $p, film: $m), has roles $r;
-reduce $num_movies = count($m), $num_roles = count($r) groupby $p, $n;
-match $num_movies >= 5;
-sort $num_roles desc;
-limit 5;
-fetch {
-  ""actor"": $n,
-  ""number_of_distinct_roles"": $num_roles
-};"
-182,List the top 5 movies by the number of roles and their respective actors.,"MATCH (m:Movie)<-[ai:ACTED_IN]-(p:Person)
-RETURN m.title AS movie, collect(p.name) AS actors, size(ai.roles) AS numRoles
-ORDER BY numRoles DESC
-LIMIT 5","with fun role_count($m: movie) -> integer:
-  match
-    $ai isa acted_in (film: $m);
-    $ai has roles $r;
-  return count;
-match
-  $m isa movie, has title $t;
-  let $count = role_count($m);
-sort $count desc;
-limit 5;
-fetch {
-  ""movie"": $t,
-  ""numRoles"": $count
-};"
-471,What are the top 3 movies by the number of roles available in the ACTED_IN relationship?,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
-RETURN m.title AS movie, size(r.roles) AS numRoles
-ORDER BY numRoles DESC
-LIMIT 3","with fun role_count($m: movie) -> integer:
-  match
-    $ai isa acted_in (film: $m);
-    $ai has roles $r;
-  return count;
-match
-  $m isa movie, has title $t;
-  let $count = role_count($m);
-sort $count desc;
-limit 3;
-fetch {
-  ""movie"": $t,
-  ""numRoles"": $count
-};"
-478,List 3 movies with exactly 3 roles in the ACTED_IN relationship.,"MATCH (m:Movie)<-[ai:ACTED_IN]-(p:Person)
-WHERE size(ai.roles) = 3
-RETURN m.title
-LIMIT 3","with fun role_count($m: movie) -> integer:
-  match
-    $ai isa acted_in (film: $m);
-    $ai has roles $r;
-  return count;
-match
-  $m isa movie, has title $t;
-  let $count = role_count($m);
-  $count == 3;
-limit 3;
-fetch {
-  ""movie"": $t
-};"
-556,List all the movies where the roles list contains more than 4 characters.,"MATCH (m:Movie)<-[ai:ACTED_IN]-(p:Person)
-WHERE EXISTS {
-  (m)<-[ai2:ACTED_IN]-(p2:Person)
-  WHERE size(ai2.roles) > 4
-}
-RETURN m.title AS movie, collect(p.name) AS actors","with fun role_count($m: movie) -> integer:
-  match
-    $ai isa acted_in (film: $m);
-    $ai has roles $r;
-  return count;
-match
-  $m isa movie, has title $t;
-  let $count = role_count($m);
-  $count > 4;
-fetch {
-  ""movie"": $t
-};"
-576,What are the first 3 movies with the longest role lists in 'ACTED_IN' relationships?,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
-RETURN m.title AS movie, size(r.roles) AS roleCount
-ORDER BY roleCount DESC
-LIMIT 3","with fun role_count($m: movie) -> integer:
-  match
-    $ai isa acted_in (film: $m);
-    $ai has roles $r;
-  return count;
-match
-  $m isa movie, has title $t;
-  let $count = role_count($m);
-sort $count desc;
-limit 3;
-fetch {
-  ""movie"": $t,
-  ""roleCount"": $count
-};"
-603,Show the first 3 movies with the most complex role lists in the 'ACTED_IN' relationship.,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
-RETURN m.title, r.roles
-ORDER BY size(r.roles) DESC
-LIMIT 3","with fun role_count($m: movie) -> integer:
-  match
-    $ai isa acted_in (film: $m);
-    $ai has roles $r;
-  return count;
-match
-  $m isa movie, has title $t;
-  let $count = role_count($m);
-sort $count desc;
-limit 3;
-fetch {
-  ""movie"": $t,
-  ""roleCount"": $count
-};"
-589,What are the roles list sizes for each movie Keanu Reeves has acted in?,"MATCH (p:Person {name: 'Keanu Reeves'})-[r:ACTED_IN]->(m:Movie)
-RETURN m.title, size(r.roles) AS roleCount","match
-  $p isa person, has name ""Keanu Reeves"";
-  $m isa movie, has title $t;
-  $ai isa acted_in (film: $m, actor: $p);
-  $ai has roles $r;
-reduce $count = count($r) groupby $m, $t;
-fetch {
-  ""movie"": $t,
-  ""roleCount"": $count
-};"
-618,What are the top 3 shortest role lists in movies reviewed by persons born before 1960?,"MATCH (p:Person)-[:REVIEWED]->(m:Movie)<-[ai:ACTED_IN]-(a:Person)
-WHERE p.born < 1960
-RETURN m.title, ai.roles
-ORDER BY size(ai.roles)
-LIMIT 3","with fun role_count($m: movie) -> integer:
-  match
-    $ai isa acted_in (film: $m);
-    $ai has roles $r;
-  return count;
-match
-  $p isa person, has born $b;
-  $b < 1960;
-  reviewed (reviewer: $p, film: $m);
-  $m isa movie, has title $t;
-  let $count = role_count($m);
-sort $count asc;
-limit 3;
-fetch {
-  ""movie"": $t,
-  ""roleCount"": $count
-};"
-619,Which movie has the most roles in the 'ACTED_IN' relationship and what are those roles?,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
-WITH m, r
-ORDER BY size(r.roles) DESC
-LIMIT 1
-RETURN m.title AS movie, r.roles AS roles","with fun role_count($m: movie) -> integer:
-  match
-    $ai isa acted_in (film: $m);
-    $ai has roles $r;
-  return count;
-match
-  $m isa movie, has title $t;
-  let $count = role_count($m);
-sort $count desc;
-limit 1;
-fetch {
-  ""movie"": $t,
-  ""roleCount"": $count
 };"

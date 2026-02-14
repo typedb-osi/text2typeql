@@ -10,6 +10,30 @@ $s isa software, has name $n;
 select $n;
 distinct;
 reduce $count = count($n);"
+1,What are the previous versions of the software running on 'DC1-RCK-1-1-M-1'?,"MATCH (dc:DataCenter)-[:CONTAINS]->(rack:Rack)-[:HOLDS]->(machine:Machine {name: 'DC1-RCK-1-1-M-1'})-[:RUNS]->(software:Software)
+MATCH (software)-[:VERSION]->(currentVersion:Version)
+MATCH (currentVersion)-[:PREVIOUS*]->(previousVersion:Version)
+RETURN DISTINCT previousVersion.name AS PreviousVersions","with fun all_previous($v: version) -> { version }:
+  match
+    {
+      previous (newer_version: $v, older_version: $prev);
+    } or {
+      let $mid in all_previous($v);
+      previous (newer_version: $mid, older_version: $prev);
+    };
+  return { $prev };
+match
+$m isa machine, has name ""DC1-RCK-1-1-M-1"";
+runs (host_machine: $m, running_process: $proc);
+instance_of (running_instance: $proc, template: $sw);
+$sw isa software;
+has_version (versioned_software: $sw, release_version: $cv);
+let $pv in all_previous($cv);
+select $pv;
+distinct;
+fetch {
+  ""PreviousVersions"": $pv.name
+};"
 2,Identify the top 3 processes by PID that depend on the 'java' service.,"MATCH (p:Process)-[:DEPENDS_ON]->(s:Service {name: 'java'})
 RETURN p.name AS processName, p.pid AS processPID
 ORDER BY p.pid DESC
@@ -299,6 +323,17 @@ fetch {
   ""name"": $process.name,
   ""start_time"": $process.start_time,
   ""pid"": $process.pid
+};"
+31,What are the start times for applications named 'webserver' in zone 3?,"MATCH (dc:DataCenter)-[:CONTAINS]->(r:Router {zone: 3})-[:ROUTES]->(i:Interface)<-[:ROUTES]-(z:Zone {zone: 3}),
+      (rck:Rack {zone: 3})-[:HOLDS]->(m:Machine)-[:RUNS]->(app:Application {name: 'webserver'})
+RETURN app.startTime","match
+$rck isa rack, has zone 3;
+$m isa machine;
+$app isa application, has name ""webserver"";
+holds (containing_rack: $rck, held_equipment: $m);
+runs (host_machine: $m, running_process: $app);
+fetch {
+  ""startTime"": $app.start_time
 };"
 32,Which versions of software are dependencies for the 'webapp' application in zone 2?,"MATCH (app:Application {name: 'webapp'})-[:DEPENDS_ON]->(software:Software)-[:VERSION]->(version:Version),
       (machine:Machine)-[:RUNS]->(app),
@@ -1943,8 +1978,10 @@ RETURN v.name AS version,
   $v isa version, has name ""7.1"";
   has_version (versioned_software: $s, release_version: $v);
   $s isa software;
+try {
   depends_on (dependent: $s, dependency: $dep);
   $dep has name $dep_name;
+};
 fetch {
   ""version"": $v.name,
   ""dependency"": $dep_name
@@ -2046,6 +2083,22 @@ listens (listening_process: $a, listened_port: $p);
 $a isa application;
 fetch {
   ""name"": $a.name
+};"
+201,What are the previous versions of version 7.1 in the software dependency chain?,"MATCH (v:Version {name: '7.1'})-[:PREVIOUS*]->(prev:Version)
+RETURN prev.name AS previous_versions","with fun all_previous($v: version) -> { version }:
+  match
+    {
+      previous (newer_version: $v, older_version: $prev);
+    } or {
+      let $mid in all_previous($v);
+      previous (newer_version: $mid, older_version: $prev);
+    };
+  return { $prev };
+match
+$v isa version, has name ""7.1"";
+let $prev in all_previous($v);
+fetch {
+  ""previous_versions"": $prev.name
 };"
 202,List all services that depend on the process named 7.1.,"MATCH (p:Process {name: '7.1'})-[:DEPENDS_ON]->(s:Service)
 RETURN s.name","match
@@ -2337,6 +2390,24 @@ typed_as (machine: $m, spec: $t);
 limit 3;
 fetch {
   ""name"": $m.name
+};"
+228,What are the first 5 previous versions of version '7.1'?,"MATCH (v:Version {name: '7.1'})-[:PREVIOUS*1..5]->(prev:Version)
+RETURN prev.name
+LIMIT 5","with fun all_previous($v: version) -> { version }:
+  match
+    {
+      previous (newer_version: $v, older_version: $prev);
+    } or {
+      let $mid in all_previous($v);
+      previous (newer_version: $mid, older_version: $prev);
+    };
+  return { $prev };
+match
+$v isa version, has name ""7.1"";
+let $prev in all_previous($v);
+limit 5;
+fetch {
+  ""name"": $prev.name
 };"
 229,List the first 3 services listening on port 80.,"MATCH (s:Service)-[:LISTENS]->(p:Port {port: 80})
 RETURN s.name
@@ -2669,6 +2740,24 @@ RETURN a.name AS application_name","match
   instance_of (running_instance: $a, template: $s);
 fetch {
   ""application_name"": $app_name
+};"
+259,List the first 5 previous versions that the version '7.1' depends on.,"MATCH (v:Version {name: '7.1'})-[:PREVIOUS*1..5]->(prev:Version)
+RETURN prev.name
+LIMIT 5","with fun all_previous($v: version) -> { version }:
+  match
+    {
+      previous (newer_version: $v, older_version: $prev);
+    } or {
+      let $mid in all_previous($v);
+      previous (newer_version: $mid, older_version: $prev);
+    };
+  return { $prev };
+match
+$v isa version, has name ""7.1"";
+let $prev in all_previous($v);
+limit 5;
+fetch {
+  ""name"": $prev.name
 };"
 260,Identify the first 3 services that depend on the version '7.1'.,"MATCH (v:Version {name: '7.1'})<-[:INSTANCE]-(s:Service)
 RETURN s.name
@@ -3977,6 +4066,30 @@ reduce $switch_count = count($rel) groupby $rack;
 sort $switch_count desc;
 limit 1;
 fetch { ""rack_name"": $rack.name, ""switch_count"": $switch_count };"
+397,What are the total dependencies of the application 'crm' including indirect dependencies?,"MATCH (app:Application {name: 'crm'})-[:DEPENDS_ON*]->(dependency)
+RETURN DISTINCT dependency.name AS DependencyName","with fun all_reachable($sw: software) -> { software }:
+  match
+    {
+      $dep is $sw;
+    } or {
+      depends_on (dependent: $sw, dependency: $dep);
+      $dep isa software;
+    } or {
+      let $mid in all_reachable($sw);
+      depends_on (dependent: $mid, dependency: $dep);
+      $dep isa software;
+    };
+  return { $dep };
+match
+$app isa application, has name ""crm"";
+depends_on (dependent: $app, dependency: $sw);
+$sw isa software;
+let $dep in all_reachable($sw);
+select $dep;
+distinct;
+fetch {
+  ""DependencyName"": $dep.name
+};"
 398,List the first 3 machines in zone 4 that run an application named 'logstash'.,"MATCH (zone:Zone {zone: 4})-[:ROUTES]->(interface:Interface)<-[:ROUTES]-(machine:Machine)-[:RUNS]->(application:Application {name: 'logstash'})
 RETURN machine.name
 LIMIT 3","match
@@ -5756,6 +5869,30 @@ limit 3;
 fetch {
   ""name"": $n
 };"
+560,List the first 3 previous versions of the version named '7.1' and their software dependencies.,"MATCH (v:Version {name: '7.1'})-[:PREVIOUS*1..3]->(prev:Version)
+OPTIONAL MATCH (prev)<-[:VERSION]-(s:Software)
+RETURN prev.name AS PreviousVersion, collect(s.name) AS SoftwareDependencies
+LIMIT 3","with fun all_previous($v: version) -> { version }:
+  match
+    {
+      previous (newer_version: $v, older_version: $prev);
+    } or {
+      let $mid in all_previous($v);
+      previous (newer_version: $mid, older_version: $prev);
+    };
+  return { $prev };
+match
+$v isa version, has name ""7.1"";
+let $prev in all_previous($v);
+try {
+  has_version (versioned_software: $sw, release_version: $prev);
+  $sw has name $sw_name;
+};
+limit 3;
+fetch {
+  ""PreviousVersion"": $prev.name,
+  ""SoftwareDependency"": $sw_name
+};"
 561,Which ports are listened to by all processes running on OS 'RHEL'?,"MATCH (os:OS {name: 'RHEL'})-[:INSTANCE]->(version:Version)<-[:INSTANCE]-(process:Process)-[:LISTENS]->(port:Port)
 RETURN DISTINCT port.port AS listened_ports","match
   $os isa os, has name ""RHEL"";
@@ -6211,6 +6348,26 @@ holds (containing_rack: $rack, held_equipment: $switch);
 sort $name;
 limit 3;
 fetch { ""name"": $name };"
+603,Identify all previous versions of the version named '7.1' that are used by a software.,"MATCH (v:Version {name: '7.1'})-[:PREVIOUS*]->(prev:Version)<-[:VERSION]-(s:Software)
+RETURN DISTINCT prev.name AS PreviousVersions","with fun all_previous($v: version) -> { version }:
+  match
+    {
+      previous (newer_version: $v, older_version: $prev);
+    } or {
+      let $mid in all_previous($v);
+      previous (newer_version: $mid, older_version: $prev);
+    };
+  return { $prev };
+match
+$v isa version, has name ""7.1"";
+let $prev in all_previous($v);
+has_version (versioned_software: $sw, release_version: $prev);
+$sw isa software;
+select $prev;
+distinct;
+fetch {
+  ""PreviousVersions"": $prev.name
+};"
 604,What are the names of all egress nodes routing through interface with IP '10.0.0.254'?,"MATCH (e:Egress)-[:ROUTES]->(i:Interface {ip: '10.0.0.254'})
 RETURN e.name","match
 $e isa egress;
@@ -6414,15 +6571,4 @@ runs (host_machine: $m, running_process: $a);
 $a isa application;
 fetch {
   ""applicationName"": $a.name
-};"
-31,What are the start times for applications named 'webserver' in zone 3?,"MATCH (dc:DataCenter)-[:CONTAINS]->(r:Router {zone: 3})-[:ROUTES]->(i:Interface)<-[:ROUTES]-(z:Zone {zone: 3}),
-      (rck:Rack {zone: 3})-[:HOLDS]->(m:Machine)-[:RUNS]->(app:Application {name: 'webserver'})
-RETURN app.startTime","match
-$rck isa rack, has zone 3;
-$m isa machine;
-$app isa application, has name ""webserver"";
-holds (containing_rack: $rck, held_equipment: $m);
-runs (host_machine: $m, running_process: $app);
-fetch {
-  ""startTime"": $app.start_time
 };"

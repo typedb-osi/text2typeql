@@ -519,6 +519,21 @@ fetch {
   ""downVotes"": $q.down_votes,
   ""score"": $s
 };"
+34,Identify the first 5 users who asked questions that were tagged with 'graphql' and answered within the same month.,"MATCH (u:User)-[:ASKED]->(q:Question)-[:TAGGED]->(t:Tag {name: 'graphql'})
+WHERE q.answered = true
+WITH u, q, date(q.createdAt) AS questionDate
+WHERE questionDate.month = date().month AND questionDate.year = date().year
+RETURN u.display_name AS userName, q.title AS questionTitle, q.createdAt AS questionDate
+ORDER BY q.createdAt
+LIMIT 5","match
+$u isa user;
+$q isa question, has answered true, has created_at $ca;
+$t isa tag, has tag_name ""graphql"";
+asked (asker: $u, asked_question: $q);
+tagged (tagged_question: $q, tag: $t);
+sort $ca;
+limit 5;
+fetch { ""user"": $u.display_name };"
 35,Show the top 3 questions with the most severe negative score (lowest score).,"MATCH (q:Question)
 WHERE q.score < 0
 RETURN q.title, q.score, q.link
@@ -532,6 +547,18 @@ fetch {
   ""title"": $t,
   ""score"": $s,
   ""link"": $l
+};"
+36,What are the first 5 questions with the longest text descriptions?,"MATCH (q:Question)
+RETURN q.title, q.text
+ORDER BY size(q.text) DESC
+LIMIT 5","match
+$q isa question, has text $text;
+let $len = len($text);
+sort $len desc;
+limit 5;
+fetch {
+  ""title"": $q.title,
+  ""text"": $text
 };"
 37,Who are the top 3 users who have asked questions with the most combined upvotes and downvotes?,"MATCH (u:User)-[:ASKED]->(q:Question)
 WITH u, SUM(q.upVotes + q.downVotes) AS totalVotes
@@ -807,6 +834,18 @@ fetch {
   ""user_id"": $u.user_id,
   ""user_link"": $u.user_link
 };"
+54,Which tags are associated with questions that have a score less than -5?,"MATCH (q:Question)-[:TAGGED]->(t:Tag)
+WHERE q.score < -5
+RETURN DISTINCT t.name AS tag","match
+$q isa question, has score $s;
+$s < -5;
+$t isa tag;
+tagged (tagged_question: $q, tag: $t);
+select $t;
+distinct;
+fetch {
+  ""tag"": $t.tag_name
+};"
 55,How many users have asked more than 3 questions?,"MATCH (u:User)-[:ASKED]->(q:Question)
 WITH u, COUNT(q) AS questionCount
 WHERE questionCount > 3
@@ -829,18 +868,6 @@ fetch {
   ""display_name"": $u.display_name,
   ""user_id"": $u.user_id,
   ""user_link"": $u.user_link
-};"
-54,Which tags are associated with questions that have a score less than -5?,"MATCH (q:Question)-[:TAGGED]->(t:Tag)
-WHERE q.score < -5
-RETURN DISTINCT t.name AS tag","match
-$q isa question, has score $s;
-$s < -5;
-$t isa tag;
-tagged (tagged_question: $q, tag: $t);
-select $t;
-distinct;
-fetch {
-  ""tag"": $t.tag_name
 };"
 57,What are the top 5 most recent questions asked by users with an image link?,"MATCH (u:User)-[:ASKED]->(q:Question)
 WHERE u.image IS NOT NULL
@@ -2056,6 +2083,18 @@ fetch {
   ""link"": $q.link,
   ""created_at"": $ca
 };"
+135,What are the top 5 questions with the shortest titles?,"MATCH (q:Question)
+RETURN q.title, q.link
+ORDER BY size(q.title) ASC
+LIMIT 5","match
+$q isa question, has title $title, has link $link;
+let $len = len($title);
+sort $len asc;
+limit 5;
+fetch {
+  ""title"": $title,
+  ""link"": $link
+};"
 136,List the first 3 questions that have been tagged with both 'apollo' and 'graphql'.,"MATCH (q:Question)-[:TAGGED]->(t1:Tag {name: 'apollo'}),
       (q)-[:TAGGED]->(t2:Tag {name: 'graphql'})
 RETURN q.title AS title, q.link AS link, q.createdAt AS createdAt
@@ -2089,6 +2128,20 @@ limit 3;
 fetch {
   ""userName"": $u.display_name,
   ""questionCount"": $count
+};"
+138,Identify the first 3 questions with the most detailed descriptions based on the number of characters.,"MATCH (q:Question)
+WITH q, size(q.text) AS descriptionLength
+ORDER BY descriptionLength DESC
+LIMIT 3
+RETURN q.title AS title, q.text AS description, descriptionLength","match
+$q isa question, has text $text, has title $title;
+let $len = len($text);
+sort $len desc;
+limit 3;
+fetch {
+  ""title"": $title,
+  ""description"": $text,
+  ""descriptionLength"": $len
 };"
 140,List the first 3 questions that have been tagged with 'aws-lambda' and have a score of exactly 2.,"MATCH (q:Question)-[:TAGGED]->(t:Tag {name: 'aws-lambda'})
 WHERE q.score = 2
@@ -2578,6 +2631,17 @@ limit 1;
 fetch {
   ""display_name"": $u.display_name,
   ""reputation"": $rep
+};"
+177,What are the top 3 longest texts in questions on the platform?,"MATCH (q:Question)
+RETURN q.text
+ORDER BY size(q.text) DESC
+LIMIT 3","match
+$q isa question, has text $t;
+let $len = len($t);
+sort $len desc;
+limit 3;
+fetch {
+  ""text"": $t
 };"
 178,Provide the titles and links of questions that have more than 2 tags.,"MATCH (q:Question)-[:TAGGED]->(t:Tag)
 WITH q, COUNT(t) AS tagCount
@@ -4772,6 +4836,17 @@ fetch {
   ""favorites"": $f,
   ""link"": $q.link
 };"
+345,Which questions have a text length greater than 500 characters?,"MATCH (q:Question)
+WHERE size(q.text) > 500
+RETURN q.title, q.text, q.link","match
+$q isa question, has text $t;
+let $len = len($t);
+$len > 500;
+fetch {
+  ""title"": $q.title,
+  ""text"": $t,
+  ""link"": $q.link
+};"
 346,List the questions asked by the user with the highest reputation.,"MATCH (u:User)-[:ASKED]->(q:Question)
 WITH u, q
 ORDER BY u.reputation DESC
@@ -6099,6 +6174,18 @@ limit 5;
 fetch {
   ""title"": $q.title,
   ""favorites"": $f
+};"
+451,Which questions have a text length greater than 500 characters?,"MATCH (q:Question)
+WHERE size(q.text) > 500
+RETURN q.title AS title, q.text AS text, q.link AS link, q.createdAt AS createdAt","match
+$q isa question, has text $text;
+let $len = len($text);
+$len > 500;
+fetch {
+  ""title"": $q.title,
+  ""text"": $text,
+  ""link"": $q.link,
+  ""createdAt"": $q.created_at
 };"
 452,Which 3 users have the highest reputation?,"MATCH (u:User)
 RETURN u.display_name, u.reputation

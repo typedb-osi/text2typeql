@@ -12,32 +12,86 @@ Characters, houses, battles, allegiances.
 
 Total: 384 + 9 = 393 / 393 ✓
 
-## Failed Queries
+## Failed Queries (9 total)
+
+8 of 9 failures involve Neo4j array element access (`array[N]`) on `fastrf_embedding`. TypeQL multi-cardinality attributes have no positional indexing. This will be unblocked when **list/array value types** are implemented in TypeQL, allowing indexed access to ordered attribute collections.
 
 ### Query 119
-**Error:** Unsupported: array element access (array[N]) not available in TypeQL 3.0
+**Reason:** Requires array index access (`fastrf_embedding[0]`). TypeQL has no positional indexing for multi-cardinality attributes.
+```cypher
+MATCH (c:Character)
+WHERE c.fastrf_embedding[0] > 0.5
+RETURN c.name, c.fastrf_embedding
+LIMIT 3
+```
 
 ### Query 121
-**Error:** Unsupported feature: array index access (c.fastrf_embedding[9]) not available in TypeQL
+**Reason:** Requires array index access (`fastrf_embedding[9]`). Same limitation as Query 119.
+```cypher
+MATCH (c:Character)
+WHERE c.fastrf_embedding[9] < -0.5
+RETURN c.name
+LIMIT 3
+```
 
 ### Query 202
-**Error:** Unsupported feature: array indexing (array[N]) is not available in TypeQL
+**Reason:** Requires array index access (`fastrf_embedding[0]`). Same limitation as Query 119.
+```cypher
+MATCH (c:Character)
+WHERE c.fastrf_embedding[0] > 0
+RETURN c.name, c.fastrf_embedding
+LIMIT 5
+```
 
 ### Query 227
-**Error:** Unsupported: array indexing (c.fastrf_embedding[0]) is not available in TypeQL
+**Reason:** Requires array index access (`fastrf_embedding[0]`). Same limitation as Query 119.
+```cypher
+MATCH (c:Character)
+WHERE c.fastrf_embedding[0] < 0
+RETURN c.name, c.fastrf_embedding
+LIMIT 5
+```
 
 ### Query 250
-**Error:** Unsupported: array element access (array[N]) - Cypher uses c.fastrf_embedding[0] which has no TypeQL equivalent
+**Reason:** Requires array index access (`fastrf_embedding[0]`). Same limitation as Query 119.
+```cypher
+MATCH (c:Character)
+WHERE c.fastrf_embedding[0] < 0
+RETURN c.name
+```
 
 ### Query 314
-**Error:** Unsupported: array element access (array[N]) not available in TypeQL
+**Reason:** Requires array index access (`fastrf_embedding[4]`). Same limitation as Query 119.
+```cypher
+MATCH (c:Character)
+WHERE c.fastrf_embedding[4] > 0.5
+RETURN c.name
+```
 
 ### Query 326
-**Error:** TypeQL has no percentileCont or percentile aggregation function. Cannot compute dynamic statistical thresholds.
+**Reason:** Requires `percentileCont()` aggregation function. TypeQL has no percentile or statistical threshold functions.
+```cypher
+MATCH (c:Character)
+WITH percentileCont(c.pagerank, 0.9) AS top10PercentThreshold
+MATCH (c:Character)
+WHERE c.pagerank >= top10PercentThreshold
+RETURN c.name, c.pagerank
+ORDER BY c.pagerank DESC
+```
 
 ### Query 374
-**Error:** Unsupported: array element access (array[N]). TypeQL multi-cardinality attributes have no positional indexing.
+**Reason:** Requires array index access (`fastrf_embedding[9]`). Same limitation as Query 119.
+```cypher
+MATCH (c:Character)
+WHERE c.fastrf_embedding[9] < -0.5
+RETURN c.name
+```
 
 ### Query 389
-**Error:** Unsupported: array element access (array[N]) not available in TypeQL
+**Reason:** Requires array index access (`fastrf_embedding[0]`). Same limitation as Query 119.
+```cypher
+MATCH (c:Character)
+WHERE c.fastrf_embedding[0] > 0.5
+RETURN c.name
+```
 

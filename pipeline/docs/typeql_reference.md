@@ -81,10 +81,16 @@ fetch { "title": $m.title, "year": $m.released };
 # Multi-cardinality (array)
 fetch { "emails": [ $p.email ] };
 
-# Subquery
+# Fetch subquery (replaces collect() - collects related data as nested array)
 fetch {
   "name": $p.name,
-  "movie_count": (match acted_in (actor: $p, film: $m); reduce $c = count($m);)
+  "movies": [
+    match
+      acted_in (actor: $p, film: $m);
+    fetch {
+      "title": $m.title
+    };
+  ]
 };
 ```
 
@@ -117,6 +123,12 @@ match $count > 100;  # Filter after aggregation
 ```typeql
 let $ratio = $follows / $followers;
 let $diff = abs($a - $b);
+
+# String length (TypeDB 3.8+)
+let $len = len($name);
+
+# String concatenation (TypeDB 3.8+)
+let $display = $name + " (" + $city + ")";
 ```
 
 ### Select + Distinct (COUNT DISTINCT)
@@ -141,6 +153,47 @@ with fun follower_count($user: user) -> integer:
 match $u isa user;
 let $count = follower_count($u);
 ```
+
+### Recursive Stream Functions (Transitive Closure)
+
+Stream functions return zero or more results (indicated by `{ }` in the return type).
+Combined with recursion, they replace Cypher's variable-length paths (`[:REL*]`).
+
+```typeql
+# Basic transitive closure: find all previous versions
+with fun all_previous($v: version) -> { version }:
+  match
+    {
+      previous (newer_version: $v, older_version: $prev);
+    } or {
+      let $mid in all_previous($v);
+      previous (newer_version: $mid, older_version: $prev);
+    };
+  return { $prev };
+
+# Usage: let $prev in all_previous($start);
+
+# Include starting node with identity base case ($dep is $sw)
+with fun all_reachable($sw: software) -> { software }:
+  match
+    { $dep is $sw; } or
+    { depends_on (dependent: $sw, dependency: $dep); $dep isa software; } or
+    { let $mid in all_reachable($sw); depends_on (dependent: $mid, dependency: $dep); $dep isa software; };
+  return { $dep };
+
+# Count distinct stream results with a wrapper function
+with fun chain_size($o: organization) -> integer:
+  match let $s in supply_chain($o);
+  select $s;
+  distinct;
+  return count;
+```
+
+Key points:
+- TypeDB tables recursive functions to break cycles (left-recursive is efficient)
+- Results are returned breadth-first (closest nodes first)
+- `let $var in function($arg);` accesses stream elements in the main query
+- Function parameters must be typed to a specific entity type (no generic `entity` type)
 
 ## Variable Scoping in Disjunctions
 
@@ -173,12 +226,20 @@ reduce $count = count($rel);  # Works
 | `count(n)` | `reduce $c = count($n);` |
 | `WITH n, count(m) AS c` | `reduce $c = count($m) groupby $n;` |
 | `HAVING count > N` | `reduce $c = count ...; match $c > N;` |
+| `size(n.prop)` (string) | `let $len = len($prop);` |
+| `a.prop + ' text'` | `let $s = $prop + " text";` |
+| `(a)-[:REL*]->(b)` | Recursive stream function (see above) |
 | `CONTAINS 'x'` | `$p contains "x";` |
 | `STARTS WITH 'x'` | `$p like "^x.*";` |
+| `collect(n.prop)` | Fetch subquery: `"key": [ match ...; fetch { ... }; ]` |
+| `timestamp()` (epoch) | `max()` aggregate as proxy + integer arithmetic |
 
-## Unsupported (Record in failed.csv)
+## Unsupported (Document in README)
 
-- `size()` - string/list length
-- `collect()` - array aggregation
 - `array[N]` - array indexing
-- Date arithmetic with duration
+- `split()` - string splitting
+- `left()` / `substring()` - substring extraction
+- `datetime({epochSeconds: N})` - epoch-to-datetime conversion (integer epoch arithmetic works though)
+- Dynamic `CONTAINS` between two variables (like requires literal pattern)
+
+Note: `size()` for **string length** is now supported via `len()` (TypeDB 3.8+). `collect()` is now handled via **fetch subqueries** (`"key": [ match ...; fetch { ... }; ]`).

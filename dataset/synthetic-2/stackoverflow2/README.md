@@ -7,37 +7,64 @@
 Questions, answers, comments, tags, users.
 
 ## Current Status
-- `queries.csv`: 298 converted queries
-- 9 failed queries
+- `queries.csv`: 306 converted queries
+- 1 failed query
 
-Total: 298 + 9 = 307 / 307 ✓
+Total: 306 + 1 = 307 / 307 ✓
+
+## Schema Changes
+
+- Added `plays commented_on:question` to `answer` entity, enabling comments on answers (query 91, 261)
 
 ## Failed Queries
 
-### Query 91
-**Error:** Schema mismatch: Cypher queries COMMENTED_ON relation on Answer entities, but TypeQL schema only defines commented_on relating comment to question, not to answer. Answer entity does not play any role in commented_on relation.
-
 ### Query 94
-**Error:** Unsupported: date extraction from epoch timestamps (date(datetime({epochSeconds: ...}))) not available in TypeQL
+**Reason:** Epoch timestamp conversion — Cypher uses `date(datetime({epochSeconds: ...}))` to extract dates from epoch integers. TypeQL has no epoch-to-date conversion.
 
-### Query 98
-**Error:** Unsupported: size() function for string length not available in TypeQL
+```cypher
+MATCH (q:Question)<-[:ANSWERED]-(a:Answer)
+WHERE date(datetime({epochSeconds: q.creation_date})) = date(datetime({epochSeconds: a.creation_date}))
+WITH q, COUNT(a) AS answer_count
+ORDER BY answer_count DESC
+LIMIT 3
+RETURN q.title AS question_title, q.link AS question_link, q.creation_date AS creation_date, answer_count
+```
 
 ### Query 169
-**Error:** Unsupported: date arithmetic (timestamp() - 31536000 for one year ago calculation)
+**Reason:** Current timestamp — Cypher uses `timestamp()` to get the current time. TypeQL has no built-in function for the current timestamp.
 
-### Query 253
-**Error:** collect() function not supported in TypeQL - cannot aggregate tags into a list
+```cypher
+WITH timestamp() AS current_time, timestamp() - 31536000 AS one_year_ago
+MATCH (u:User)-[:ASKED]->(q:Question)
+WHERE q.creation_date >= one_year_ago
+WITH u, COUNT(q) AS question_count
+ORDER BY question_count DESC
+LIMIT 10
+RETURN u.display_name AS user, question_count
+```
 
-### Query 259
-**Error:** COLLECT() function is unsupported in TypeQL - cannot aggregate values into an array
+## Resolved Queries
 
-### Query 260
-**Error:** collect() function is not supported in TypeQL - cannot aggregate tags into an array per question
+### Query 91 (resolved)
+Previously failed due to schema mismatch (commented_on only connected comments to questions). Added `plays commented_on:question` to answer entity, then counted comments per answer.
 
-### Query 261
-**Error:** Requires nested subqueries with two-stage aggregation (first limit to top 3 questions by view_count, then sum comment counts per user). TypeQL 3.0 does not support subqueries or CTEs.
+### Query 98 (resolved)
+Previously failed due to `size()` function. Converted using `len()` (TypeDB 3.8+).
 
-### Query 288
-**Error:** Cypher uses collect() to aggregate tags into a list, which is not supported in TypeQL. TypeQL has no equivalent to collect/aggregate into arrays.
+### Query 253 (resolved)
+Previously failed due to `collect()`. Converted using fetch subquery to collect tags as nested array.
 
+### Query 259 (resolved)
+Previously failed due to `COLLECT()`. Converted using fetch subquery to collect tags as nested array.
+
+### Query 260 (resolved)
+Previously failed due to `collect()`. Converted using fetch subquery to collect tags as nested array.
+
+### Query 261 (resolved)
+Previously failed due to nested subqueries/CTEs. Converted using custom function `comment_count_on_top_questions()` with chained match-sort-limit-match pipeline.
+
+### Query 169 (resolved)
+Previously failed due to `timestamp()` for current time. Converted using `max_creation_date()` custom function as proxy for "now", then integer subtraction of 31536000 (one year in seconds).
+
+### Query 288 (resolved)
+Previously failed due to `collect()`. Converted using fetch subquery to collect tags as nested array.

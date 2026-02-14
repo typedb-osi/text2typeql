@@ -7,11 +7,11 @@
 Tweets, users, follows, retweets, mentions.
 
 ## Current Status
-- `queries.csv`: 0 converted queries
+- `queries.csv`: 502 converted queries
 - 0 failed queries
 
-Total: 0 + 0 = 0 / 502 pending
+Total: 502 + 0 = 502 / 502 ✓
 
-## Failed Queries
+## Conversion Notes
 
-_None yet._
+Queries 23 and 66 had semantic mismatches in the original Cypher (wrong property used for sorting/filtering) but were successfully converted using TypeQL that correctly implements the English question's intent, matching the same patterns used in synthetic-1.

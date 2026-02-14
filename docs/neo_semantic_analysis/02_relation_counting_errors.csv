@@ -1,0 +1,2476 @@
+source,database,original_index,confidence,check,detail,question,cypher,typeql
+synthetic-1,companies,277,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the names of organizations that have at least 2 board members?,"MATCH (o:Organization)
+WHERE size([(o)-[:HAS_BOARD_MEMBER]->(:Person) | 1]) >= 2
+RETURN o.name","match
+  $o isa organization;
+  board_member_of (organization: $o, member: $p);
+reduce $count = count($p) groupby $o;
+match $count >= 2;
+fetch { ""name"": $o.name };"
+synthetic-1,companies,407,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which organizations are mentioned in articles published after 2020?,"MATCH (a:Article)-[:MENTIONS]->(o:Organization) WHERE a.date > date(""2020-01-01"") RETURN DISTINCT o","match
+  $o isa organization;
+  $a isa article;
+  (article: $a, mentioned: $o) isa mentions;
+reduce $mentionCount = count($a) groupby $o;
+limit 3;
+fetch { ""organization"": $o.name, ""mentionCount"": $mentionCount };"
+synthetic-1,companies,537,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What is the summary of the person with ID 'Eaf0bpz6NNoqLVUCqNZPAew'?,"MATCH (p:Person {id: 'Eaf0bpz6NNoqLVUCqNZPAew'})
+RETURN p.summary","match
+  $o isa organization;
+  $a isa article;
+  (article: $a, mentioned: $o) isa mentions;
+reduce $mentionCount = count($a) groupby $o;
+sort $mentionCount desc;
+limit 3;
+fetch { ""organization"": $o.name, ""mentionCount"": $mentionCount };"
+synthetic-1,companies,564,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 5 organizations by number of employees?,"MATCH (o:Organization)
+WHERE o.nbrEmployees IS NOT NULL
+RETURN o.name AS organization, o.nbrEmployees AS numberOfEmployees
+ORDER BY o.nbrEmployees DESC
+LIMIT 5","match $o isa organization, has name $n; $a isa article; (article: $a, mentioned: $o) isa mentions; reduce $mentions = count($a) groupby $o; match $o has name $n; sort $mentions desc; limit 5; fetch { ""organization"": $n, ""mentions"": $mentions };"
+synthetic-1,companies,642,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the relationships of 'Julie Spellman Sweet' within the context of the organization she is associated with?,"MATCH (p:Person {name: 'Julie Spellman Sweet'})-[r]-(o:Organization)
+WHERE p.name IS NOT NULL AND o.name IS NOT NULL
+RETURN p, r, o","match
+  $c isa city;
+  $o isa organization;
+  $ic isa industry_category;
+  (organization: $o, city: $c) isa located_in;
+  $ic has industry_category_name $ic_industry_category_name;
+  $ic_industry_category_name contains ""Environmental"";
+  (organization: $o, category: $ic) isa in_category;
+reduce $orgCount = count($o) groupby $c;
+sort $orgCount desc;
+limit 3;
+fetch { ""city"": $c.city_name, ""orgCount"": $orgCount };"
+synthetic-1,companies,646,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the cities where organizations with a summary mentioning 'financial services' are based.,"MATCH (o:Organization)-[:IN_CITY]->(c:City)
+WHERE o.summary CONTAINS 'financial services'
+RETURN DISTINCT c.name","match
+  $c isa city;
+  $o isa organization;
+  $ic isa industry_category;
+  (organization: $o, city: $c) isa located_in;
+  $ic has industry_category_name $ic_industry_category_name;
+  $ic_industry_category_name contains ""Food"";
+  (organization: $o, category: $ic) isa in_category;
+reduce $orgCount = count($o) groupby $c;
+sort $orgCount desc;
+limit 3;
+fetch { ""city"": $c.city_name, ""orgCount"": $orgCount };"
+synthetic-1,movies,36,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Show the top 5 movies with the most roles in their cast.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WITH m, size(r.roles) AS roleCount
+ORDER BY roleCount DESC
+LIMIT 5
+RETURN m.title AS movie, roleCount AS `number of cast roles`","match
+  $m isa movie, has title $t;
+  (actor: $p, film: $m) isa acted_in;
+reduce $roleCount = count($p) groupby $t;
+sort $roleCount desc;
+limit 5;
+fetch {
+  ""movie"": $t,
+  ""roleCount"": $roleCount
+};"
+synthetic-1,movies,58,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which person has the most roles in a single movie?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+RETURN p.name AS person, m.title AS movie, size(r.roles) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 1","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+  $m has title $t;
+reduce $count = count($r) groupby $n, $t;
+sort $count desc;
+limit 1;"
+synthetic-1,movies,63,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 5 movies with the most roles listed in their 'ACTED_IN' relationship?,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+RETURN m.title, size(r.roles) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 5","match
+  $m isa movie, has title $t;
+  $a isa acted_in (actor: $p, film: $m);
+  $a has roles $r;
+reduce $roleCount = count($r) groupby $t;
+sort $roleCount desc;
+limit 5;
+fetch {
+  ""movie"": $t,
+  ""roleCount"": $roleCount
+};"
+synthetic-1,movies,186,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the roles of actors in the 3 movies with the highest number of actors involved.,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
+WITH m, collect(p) AS actors
+ORDER BY size(actors) DESC
+LIMIT 3
+UNWIND actors AS actor
+MATCH (actor)-[r:ACTED_IN]->(m)
+RETURN m.title AS movie, actor.name AS actor, r.roles AS roles","match
+  $m isa movie, has title $t;
+  acted_in (actor: $actor, film: $m);
+reduce $count = count($actor) groupby $m;
+sort $count desc;
+limit 3;
+match
+  $ai isa acted_in (actor: $a, film: $m), has roles $roles;
+  $a has name $n;
+  $m has title $t;
+fetch {
+  ""movie"": $t,
+  ""actor"": $n,
+  ""roles"": $roles
+};"
+synthetic-1,movies,245,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 5 movies with the most roles listed in ACTED_IN relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+RETURN m.title AS movie, size(r.roles) AS roleCount
+ORDER BY roleCount DESC
+LIMIT 5","match
+  $m isa movie, has title $t;
+  $ai isa acted_in (film: $m), has roles $r;
+reduce $roleCount = count($r) groupby $t;
+sort $roleCount desc;
+limit 5;
+fetch {
+  ""movie"": $t,
+  ""roleCount"": $roleCount
+};"
+synthetic-1,movies,260,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Who has the most roles in a single movie?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+RETURN p.name AS person, m.title AS movie, size(r.roles) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 1","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+  $m isa movie, has title $t;
+reduce $count = count($r) groupby $p, $m, $n, $t;
+sort $count desc;
+limit 1;
+fetch {
+  ""person"": $n,
+  ""movie"": $t,
+  ""num_roles"": $count
+};
+"
+synthetic-1,movies,277,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 5 movies with the most diverse cast in terms of birth years.,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
+WITH m, collect(p.born) AS birthYears
+RETURN m.title AS movie, size(apoc.coll.toSet(birthYears)) AS numUniqueBirthYears
+ORDER BY numUniqueBirthYears DESC
+LIMIT 5","match
+  $m isa movie, has title $t;
+  acted_in (actor: $p, film: $m);
+  $p has born $b;
+select $b, $m, $t;
+distinct;
+reduce $numUniqueBirthYears = count groupby $m, $t;
+sort $numUniqueBirthYears desc;
+limit 5;
+fetch {
+  ""movie"": $t,
+  ""numUniqueBirthYears"": $numUniqueBirthYears
+};"
+synthetic-1,movies,287,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which movies have been reviewed by more than two persons?,"MATCH (m:Movie)
+WHERE size([(p)-[:REVIEWED]->(m) | p]) > 2
+RETURN m.title","match
+  $m isa movie, has title $t;
+  (reviewer: $p, film: $m) isa reviewed;
+reduce $count = count($p) groupby $t;
+match $count > 2;
+fetch {
+  ""title"": $t
+};"
+synthetic-1,movies,388,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List all movies with more than 3 roles listed in their ACTED_IN relationships.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WHERE size(r.roles) > 3
+RETURN m.title, r.roles","match
+  $m isa movie, has title $t;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $count = count($r) groupby $ai, $t;
+match $count > 3;
+fetch {
+  ""title"": $t,
+  ""role_count"": $count
+};"
+synthetic-1,movies,395,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Who has the most roles in a single movie?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+RETURN p.name AS person, m.title AS movie, size(r.roles) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 1","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+  $m has title $t;
+reduce $count = count($r) groupby $p, $n, $m, $t;
+sort $count desc;
+limit 1;
+fetch {
+  ""person"": $n,
+  ""movie"": $t,
+  ""num_roles"": $count
+};"
+synthetic-1,movies,405,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Who has the most diverse roles across different movies?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, size(collect(distinct r.roles)) AS num_roles
+RETURN p.name AS actor, num_roles
+ORDER BY num_roles DESC
+LIMIT 1","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $num_roles = count($r) groupby $n;
+sort $num_roles desc;
+limit 1;
+fetch {
+  ""actor"": $n,
+  ""num_roles"": $num_roles
+};"
+synthetic-1,movies,424,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the movies with exactly two roles in their ACTED_IN relationships.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WHERE size(r.roles) = 2
+RETURN m.title","match
+  $rel isa acted_in (actor: $p, film: $m);
+  $m has title $t;
+  $rel has roles $r;
+reduce $count = count($r) groupby $rel, $t;
+match $count == 2;
+fetch {
+  ""title"": $t
+};"
+synthetic-1,movies,430,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Who are the top 3 actors with the most diverse roles?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, size(collect(distinct r.roles)) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 3
+RETURN p.name AS actor, num_roles AS number_of_distinct_roles","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $num_roles = count($r) groupby $n;
+sort $num_roles desc;
+limit 3;
+fetch {
+  ""actor"": $n,
+  ""number_of_distinct_roles"": $num_roles
+};"
+synthetic-1,movies,455,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List 3 movies with the most roles listed in the ACTED_IN relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+RETURN m.title AS movie, size(r.roles) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 3","match
+  $m isa movie, has title $t;
+  $rel isa acted_in (film: $m), has roles $r;
+reduce $num_roles = count($r) groupby $t;
+sort $num_roles desc;
+limit 3;
+fetch {
+  ""movie"": $t,
+  ""num_roles"": $num_roles
+};"
+synthetic-1,movies,465,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 3 movies with the most diverse roles in the ACTED_IN relationship?,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WITH m, size(collect(distinct r.roles)) AS role_diversity
+RETURN m.title AS movie, role_diversity
+ORDER BY role_diversity DESC
+LIMIT 3","match
+  $m isa movie, has title $t;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+select $t, $r;
+distinct;
+reduce $role_diversity = count groupby $t;
+sort $role_diversity desc;
+limit 3;
+fetch {
+  ""movie"": $t,
+  ""role_diversity"": $role_diversity
+};"
+synthetic-1,movies,493,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 5 actors by the variety of roles they played in movies.,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, size(collect(distinct r.roles)) as roleCount
+ORDER BY roleCount DESC
+LIMIT 5
+RETURN p.name as actor, roleCount as numberOfRoles","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $roleCount = count($r) groupby $n;
+sort $roleCount desc;
+limit 5;
+fetch {
+  ""actor"": $n,
+  ""numberOfRoles"": $roleCount
+};"
+synthetic-1,movies,501,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 persons have the most distinct roles in the ACTED_IN relationship?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, size(collect(distinct r.roles)) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 3
+RETURN p.name AS person, num_roles","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $num_roles = count($r) groupby $n;
+sort $num_roles desc;
+limit 3;
+fetch {
+  ""person"": $n,
+  ""num_roles"": $num_roles
+};"
+synthetic-1,movies,518,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Name 3 people who have the most combined roles across all their ACTED_IN movies.,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, size(r.roles) AS role_count
+RETURN p.name, sum(role_count) AS total_roles
+ORDER BY total_roles DESC
+LIMIT 3","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $total_roles = count($r) groupby $p, $n;
+sort $total_roles desc;
+limit 3;
+fetch {
+  ""name"": $n,
+  ""total_roles"": $total_roles
+};"
+synthetic-1,movies,527,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 3 movies with roles played by persons born in the 1940s.,"MATCH (p:Person)-[ai:ACTED_IN]->(m:Movie)
+WHERE p.born >= 1940 AND p.born < 1950
+RETURN m.title AS movie, collect(ai.roles) AS roles
+ORDER BY size(roles) DESC
+LIMIT 3","match
+  $p isa person, has born $b;
+  $b >= 1940;
+  $b < 1950;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $count = count($ai) groupby $m;
+sort $count desc;
+limit 3;
+fetch {
+  ""movie"": $m.title,
+  ""role_count"": $count
+};"
+synthetic-1,movies,532,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 persons have the most diverse roles across movies they acted in?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, size(collect(distinct r.roles)) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 3
+RETURN p.name AS person, num_roles AS number_of_distinct_roles","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $num_roles = count($r) groupby $n;
+sort $num_roles desc;
+limit 3;
+fetch {
+  ""person"": $n,
+  ""number_of_distinct_roles"": $num_roles
+};"
+synthetic-1,movies,584,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List all movies with exactly 5 roles in the 'ACTED_IN' relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WHERE size(r.roles) = 5
+RETURN m.title","match
+  $m isa movie, has title $t;
+  $rel isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $role_count = count($r) groupby $rel, $t;
+match $role_count == 5;
+fetch {
+  ""title"": $t
+};
+"
+synthetic-1,movies,589,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the roles list sizes for each movie Keanu Reeves has acted in?,"MATCH (p:Person {name: 'Keanu Reeves'})-[r:ACTED_IN]->(m:Movie)
+RETURN m.title, size(r.roles) AS roleCount","match
+  $p isa person, has name ""Keanu Reeves"";
+  $m isa movie, has title $t;
+  $ai isa acted_in (film: $m, actor: $p);
+  $ai has roles $r;
+reduce $count = count($r) groupby $m, $t;
+fetch {
+  ""movie"": $t,
+  ""roleCount"": $count
+};"
+synthetic-1,movies,605,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 5 movies by number of roles in the 'ACTED_IN' relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+RETURN m.title AS movie, size(r.roles) AS numRoles
+ORDER BY numRoles DESC
+LIMIT 5","match
+  $m isa movie, has title $t;
+  $rel isa acted_in (actor: $p, film: $m);
+  $rel has roles $r;
+reduce $roleCount = count($r) groupby $t;
+sort $roleCount desc;
+limit 5;
+fetch {
+  ""movie"": $t,
+  ""roleCount"": $roleCount
+};"
+synthetic-1,movies,622,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Who are the top 3 persons with the most roles in movies they have acted in?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, size(r.roles) AS role_count
+ORDER BY role_count DESC
+LIMIT 3
+RETURN p.name AS person, role_count","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $role_count = count($r) groupby $n;
+sort $role_count desc;
+limit 3;
+fetch {
+  ""person"": $n,
+  ""role_count"": $role_count
+};"
+synthetic-1,movies,648,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Who has the most roles in a single movie?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+RETURN p.name AS person, m.title AS movie, size(r.roles) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 1","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+  $m has title $t;
+reduce $count = count($r) groupby $p, $m, $n, $t;
+sort $count desc;
+limit 1;
+fetch {
+  ""person"": $n,
+  ""movie"": $t,
+  ""num_roles"": $count
+};"
+synthetic-1,movies,660,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Who are the top 3 actors in terms of the diversity of roles played?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, size(collect(distinct r.roles)) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 3
+RETURN p.name AS actor, num_roles AS number_of_distinct_roles","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $num_roles = count($r) groupby $n;
+sort $num_roles desc;
+limit 3;
+fetch {
+  ""actor"": $n,
+  ""number_of_distinct_roles"": $num_roles
+};"
+synthetic-1,movies,667,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the first 3 movies with the most roles listed?,"MATCH (m:Movie)<-[r:ACTED_IN]-()
+RETURN m.title, size(r.roles) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 3","match
+  $m isa movie, has title $t;
+  (actor: $p, film: $m) isa acted_in;
+reduce $num_roles = count($p) groupby $t;
+sort $num_roles desc;
+limit 3;
+fetch {
+  ""movie"": $t,
+  ""num_roles"": $num_roles
+};"
+synthetic-1,movies,669,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Name the top 5 movies with the most diverse cast in terms of roles.,"MATCH (m:Movie)<-[ai:ACTED_IN]-(p:Person)
+WITH m, size(collect(distinct ai.roles)) AS role_diversity
+RETURN m.title AS movie, role_diversity
+ORDER BY role_diversity DESC
+LIMIT 5","match
+  $m isa movie, has title $t;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $role_diversity = count($r) groupby $t;
+sort $role_diversity desc;
+limit 5;
+fetch {
+  ""movie"": $t,
+  ""role_diversity"": $role_diversity
+};"
+synthetic-1,movies,692,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What is the average number of roles per actor in 'The Matrix'?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie {title: 'The Matrix'})
+RETURN avg(size(r.roles)) AS avg_roles_per_actor","match
+  $rel isa acted_in (actor: $p, film: $m);
+  $m has title ""The Matrix"";
+  $rel has roles $role;
+reduce $role_count = count($role) groupby $p;
+reduce $avg = mean($role_count);
+fetch {
+  ""avg_roles_per_actor"": $avg
+};"
+synthetic-1,neoflix,151,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the first 5 countries that have produced movies with an average vote above 7.0.,"MATCH (c:Country)<-[:PRODUCED_IN_COUNTRY]-(m:Movie)
+WHERE m.average_vote > 7.0
+RETURN c.name AS country, avg(m.average_vote) AS avg_vote
+ORDER BY avg_vote DESC
+LIMIT 5","match
+  $c isa country, has country_name $cn;
+  $m isa movie;
+  (media: $m, country: $c) isa produced_in_country;
+  $m has average_vote $av;
+  $av > 7.0;
+reduce $avg = mean($av) groupby $c, $cn;
+sort $avg desc;
+limit 5;
+fetch { ""country"": $cn, ""avg_vote"": $avg };"
+synthetic-1,neoflix,803,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the first 3 genres of movies with the highest average vote count.,"MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
+WITH g, avg(m.vote_count) AS avg_votes
+ORDER BY avg_votes DESC
+LIMIT 3
+RETURN g.name AS genre, avg_votes","match
+  $m isa movie, has vote_count $vc;
+  $g isa genre, has genre_name $gn;
+  in_genre (media: $m, genre: $g);
+reduce $avg = mean($vc) groupby $g, $gn;
+sort $avg desc;
+limit 3;
+fetch {
+  ""genre"": $gn,
+  ""avg_votes"": $avg
+};"
+synthetic-1,neoflix,819,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the first 3 genres of movies with the highest average vote count.,"MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
+WITH g, avg(m.vote_count) AS avg_votes
+ORDER BY avg_votes DESC
+LIMIT 3
+RETURN g.name AS genre, avg_votes","match
+  $m isa movie, has vote_count $votes;
+  in_genre (media: $m, genre: $g);
+  $g has genre_name $name;
+reduce $avg = mean($votes) groupby $g, $name;
+sort $avg desc;
+limit 3;
+fetch { ""genre"": $name, ""avg_votes"": $avg };"
+synthetic-1,neoflix,837,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the first 3 movies with the most unique spoken languages.,"MATCH (m:Movie)-[:SPOKEN_IN_LANGUAGE]->(l:Language)
+RETURN m.title AS movie, collect(DISTINCT l.name) AS languages, size(collect(DISTINCT l.name)) AS numLanguages
+ORDER BY numLanguages DESC
+LIMIT 3","match
+  $m isa movie;
+  spoken_in_language (media: $m, language: $l);
+reduce $num_languages = count($l) groupby $m;
+sort $num_languages desc;
+limit 3;
+fetch {
+  ""movie"": $m.title,
+  ""numLanguages"": $num_languages
+};"
+synthetic-1,neoflix,902,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),"List the top 5 movies with the most diverse cast, measured by the number of different countries actors come from.","MATCH (m:Movie)<-[:CAST_FOR]-(p:Person)
+WITH m, size(collect(distinct p.country)) AS num_countries
+ORDER BY num_countries DESC
+LIMIT 5
+RETURN m.title AS movie, num_countries AS number_of_countries","match
+$m isa movie;
+$p isa person;
+cast_for (actor: $p, film: $m);
+born_in (person: $p, country: $co);
+select $m, $co;
+distinct;
+reduce $num_countries = count($co) groupby $m;
+sort $num_countries desc;
+limit 5;
+fetch { ""movie"": $m.title, ""number_of_countries"": $num_countries };"
+synthetic-1,recommendations,23,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the first 5 genres associated with movies having the most languages available?,"MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
+RETURN g.name AS genre, max(size(m.languages)) AS maxLanguages
+ORDER BY maxLanguages DESC
+LIMIT 5","with fun language_count($m: movie) -> integer:
+  match $m has languages $l;
+  return count;
+
+match
+$m isa movie;
+in_genre (film: $m, genre: $g);
+let $lang_count = language_count($m);
+reduce $max_langs = max($lang_count) groupby $g;
+sort $max_langs desc;
+limit 5;
+fetch { ""genre"": $g.name, ""maxLanguages"": $max_langs };"
+synthetic-1,recommendations,117,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What movies had a budget greater than 100 million dollars and were directed by a director born in the USA?,"MATCH (m:Movie)
+WHERE m.budget > 100000000
+AND exists {
+  (d:Director)-[:DIRECTED]->(m)
+  WHERE d.bornIn CONTAINS 'USA'
+}
+RETURN m.title, m.budget, m.year","match
+$d isa person, has name $n;
+(director: $d, film: $m) isa directed;
+$m has budget $b;
+$b > 100000000;
+reduce $num_high_budget_movies = count($m) groupby $n;
+sort $num_high_budget_movies desc;
+limit 10;
+fetch { ""director"": $n, ""num_high_budget_movies"": $num_high_budget_movies };"
+synthetic-1,recommendations,123,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which actors have acted in movies from at least three different countries?,"MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
+WITH a, size(collect(distinct m.countries)) AS numCountries
+WHERE numCountries >= 3
+RETURN a.name AS actor, numCountries","match
+$p isa person;
+$m isa movie, has countries $c;
+acted_in (actor: $p, film: $m);
+select $p, $c;
+distinct;
+reduce $num_countries = count($c) groupby $p;
+match
+$num_countries >= 3;
+fetch { ""actor"": $p.name, ""numCountries"": $num_countries };"
+synthetic-1,recommendations,159,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 5 movies with the most countries listed in their production?,"MATCH (m:Movie)
+WHERE m.countries IS NOT NULL
+RETURN m.title, m.countries
+ORDER BY size(m.countries) DESC
+LIMIT 5","match
+$m isa movie, has title $t, has countries $c;
+reduce $count = count($c) groupby $m, $t;
+sort $count desc;
+limit 5;
+fetch { ""title"": $t, ""country_count"": $count };"
+synthetic-1,recommendations,175,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which directors have directed movies in more than three different languages?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WHERE m.languages IS NOT NULL
+WITH d, size(collect(DISTINCT m.languages)) AS num_languages 
+WHERE num_languages > 3
+RETURN d.name AS director, num_languages","match
+$p isa person;
+$m isa movie, has languages $l;
+directed (director: $p, film: $m);
+select $p, $l;
+distinct;
+reduce $num_languages = count($l) groupby $p;
+match
+$num_languages > 3;
+fetch { ""director"": $p.name, ""num_languages"": $num_languages };"
+synthetic-1,recommendations,178,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which users have rated the same movie more than once?,"MATCH (u:User)-[r1:RATED]->(m:Movie)<-[r2:RATED]-(u)
+WHERE r1.timestamp <> r2.timestamp
+RETURN u.name AS user, m.title AS movie","match
+$u isa user, has name $n;
+$m isa movie, has title $t;
+$rel isa rated (user: $u, film: $m);
+reduce $count = count($rel) groupby $u, $m, $n, $t;
+match $count > 1;
+fetch { ""user"": $n, ""movie"": $t };"
+synthetic-1,recommendations,253,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 5 genres of movies with the most language diversity.,"MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
+WITH g, m.languages AS languages
+WITH g, size(languages) AS languageCount
+RETURN g.name AS genre, avg(languageCount) AS avgLanguages
+ORDER BY avgLanguages DESC
+LIMIT 5","with fun language_count($m: movie) -> integer:
+  match $m has languages $l;
+  return count;
+
+match
+$m isa movie;
+in_genre (film: $m, genre: $g);
+let $lang_count = language_count($m);
+reduce $avg_langs = mean($lang_count) groupby $g;
+sort $avg_langs desc;
+limit 5;
+fetch { ""genre"": $g.name, ""avgLanguages"": $avg_langs };"
+synthetic-1,recommendations,285,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 5 directors have directed movies in more than three different countries?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WITH d, size(collect(distinct m.countries)) AS numCountries
+WHERE numCountries > 3
+RETURN d.name AS director, numCountries
+ORDER BY numCountries DESC
+LIMIT 5","match
+$p isa person;
+$m isa movie, has countries $c;
+directed (director: $p, film: $m);
+select $p, $c;
+distinct;
+reduce $num_countries = count($c) groupby $p;
+match
+$num_countries > 3;
+sort $num_countries desc;
+limit 5;
+fetch { ""director"": $p.name, ""numCountries"": $num_countries };"
+synthetic-1,recommendations,293,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the first 5 movies with the highest number of directors involved.,"MATCH (m:Movie)
+WITH m, size([(d)-[:DIRECTED]->(m) | d]) AS numDirectors
+ORDER BY numDirectors DESC
+LIMIT 5
+RETURN m.title AS movie, numDirectors","match $m isa movie, has title $t; directed (director: $d, film: $m); reduce $count = count($d) groupby $t; sort $count desc; limit 5;"
+synthetic-1,recommendations,355,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which three actors have acted in movies in more than 3 different languages?,"MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
+WITH a, size(collect(distinct m.languages)) AS num_languages
+WHERE num_languages > 3
+RETURN a.name, num_languages
+ORDER BY num_languages DESC
+LIMIT 3","match
+$p isa person;
+$m isa movie, has languages $l;
+acted_in (actor: $p, film: $m);
+select $p, $l;
+distinct;
+reduce $num_languages = count($l) groupby $p;
+match
+$num_languages > 3;
+sort $num_languages desc;
+limit 3;
+fetch { ""name"": $p.name, ""num_languages"": $num_languages };"
+synthetic-1,recommendations,392,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 3 directors based on the number of different countries their movies have been released in.,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WITH d, size(collect(distinct m.countries)) AS numCountries
+ORDER BY numCountries DESC
+LIMIT 3
+RETURN d.name AS director, numCountries AS numberOfCountries","match
+$p isa person;
+$m isa movie, has countries $c;
+directed (director: $p, film: $m);
+select $p, $c;
+distinct;
+reduce $num_countries = count($c) groupby $p;
+sort $num_countries desc;
+limit 3;
+fetch { ""director"": $p.name, ""numberOfCountries"": $num_countries };"
+synthetic-1,recommendations,435,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which genres are associated with movies that have a budget over 100 million?,"MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
+WHERE m.budget > 100000000
+RETURN DISTINCT g.name AS genre
+LIMIT 5","match $m isa movie, has budget $b; $b > 100000000; in_genre (film: $m, genre: $g); $g has name $n; reduce $count = count($m) groupby $n; sort $count desc; limit 5;"
+synthetic-1,recommendations,513,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List all movies that have a revenue greater than 100 million dollars and have been rated by more than 500 users.,"MATCH (m:Movie)
+WHERE m.revenue > 100000000 AND m.imdbVotes > 500
+RETURN m.title, m.revenue, m.imdbVotes","match
+$m isa movie, has revenue $r, has title $t;
+$r > 100000000;
+rated (user: $u, film: $m);
+reduce $count = count($u) groupby $m, $r, $t;
+match $count > 500;
+fetch { ""title"": $t, ""revenue"": $r, ""rating_count"": $count };"
+synthetic-1,recommendations,561,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 5 directors have directed movies in more than 5 different languages?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WITH d, size(collect(distinct m.languages)) AS num_languages
+WHERE num_languages > 5
+RETURN d.name, num_languages
+ORDER BY num_languages DESC
+LIMIT 5","match
+$p isa person;
+$m isa movie, has languages $l;
+directed (director: $p, film: $m);
+select $p, $l;
+distinct;
+reduce $num_languages = count($l) groupby $p;
+match
+$num_languages > 5;
+sort $num_languages desc;
+limit 5;
+fetch { ""name"": $p.name, ""num_languages"": $num_languages };"
+synthetic-1,recommendations,590,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the first 3 movies with the most different directors involved.,"MATCH (m:Movie)
+WITH m, size([(m)<-[:DIRECTED]-(d) | d]) AS numDirectors
+ORDER BY numDirectors DESC
+LIMIT 3
+RETURN m.title AS movie, numDirectors","match
+$m isa movie;
+$d isa person;
+directed (director: $d, film: $m);
+reduce $num_directors = count($d) groupby $m;
+sort $num_directors desc;
+limit 3;
+fetch { ""movie"": $m.title, ""numDirectors"": $num_directors };"
+synthetic-1,recommendations,631,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which directors have directed movies in more than three different languages?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WHERE m.languages IS NOT NULL
+WITH d, size(collect(DISTINCT m.languages)) AS num_languages 
+WHERE num_languages > 3
+RETURN d.name AS director, num_languages","match
+$p isa person;
+$m isa movie, has languages $l;
+directed (director: $p, film: $m);
+select $p, $l;
+distinct;
+reduce $num_languages = count($l) groupby $p;
+match
+$num_languages > 3;
+fetch { ""director"": $p.name, ""num_languages"": $num_languages };"
+synthetic-1,recommendations,656,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 directors have directed movies with an imdbRating greater than 8.0?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WHERE m.imdbRating > 8.0
+RETURN d.name AS director, collect(m.title) AS movies
+ORDER BY size(movies) DESC
+LIMIT 3","match $d isa person, has name $n; directed (director: $d, film: $m); $m has imdb_rating $r, has title $t; $r > 8.0; reduce $numMovies = count($m) groupby $n; sort $numMovies desc; limit 3; fetch { ""director"": $n, ""numMovies"": $numMovies };"
+synthetic-1,twitch,97,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 3 most viewed games by streams that have a team?,"MATCH (s:Stream)-[:PLAYS]->(g:Game), (s)-[:HAS_TEAM]->(:Team)
+WITH g.name AS game, sum(s.total_view_count) AS total_views
+RETURN game, total_views
+ORDER BY total_views DESC
+LIMIT 3","match
+  game_play (streaming_channel: $s, played_game: $g);
+  team_membership (member_stream: $s, organization: $t);
+  $s has total_view_count $tvc;
+  $g has name $gn;
+reduce $total_views = sum($tvc) groupby $gn;
+sort $total_views desc;
+limit 3;"
+synthetic-1,twitch,362,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What is the total view count of streams that are moderated by 'itsbigchase'?,"MATCH (s:Stream)<-[:MODERATOR]-(u:User {name: 'itsbigchase'})
+RETURN sum(s.total_view_count) AS total_views","match
+  $u isa user, has name ""itsbigchase"";
+  moderation (moderated_channel: $s, moderating_user: $u);
+  $s has total_view_count $tvc;
+reduce $total_views = sum($tvc);"
+synthetic-1,twitch,428,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Show the top 3 streams with the most moderators.,"MATCH (s:Stream)
+WITH s, size([(s)<-[:MODERATOR]-(m) | m]) AS num_moderators
+ORDER BY num_moderators DESC
+LIMIT 3
+RETURN s.name AS stream_name, num_moderators","match
+  $s isa stream, has name $sn;
+  moderation (moderated_channel: $s, moderating_user: $m);
+reduce $num_moderators = count($m) groupby $sn;
+sort $num_moderators desc;
+limit 3;
+fetch { ""stream_name"": $sn, ""num_moderators"": $num_moderators };"
+synthetic-1,twitter,154,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which three tweets have the highest retweet counts?,"MATCH (t:Tweet)
+RETURN t.text, t.favorites
+ORDER BY t.favorites DESC
+LIMIT 3","match
+$t isa tweet, has text $txt;
+retweets (original_tweet: $t, retweeting_tweet: $rt);
+reduce $count = count($rt) groupby $txt;
+sort $count desc;
+limit 3;
+fetch { ""text"": $txt, ""retweet_count"": $count };"
+synthetic-1,twitter,170,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Find the first 3 tweets that have been retweeted more than 100 times.,"MATCH (t:Tweet)
+WHERE t.favorites > 100
+RETURN t
+ORDER BY t.favorites DESC
+LIMIT 3","match
+$tweet isa tweet;
+retweets (original_tweet: $tweet, retweeting_tweet: $retweet);
+reduce $count = count groupby $tweet;
+match
+$count > 100;
+sort $count desc;
+limit 3;
+fetch {
+  ""tweet"": $tweet.text,
+  ""retweets"": $count
+};"
+synthetic-1,twitter,281,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Show the first 3 hashtags tagged in tweets that have been retweeted more than 100 times.,"MATCH (t:Tweet)-[:TAGS]->(h:Hashtag)
+WHERE t.favorites > 100
+RETURN h.name
+LIMIT 3","match
+$tweet isa tweet;
+retweets (original_tweet: $tweet, retweeting_tweet: $retweet);
+reduce $count = count groupby $tweet;
+match
+$count > 100;
+tags (tagged_tweet: $tweet, tag: $hashtag);
+limit 3;
+fetch {
+  ""hashtag"": $hashtag.hashtag_name
+};"
+synthetic-1,twitter,429,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which tweets by 'neo4j' have been retweeted more than 50 times?,"MATCH (me:Me {screen_name: 'neo4j'})-[:POSTS]->(tweet:Tweet)
+WHERE tweet.favorites > 50
+RETURN tweet.text, tweet.favorites","match
+$me isa me, has screen_name ""neo4j"";
+posts (author: $me, content: $tweet);
+retweets (original_tweet: $tweet, retweeting_tweet: $retweet);
+reduce $count = count groupby $tweet;
+match
+$count > 50;
+fetch {
+  ""tweet"": $tweet.text,
+  ""retweets"": $count
+};"
+synthetic-1,twitter,468,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 3 tweets from 'Neo4j' that have been retweeted more than 100 times.,"MATCH (me:Me {screen_name: 'neo4j'})-[:POSTS]->(tweet:Tweet)
+WHERE tweet.favorites > 100
+RETURN tweet.text, tweet.favorites
+ORDER BY tweet.favorites DESC
+LIMIT 3","match
+$me isa me, has screen_name ""neo4j"";
+posts (author: $me, content: $tweet);
+retweets (original_tweet: $tweet, retweeting_tweet: $retweet);
+reduce $count = count groupby $tweet;
+match
+$count > 100;
+sort $count desc;
+limit 3;
+fetch {
+  ""tweet"": $tweet.text,
+  ""retweets"": $count
+};"
+synthetic-2,companies,170,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which organizations have a CEO with a name mentioned in more than one article?,"MATCH (org:Organization)-[:HAS_CEO]->(ceo:Person)
+WITH org, ceo
+MATCH (a1:Article)-[:MENTIONS]->(org), (a2:Article)-[:MENTIONS]->(org)
+WHERE a1.id <> a2.id
+RETURN DISTINCT org.name AS organizationName, ceo.name AS ceoName","match
+$org isa organization;
+$ceo isa person;
+ceo_of (organization: $org, ceo: $ceo);
+mentions (article: $a, mentioned: $org);
+reduce $count = count($a) groupby $org, $ceo;
+match $count > 1;
+fetch { ""organizationName"": $org.name, ""ceoName"": $ceo.name };"
+synthetic-2,companies,213,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the names of the people who are board members of at least two different organizations?,"MATCH (p:Person)-[:HAS_BOARD_MEMBER]->(o1:Organization),
+      (p)-[:HAS_BOARD_MEMBER]->(o2:Organization)
+WHERE o1.id <> o2.id
+RETURN DISTINCT p.name","match
+$p isa person;
+board_member_of (member: $p, organization: $o);
+reduce $count = count($o) groupby $p;
+match
+$count >= 2;
+fetch {
+  ""name"": $p.name
+};"
+synthetic-2,fincen,36,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 5 countries with entities that have originated filings with the highest average amounts?,"MATCH (e:Entity)-[:ORIGINATOR]->(f:Filing)-[:ORIGINATOR]->(e)
+MATCH (e)-[:COUNTRY]->(c:Country)
+WITH c.name AS country, AVG(f.amount) AS avg_amount
+ORDER BY avg_amount DESC
+LIMIT 5
+RETURN country, avg_amount","match
+$e isa fincen_entity;
+$f isa filing, has amount $a;
+originator (originating_entity: $e, filing: $f);
+entity_country (fincen_entity: $e, country: $c);
+reduce $avg_amount = mean($a) groupby $c;
+sort $avg_amount desc;
+limit 5;
+fetch {
+  ""country"": $c.name,
+  ""avg_amount"": $avg_amount
+};"
+synthetic-2,fincen,55,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Identify the top 5 beneficiary banks that have received the highest amounts from filings where the originator bank country is 'Germany'.,"MATCH (f:Filing)-[:BENEFITS]->(e:Entity)
+WHERE f.originator_bank_country = 'Germany'
+RETURN f.beneficiary_bank AS BeneficiaryBank, SUM(f.amount) AS TotalAmount
+ORDER BY TotalAmount DESC
+LIMIT 5","match
+$f isa filing, has originator_bank_country ""Germany"", has beneficiary_bank $bb, has amount $a;
+benefits (filing: $f, beneficiary: $e);
+reduce $total = sum($a) groupby $bb;
+sort $total desc;
+limit 5;"
+synthetic-2,fincen,83,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Identify the top 5 entities based on the total amount of their filings where the beneficiary bank's country is 'Singapore'.,"MATCH (e:Entity)-[:FILED]->(f:Filing)
+WHERE f.beneficiary_bank_country = 'Singapore'
+WITH e, SUM(f.amount) AS totalAmount
+ORDER BY totalAmount DESC
+LIMIT 5
+RETURN e.name AS entityName, totalAmount","match
+$e isa fincen_entity;
+filed (filer: $e, filing: $f);
+$f has beneficiary_bank_country ""Singapore"", has amount $a;
+reduce $total = sum($a) groupby $e;
+sort $total desc;
+limit 5;
+fetch { ""entityName"": $e.name, ""totalAmount"": $total };"
+synthetic-2,fincen,93,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 countries have beneficiary banks that received the highest total amounts in filings?,"MATCH (f:Filing)-[:BENEFITS]->(e:Entity)-[:COUNTRY]->(c:Country)
+WITH c.name AS country, SUM(f.amount) AS totalAmount
+ORDER BY totalAmount DESC
+LIMIT 3
+RETURN country, totalAmount","match
+$f isa filing, has amount $a;
+$e isa fincen_entity;
+$c isa country;
+benefits (filing: $f, beneficiary: $e);
+entity_country (fincen_entity: $e, country: $c);
+reduce $total = sum($a) groupby $c;
+sort $total desc;
+limit 3;
+fetch { ""country"": $c.name, ""totalAmount"": $total };"
+synthetic-2,fincen,106,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the names of the top 3 beneficiary banks based on the number of different originator banks they have interacted with in filings?,"MATCH (f:Filing)-[:BENEFITS]->(b:Entity), (f)-[:ORIGINATOR]->(o:Entity)
+WITH b.name AS beneficiary_bank, o.name AS originator_bank
+ORDER BY beneficiary_bank
+WITH beneficiary_bank, collect(DISTINCT originator_bank) AS originator_banks
+RETURN beneficiary_bank, size(originator_banks) AS num_originator_banks
+ORDER BY num_originator_banks DESC
+LIMIT 3","match
+  $b isa fincen_entity, has name $bname;
+  $o isa fincen_entity, has name $oname;
+  $f isa filing;
+  benefits (filing: $f, beneficiary: $b);
+  originator (filing: $f, originating_entity: $o);
+select $b, $bname, $o;
+distinct;
+reduce $count = count($o) groupby $b, $bname;
+sort $count desc;
+limit 3;
+fetch { ""beneficiary_bank"": $bname, ""num_originator_banks"": $count };"
+synthetic-2,fincen,111,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 3 countries where the originator banks have originated the smallest total amounts in filings.,"MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)-[:COUNTRY]->(c:Country)
+WITH c.name AS country, SUM(f.amount) AS total_amount
+ORDER BY total_amount ASC
+LIMIT 3
+RETURN country, total_amount","match
+$f isa filing, has amount $a;
+$e isa fincen_entity;
+$c isa country, has name $cn;
+originator (filing: $f, originating_entity: $e);
+entity_country (fincen_entity: $e, country: $c);
+reduce $total = sum($a) groupby $c, $cn;
+sort $total asc;
+limit 3;
+fetch { ""country"": $cn, ""total_amount"": $total };"
+synthetic-2,fincen,139,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 5 countries in terms of total amount received by beneficiary banks?,"MATCH (f:Filing)-[:BENEFITS]->(e:Entity)-[:COUNTRY]->(c:Country)
+WITH c.name AS country, SUM(f.amount) AS total_amount
+ORDER BY total_amount DESC
+LIMIT 5
+RETURN country, total_amount","match
+$f isa filing, has amount $a;
+benefits (filing: $f, beneficiary: $e);
+entity_country (fincen_entity: $e, country: $c);
+$c has name $n;
+reduce $total = sum($a) groupby $c, $n;
+sort $total desc;
+limit 5;
+fetch { ""country"": $n, ""total_amount"": $total };"
+synthetic-2,fincen,143,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 countries have the highest average amounts in filings where they are listed as originator?,"MATCH (c:Country)<-[:COUNTRY]-(e:Entity)<-[:ORIGINATOR]-(f:Filing)
+WITH c.name AS country, AVG(f.amount) AS avg_amount
+ORDER BY avg_amount DESC
+LIMIT 3
+RETURN country, avg_amount","match
+$c isa country, has name $country_name;
+$e isa fincen_entity;
+entity_country (fincen_entity: $e, country: $c);
+$f isa filing, has amount $amt;
+originator (originating_entity: $e, filing: $f);
+reduce $avg_amount = mean($amt) groupby $c;
+sort $avg_amount desc;
+limit 3;
+fetch { ""country"": $c.name, ""avg_amount"": $avg_amount };"
+synthetic-2,fincen,154,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 5 countries in terms of total amount sent by originator banks?,"MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)-[:COUNTRY]->(c:Country)
+WITH c.name AS country, SUM(f.amount) AS total_amount
+ORDER BY total_amount DESC
+LIMIT 5
+RETURN country, total_amount","match
+$f isa filing, has amount $a;
+$e isa fincen_entity;
+$c isa country, has name $cn;
+originator (filing: $f, originating_entity: $e);
+entity_country (fincen_entity: $e, country: $c);
+reduce $total = sum($a) groupby $c, $cn;
+sort $total desc;
+limit 5;
+fetch { ""country"": $cn, ""total_amount"": $total };"
+synthetic-2,fincen,191,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List Entities that originated Filings to more than two different countries.,"MATCH (e:Entity)-[:ORIGINATOR]->(f:Filing)
+WITH e, collect(DISTINCT f.beneficiary_bank_country) AS countries
+WHERE size(countries) > 2
+RETURN e.name AS EntityName, countries","match
+$e isa fincen_entity;
+originator (originating_entity: $e, filing: $f);
+$f has beneficiary_bank_country $c;
+select $e, $c;
+distinct;
+reduce $count = count($c) groupby $e;
+match $count > 2;
+fetch { ""entity_name"": $e.name };"
+synthetic-2,fincen,233,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which three countries have entities that benefited from the highest amount in filings in 2014?,"MATCH (f:Filing)-[:BENEFITS]->(e:Entity)-[:COUNTRY]->(c:Country)
+WHERE f.begin >= datetime('2014-01-01T00:00:00Z') AND f.end <= datetime('2014-12-31T23:59:59Z')
+WITH c.name AS country, SUM(f.amount) AS totalAmount
+ORDER BY totalAmount DESC
+LIMIT 3
+RETURN country, totalAmount","match
+$f isa filing, has period_begin $pb, has period_end $pe, has amount $a;
+$pb >= 2014-01-01T00:00:00;
+$pe <= 2014-12-31T23:59:59;
+benefits (filing: $f, beneficiary: $e);
+entity_country (fincen_entity: $e, country: $c);
+$c has name $cn;
+reduce $total = sum($a) groupby $c, $cn;
+sort $total desc;
+limit 3;
+fetch { ""country"": $cn, ""totalAmount"": $total };"
+synthetic-2,fincen,240,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Show the first 3 originator countries by the total amount sent in transactions.,"MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)-[:COUNTRY]->(c:Country)
+WITH c.name AS originator_country, SUM(f.amount) AS total_amount
+ORDER BY total_amount DESC
+LIMIT 3
+RETURN originator_country, total_amount","match
+$f isa filing, has amount $amt;
+originator (filing: $f, originating_entity: $e);
+entity_country (fincen_entity: $e, country: $c);
+$c has name $cn;
+reduce $total = sum($amt) groupby $cn;
+sort $total desc;
+limit 3;
+fetch { ""originator_country"": $cn, ""total_amount"": $total };"
+synthetic-2,fincen,335,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 5 countries have the highest total amount of transactions where they are the originator?,"MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)-[:COUNTRY]->(c:Country)
+WITH c.name AS country, SUM(f.amount) AS total_amount
+ORDER BY total_amount DESC
+LIMIT 5
+RETURN country, total_amount","match
+$f isa filing, has amount $a;
+originator (filing: $f, originating_entity: $e);
+entity_country (fincen_entity: $e, country: $c);
+$c has name $country;
+reduce $total = sum($a) groupby $c, $country;
+sort $total desc;
+limit 5;
+fetch { ""country"": $country, ""total_amount"": $total };"
+synthetic-2,fincen,348,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 countries have beneficiary banks that received the highest total amounts in filings?,"MATCH (f:Filing)-[:BENEFITS]->(e:Entity)-[:COUNTRY]->(c:Country)
+WITH c.name AS country, SUM(f.amount) AS totalAmount
+ORDER BY totalAmount DESC
+LIMIT 3
+RETURN country, totalAmount","match
+$f isa filing, has amount $a;
+$e isa fincen_entity;
+$c isa country;
+benefits (filing: $f, beneficiary: $e);
+entity_country (fincen_entity: $e, country: $c);
+reduce $total = sum($a) groupby $c;
+sort $total desc;
+limit 3;
+fetch {
+  ""country"": $c.name,
+  ""totalAmount"": $total
+};"
+synthetic-2,fincen,366,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 beneficiary banks received the highest total amount in transactions from filings originated in 'United Kingdom'?,"MATCH (f:Filing)-[:BENEFITS]->(e:Entity)
+WHERE f.originator_bank_country = 'United Kingdom'
+WITH e.name AS beneficiary_bank, SUM(f.amount) AS total_amount
+RETURN beneficiary_bank, total_amount
+ORDER BY total_amount DESC
+LIMIT 3","match
+$f isa filing, has originator_bank_country ""United Kingdom"", has amount $a;
+benefits (filing: $f, beneficiary: $e);
+$e isa fincen_entity, has name $n;
+reduce $total = sum($a) groupby $n;
+sort $total desc;
+limit 3;
+fetch { ""beneficiary_bank"": $n, ""total_amount"": $total };"
+synthetic-2,fincen,369,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),"Identify the top 3 countries where the beneficiary banks are located, based on the total amount transferred.","MATCH (f:Filing)-[:BENEFITS]->(e:Entity)-[:COUNTRY]->(c:Country)
+WITH c.name AS country, SUM(f.amount) AS total_amount
+RETURN country, total_amount
+ORDER BY total_amount DESC
+LIMIT 3","match
+$f isa filing, has amount $a;
+$e isa fincen_entity;
+$c isa country;
+benefits (filing: $f, beneficiary: $e);
+entity_country (fincen_entity: $e, country: $c);
+reduce $total = sum($a) groupby $c;
+sort $total desc;
+limit 3;
+fetch { ""country"": $c.name, ""total_amount"": $total };"
+synthetic-2,fincen,379,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 5 countries have the highest total amount of transactions where they are the beneficiary?,"MATCH (c:Country)<-[:COUNTRY]-(e:Entity)<-[:BENEFITS]-(f:Filing)
+WITH c.name AS country, SUM(f.amount) AS totalAmount
+ORDER BY totalAmount DESC
+LIMIT 5
+RETURN country, totalAmount","match
+$c isa country, has name $cn;
+entity_country (country: $c, fincen_entity: $e);
+benefits (beneficiary: $e, filing: $f);
+$f has amount $amt;
+reduce $total = sum($amt) groupby $c;
+sort $total desc;
+limit 5;
+fetch { ""country"": $c.name, ""totalAmount"": $total };"
+synthetic-2,fincen,380,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the first 3 filings with entities from three different continents as originators?,"MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)-[:COUNTRY]->(c:Country)
+WITH f, e, c
+ORDER BY f.begin
+WITH f, COLLECT(DISTINCT c.code) AS continents
+WHERE SIZE(continents) >= 3
+RETURN f
+LIMIT 3","match
+$f isa filing, has period_begin $begin;
+originator (filing: $f, originating_entity: $e);
+entity_country (fincen_entity: $e, country: $c);
+select $f, $c, $begin;
+distinct;
+reduce $count = count($c) groupby $f, $begin;
+match $count >= 3;
+sort $begin;
+limit 3;
+fetch { ""filing"": $f.filing_id };"
+synthetic-2,fincen,387,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 5 filings have entities from more than one country as originators?,"MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)-[:COUNTRY]->(c:Country)
+WITH f, collect(DISTINCT c.code) AS countries
+WHERE size(countries) > 1
+RETURN f.id AS filing_id, countries
+ORDER BY f.begin
+LIMIT 5","match
+  $f isa filing;
+  originator (filing: $f, originating_entity: $e);
+  entity_country (fincen_entity: $e, country: $c);
+select $f, $c;
+distinct;
+reduce $count = count($c) groupby $f;
+match
+  $count > 1;
+  $f has period_begin $pb;
+sort $pb;
+limit 5;
+fetch {
+  ""filing_id"": $f.filing_id
+};"
+synthetic-2,fincen,389,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Show the top 5 beneficiary countries by the total amount received in transactions.,"MATCH (f:Filing)-[:BENEFITS]->(e:Entity)-[:COUNTRY]->(c:Country)
+WITH c.name AS country, SUM(f.amount) AS total_amount
+ORDER BY total_amount DESC
+LIMIT 5
+RETURN country, total_amount","match
+$f isa filing, has amount $amt;
+$e isa fincen_entity;
+$c isa country;
+benefits (filing: $f, beneficiary: $e);
+entity_country (fincen_entity: $e, country: $c);
+reduce $total = sum($amt) groupby $c;
+sort $total desc;
+limit 5;
+fetch {
+  ""country"": $c.name,
+  ""total_amount"": $total
+};"
+synthetic-2,fincen,401,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 5 filings have the most distinct beneficiary iso codes involved?,"MATCH (f:Filing)
+WITH f, f.beneficiary_iso AS iso
+ORDER BY iso
+WITH f, collect(DISTINCT iso) AS distinct_isos
+ORDER BY size(distinct_isos) DESC
+LIMIT 5
+RETURN f.sar_id AS filing_id, size(distinct_isos) AS distinct_beneficiary_iso_count","match
+$f isa filing, has beneficiary_iso $iso;
+reduce $count = count($iso) groupby $f;
+sort $count desc;
+limit 5;
+fetch {
+  ""filing_id"": $f.sar_id,
+  ""distinct_beneficiary_iso_count"": $count
+};"
+synthetic-2,fincen,460,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the three entities with the highest total filing amounts where the originator bank country is 'Singapore'?,"MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)
+WHERE f.originator_bank_country = 'Singapore'
+WITH e, SUM(f.amount) AS totalAmount
+RETURN e.name AS entityName, totalAmount
+ORDER BY totalAmount DESC
+LIMIT 3","match
+$f isa filing, has originator_bank_country ""Singapore"", has amount $a;
+originator (filing: $f, originating_entity: $e);
+$e has name $n;
+reduce $total = sum($a) groupby $e, $n;
+sort $total desc;
+limit 3;
+fetch { ""entityName"": $n, ""totalAmount"": $total };"
+synthetic-2,fincen,461,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Identify the top 3 entities based on the total amount of filings where the beneficiary bank's country is 'United Kingdom'.,"MATCH (f:Filing)-[:BENEFITS]->(e:Entity)
+WHERE f.beneficiary_bank_country = 'United Kingdom'
+WITH e, SUM(f.amount) AS totalAmount
+RETURN e.name AS entityName, totalAmount
+ORDER BY totalAmount DESC
+LIMIT 3","match
+$f isa filing, has beneficiary_bank_country ""United Kingdom"", has amount $a;
+$e isa fincen_entity, has name $n;
+benefits (filing: $f, beneficiary: $e);
+reduce $total = sum($a) groupby $e, $n;
+sort $total desc;
+limit 3;
+fetch { ""entityName"": $n, ""totalAmount"": $total };"
+synthetic-2,fincen,494,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Find the first 3 countries where the total amount of filings exceeds 1000000.,"MATCH (c:Country)<-[:COUNTRY]-(e:Entity)-[:FILED]->(f:Filing)
+WITH c, SUM(f.amount) AS totalAmount
+WHERE totalAmount > 1000000
+RETURN c.name AS country, totalAmount
+ORDER BY totalAmount DESC
+LIMIT 3","match
+$c isa country, has name $cn;
+$e isa fincen_entity;
+entity_country (fincen_entity: $e, country: $c);
+$f isa filing, has amount $a;
+filed (filer: $e, filing: $f);
+reduce $total = sum($a) groupby $c, $cn;
+match $total > 1000000;
+sort $total desc;
+limit 3;
+fetch { ""country"": $cn, ""totalAmount"": $total };"
+synthetic-2,fincen,510,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Find the top 5 filings based on the number of different countries involved as either originator or beneficiary.,"MATCH (f:Filing)
+OPTIONAL MATCH (f)-[:ORIGINATOR]->(o:Entity)-[:COUNTRY]->(oc:Country)
+OPTIONAL MATCH (f)-[:BENEFITS]->(b:Entity)-[:COUNTRY]->(bc:Country)
+WITH f, collect(DISTINCT oc.code) + collect(DISTINCT bc.code) AS countries
+WITH f, size(apoc.coll.toSet(countries)) AS country_count
+RETURN f.sar_id AS filing_id, country_count
+ORDER BY country_count DESC
+LIMIT 5","match
+$f isa filing, has sar_id $sid;
+$rel isa $t (filing: $f, $e);
+{ $t label originator; } or { $t label benefits; };
+$e isa fincen_entity;
+entity_country (fincen_entity: $e, country: $c);
+$c has code $cc;
+select $f, $sid, $c;
+distinct;
+reduce $country_count = count($c) groupby $f, $sid;
+sort $country_count desc;
+limit 5;
+fetch { ""filing_id"": $sid, ""country_count"": $country_count };"
+synthetic-2,fincen,517,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Identify the top 5 countries by the total amount of filings originating from them.,"MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)-[:COUNTRY]->(c:Country)
+WITH c.name AS country, SUM(f.amount) AS totalAmount
+ORDER BY totalAmount DESC
+LIMIT 5
+RETURN country, totalAmount","match
+$f isa filing, has amount $a;
+$e isa fincen_entity;
+$c isa country, has name $cn;
+originator (filing: $f, originating_entity: $e);
+entity_country (fincen_entity: $e, country: $c);
+reduce $total = sum($a) groupby $c, $cn;
+sort $total desc;
+limit 5;
+fetch { ""country"": $cn, ""totalAmount"": $total };"
+synthetic-2,fincen,528,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What is the total amount filed by entities in 'China'?,"MATCH (c:Country {name: 'China'})<-[:COUNTRY]-(e:Entity)-[:FILED]->(f:Filing)
+RETURN SUM(f.amount) AS total_amount","match
+$c isa country, has name ""China"";
+entity_country (fincen_entity: $e, country: $c);
+filed (filer: $e, filing: $f);
+$f has amount $a;
+reduce $total = sum($a);"
+synthetic-2,fincen,554,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 3 countries by the average amount of filings?,"MATCH (f:Filing)-[:BENEFITS|:CONCERNS|:ORIGINATOR]->(e:Entity)-[:COUNTRY]->(c:Country)
+WITH c.name AS country, f.amount AS amount
+RETURN country, AVG(amount) AS average_amount
+ORDER BY average_amount DESC
+LIMIT 3","match
+$f isa filing, has amount $amt;
+$rel isa $t (filing: $f, $e);
+{ $t label benefits; } or { $t label concerns; } or { $t label originator; };
+$e isa fincen_entity;
+entity_country (fincen_entity: $e, country: $c);
+$c has name $country;
+reduce $avg = mean($amt) groupby $c, $country;
+sort $avg desc;
+limit 3;
+fetch { ""country"": $country, ""average_amount"": $avg };"
+synthetic-2,fincen,581,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 5 countries by the total amount of filings concerning their entities?,"MATCH (f:Filing)-[:CONCERNS]->(e:Entity)-[:COUNTRY]->(c:Country)
+WITH c.name AS country, SUM(f.amount) AS totalAmount
+RETURN country, totalAmount
+ORDER BY totalAmount DESC
+LIMIT 5","match
+$f isa filing, has amount $a;
+concerns (filing: $f, concerned_entity: $e);
+entity_country (fincen_entity: $e, country: $c);
+reduce $total = sum($a) groupby $c;
+sort $total desc;
+limit 5;
+fetch { ""country"": $c.name, ""total_amount"": $total };"
+synthetic-2,grandstack,391,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the names of 3 businesses in 'CA' with reviews mentioning 'great'?,"MATCH (b:Business)-[:IN_CATEGORY]->(:Category), (r:Review)-[:REVIEWS]->(b)
+WHERE b.state = 'CA' AND r.text CONTAINS 'great'
+RETURN DISTINCT b.name
+LIMIT 3","match
+$b isa business, has state ""CA"";
+in_category (business: $b, category: $c);
+$r isa review, has text $t;
+$t like "".*great.*"";
+reviews (review: $r, reviewed_business: $b);
+reduce $count = count groupby $b;
+limit 3;
+fetch { ""name"": $b.name };"
+synthetic-2,grandstack,750,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which business has the most diverse range of review star ratings?,"MATCH (b:Business)<-[:REVIEWS]-(r:Review)
+WITH b, collect(r.stars) AS starRatings
+RETURN b.name AS businessName, size(apoc.coll.toSet(starRatings)) AS uniqueStarRatingsCount
+ORDER BY uniqueStarRatingsCount DESC
+LIMIT 1","match
+$b isa business;
+$r isa review, has stars $s;
+reviews (review: $r, reviewed_business: $b);
+select $b, $s;
+distinct;
+reduce $count = count groupby $b;
+sort $count desc;
+limit 1;
+fetch { ""businessName"": $b.name };"
+synthetic-2,grandstack,797,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Find the top 3 businesses with the most diverse range of star ratings in their reviews.,"MATCH (b:Business)<-[:REVIEWS]-(r:Review)
+WITH b, collect(r.stars) AS starRatings
+RETURN b.name, b.businessId, size(apoc.coll.toSet(starRatings)) AS uniqueStarCount
+ORDER BY uniqueStarCount DESC
+LIMIT 3","match
+$b isa business;
+$r isa review, has stars $s;
+reviews (reviewed_business: $b, review: $r);
+select $b, $s;
+distinct;
+reduce $count = count groupby $b;
+sort $count desc;
+limit 3;
+fetch {
+  ""name"": $b.name,
+  ""business_id"": $b.business_id,
+  ""unique_star_count"": $count
+};"
+synthetic-2,movies,169,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List all movies with more than one role listed in the 'ACTED_IN' relationship.,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WHERE size(r.roles) > 1
+RETURN m.title AS MovieTitle, r.roles AS Roles","match
+$p isa person;
+$m isa movie;
+$r isa acted_in (actor: $p, film: $m);
+$r has roles $role;
+reduce $count = count($role) groupby $r, $m;
+match $count > 1;
+fetch { ""MovieTitle"": $m.title, ""Roles"": [ $r.roles ] };"
+synthetic-2,movies,175,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which person has the most roles in a single movie?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, r, size(r.roles) AS numRoles
+ORDER BY numRoles DESC
+LIMIT 1
+RETURN p.name AS person, numRoles","match
+$p isa person;
+$rel isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $numRoles = count($r) groupby $p, $rel;
+sort $numRoles desc;
+limit 1;
+fetch { ""person"": $p.name, ""numRoles"": $numRoles };"
+synthetic-2,movies,180,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 5 movies with the most roles listed in their 'ACTED_IN' relationship?,"MATCH (m:Movie)<-[r:ACTED_IN]-()
+WITH m, size(r.roles) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 5
+RETURN m.title AS movie_title, num_roles","match
+$m isa movie;
+$rel isa acted_in (film: $m);
+$rel has roles $r;
+reduce $num_roles = count($r) groupby $m;
+sort $num_roles desc;
+limit 5;
+fetch { ""movie_title"": $m.title, ""num_roles"": $num_roles };"
+synthetic-2,movies,208,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 5 movies with the most roles for actors born after 1970?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WHERE p.born > 1970
+WITH m, size(r.roles) AS num_roles
+ORDER BY num_roles DESC
+LIMIT 5
+RETURN m.title AS movie_title, num_roles","match
+$p isa person, has born $b;
+$b > 1970;
+$rel isa acted_in (actor: $p, film: $m);
+$rel has roles $r;
+$m has title $t;
+reduce $num_roles = count($r) groupby $m, $t;
+sort $num_roles desc;
+limit 5;
+fetch { ""movie_title"": $t, ""num_roles"": $num_roles };"
+synthetic-2,movies,220,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Who are the top 3 actors with the most roles in movies released before 1990?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WHERE m.released < 1990
+WITH p, size(r.roles) AS numRoles
+RETURN p.name AS actor, sum(numRoles) AS totalRoles
+ORDER BY totalRoles DESC
+LIMIT 3","match
+$p isa person;
+$m isa movie, has released $r;
+$r < 1990;
+$rel isa acted_in (actor: $p, film: $m), has roles $role;
+reduce $totalRoles = count($role) groupby $p;
+sort $totalRoles desc;
+limit 3;
+fetch {
+  ""actor"": $p.name,
+  ""totalRoles"": $totalRoles
+};"
+synthetic-2,movies,345,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the movies with exactly 3 roles in the ACTED_IN relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WHERE size(r.roles) = 3
+RETURN m.title AS MovieTitle","match
+$r isa acted_in (actor: $p, film: $m);
+$r has roles $role;
+reduce $count = count($role) groupby $r, $m;
+match
+$count == 3;
+fetch {
+  ""MovieTitle"": $m.title
+};"
+synthetic-2,movies,347,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Find the top 5 movies with the lowest ratings in REVIEWS.,"MATCH (:Person)-[r:REVIEWED]->(m:Movie)
+RETURN m.title AS movie, AVG(r.rating) AS average_rating
+ORDER BY average_rating ASC
+LIMIT 5","match
+$m isa movie;
+$rev isa reviewed (reviewer: $p, film: $m);
+$rev has rating $rating;
+reduce $sum = sum($rating), $count = count groupby $m;
+match
+let $avg = $sum / $count;
+sort $avg asc;
+limit 5;
+fetch {
+  ""movie"": $m.title,
+  ""average_rating"": $avg
+};"
+synthetic-2,movies,356,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 5 movies with the most diverse cast in terms of birth years.,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
+WITH m, COLLECT(DISTINCT p.born) AS birth_years
+RETURN m.title, SIZE(birth_years) AS diversity
+ORDER BY diversity DESC
+LIMIT 5","match
+$m isa movie, has title $t;
+$p isa person, has born $b;
+acted_in (actor: $p, film: $m);
+select $m, $t, $b;
+distinct;
+reduce $diversity = count groupby $m, $t;
+sort $diversity desc;
+limit 5;
+fetch { ""title"": $t, ""diversity"": $diversity };"
+synthetic-2,movies,360,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 5 movies with the most roles listed in ACTED_IN relationship.,"MATCH (:Person)-[a:ACTED_IN]->(m:Movie)
+WITH m, size(a.roles) AS role_count
+ORDER BY role_count DESC
+LIMIT 5
+RETURN m.title AS movie_title, role_count","match
+$m isa movie;
+$a isa acted_in (film: $m);
+$a has roles $r;
+reduce $count = count($r) groupby $m;
+sort $count desc;
+limit 5;
+fetch { ""movie_title"": $m.title, ""role_count"": $count };"
+synthetic-2,movies,457,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Who are the top 3 actors with roles in the most diverse genres (based on taglines)?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, collect(DISTINCT m.tagline) AS genres
+ORDER BY size(genres) DESC
+LIMIT 3
+RETURN p.name AS actor, size(genres) AS genre_count, genres","match
+$p isa person;
+acted_in (actor: $p, film: $m);
+$m has tagline $tagline;
+select $p, $tagline;
+distinct;
+reduce $genre_count = count groupby $p;
+sort $genre_count desc;
+limit 3;
+fetch { ""actor"": $p.name, ""genre_count"": $genre_count };"
+synthetic-2,movies,506,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List 3 movies with the most roles listed in the ACTED_IN relationship.,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH m, size(r.roles) AS role_count
+ORDER BY role_count DESC
+LIMIT 3
+RETURN m.title AS movie_title, role_count","match
+$m isa movie;
+$rel isa acted_in (actor: $p, film: $m);
+$rel has roles $r;
+reduce $role_count = count($r) groupby $m;
+sort $role_count desc;
+limit 3;
+fetch { ""movie_title"": $m.title, ""role_count"": $role_count };"
+synthetic-2,movies,524,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Find the top 3 longest relationships in terms of roles between a person and a movie.,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+RETURN p.name AS person, m.title AS movie, size(r.roles) AS numberOfRoles
+ORDER BY numberOfRoles DESC
+LIMIT 3","match
+$p isa person, has name $name;
+$m isa movie, has title $t;
+$rel isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $count = count($r) groupby $p, $m, $name, $t;
+sort $count desc;
+limit 3;
+fetch {
+  ""person"": $name,
+  ""movie"": $t,
+  ""numberOfRoles"": $count
+};"
+synthetic-2,movies,536,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 3 movies by the number of roles available in the ACTED_IN relationship?,"MATCH (m:Movie)<-[r:ACTED_IN]-()
+WITH m, size(r.roles) AS num_roles
+RETURN m.title, num_roles
+ORDER BY num_roles DESC
+LIMIT 3","match
+$m isa movie;
+$rel isa acted_in (film: $m);
+$rel has roles $r;
+reduce $count = count($r) groupby $m;
+sort $count desc;
+limit 3;
+fetch {
+  ""title"": $m.title,
+  ""num_roles"": $count
+};"
+synthetic-2,movies,540,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Who has the most roles in movies released before 1985?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WHERE m.released < 1985
+WITH p, size(r.roles) AS numRoles
+RETURN p.name AS person, sum(numRoles) AS totalRoles
+ORDER BY totalRoles DESC
+LIMIT 1","match
+$p isa person;
+$m isa movie, has released $r;
+$r < 1985;
+$a isa acted_in (actor: $p, film: $m), has roles $role;
+reduce $totalRoles = count($role) groupby $p;
+sort $totalRoles desc;
+limit 1;
+fetch {
+  ""person"": $p.name,
+  ""totalRoles"": $totalRoles
+};"
+synthetic-2,movies,565,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 persons have the most distinct roles in the ACTED_IN relationship?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, collect(distinct r.roles) AS roles
+RETURN p.name, size(apoc.coll.flatten(roles)) AS role_count
+ORDER BY role_count DESC
+LIMIT 3","match
+$p isa person, has name $n;
+$rel isa acted_in (actor: $p), has roles $r;
+select $p, $n, $r;
+distinct;
+reduce $count = count($r) groupby $p, $n;
+sort $count desc;
+limit 3;
+fetch { ""name"": $n, ""role_count"": $count };"
+synthetic-2,movies,573,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 5 actors by the variety of roles they played in movies.,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, size(apoc.coll.toSet(collect(r.roles))) AS roleVariety
+RETURN p.name AS actor, roleVariety
+ORDER BY roleVariety DESC
+LIMIT 5","match
+$p isa person, has name $n;
+$rel isa acted_in (actor: $p), has roles $r;
+select $p, $n, $r;
+distinct;
+reduce $count = count($r) groupby $p, $n;
+sort $count desc;
+limit 5;
+fetch { ""actor"": $n, ""roleVariety"": $count };"
+synthetic-2,movies,589,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List 3 movies with exactly 3 roles in the ACTED_IN relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WHERE size(r.roles) = 3
+RETURN m.title AS MovieTitle
+LIMIT 3","match
+$m isa movie;
+$rel isa acted_in (actor: $p, film: $m);
+$rel has roles $r;
+reduce $count = count($r) groupby $m, $rel;
+match $count == 3;
+limit 3;
+fetch { ""MovieTitle"": $m.title };"
+synthetic-2,movies,610,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Name 3 people who have the most combined roles across all their ACTED_IN movies.,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, size(r.roles) AS numRoles
+RETURN p.name, sum(numRoles) AS totalRoles
+ORDER BY totalRoles DESC
+LIMIT 3","match
+$p isa person;
+$rel isa acted_in (actor: $p, film: $m);
+$rel has roles $r;
+reduce $totalRoles = count($r) groupby $p;
+sort $totalRoles desc;
+limit 3;
+fetch {
+  ""name"": $p.name,
+  ""totalRoles"": $totalRoles
+};"
+synthetic-2,movies,632,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Who are the top 3 persons with the most roles in movies they have acted in?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, size(r.roles) AS numRoles
+RETURN p.name, sum(numRoles) AS totalRoles
+ORDER BY totalRoles DESC
+LIMIT 3","match
+$p isa person;
+$rel isa acted_in (actor: $p, film: $m);
+$rel has roles $r;
+reduce $totalRoles = count($r) groupby $p;
+sort $totalRoles desc;
+limit 3;
+fetch { ""name"": $p.name, ""totalRoles"": $totalRoles };"
+synthetic-2,movies,636,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which movie has the most roles in the 'ACTED_IN' relationship and what are those roles?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH m, r.roles AS roles, size(r.roles) AS numRoles
+ORDER BY numRoles DESC
+LIMIT 1
+RETURN m.title AS movieTitle, roles","match
+$m isa movie;
+$rel isa acted_in (film: $m), has roles $r;
+reduce $count = count($r) groupby $m;
+sort $count desc;
+limit 1;
+match
+$rel2 isa acted_in (film: $m), has roles $role;
+fetch { ""movieTitle"": $m.title, ""roles"": $role };"
+synthetic-2,movies,637,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 3 shortest role lists in movies reviewed by persons born before 1960?,"MATCH (p:Person)-[:REVIEWED]->(m:Movie)<-[:ACTED_IN]-(actor:Person)
+WHERE p.born < 1960
+WITH m, actor, size(actor.roles) AS role_count
+ORDER BY role_count ASC
+LIMIT 3
+RETURN m.title AS movie_title, actor.name AS actor_name, role_count","match
+$p isa person, has born $b;
+$b < 1960;
+reviewed (reviewer: $p, film: $m);
+$ai isa acted_in (actor: $actor, film: $m);
+$ai has roles $r;
+reduce $role_count = count($r) groupby $m, $actor, $ai;
+sort $role_count asc;
+limit 3;
+fetch {
+  ""movie_title"": $m.title,
+  ""actor_name"": $actor.name,
+  ""role_count"": $role_count
+};"
+synthetic-2,movies,650,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the first 3 movies with the most roles listed?,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
+WITH m, size(collect(p)) AS role_count
+ORDER BY role_count DESC
+LIMIT 3
+RETURN m.title AS movie_title, role_count","match
+$m isa movie;
+acted_in (actor: $p, film: $m);
+reduce $role_count = count($p) groupby $m;
+sort $role_count desc;
+limit 3;
+fetch {
+  ""movie_title"": $m.title,
+  ""role_count"": $role_count
+};"
+synthetic-2,movies,658,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Who are the top 3 actors in terms of the diversity of roles played?,"MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, size(apoc.coll.toSet(collect(r.roles))) AS roleDiversity
+RETURN p.name AS actor, roleDiversity
+ORDER BY roleDiversity DESC
+LIMIT 3","match
+$p isa person, has name $n;
+$rel isa acted_in (actor: $p, film: $m), has roles $r;
+select $p, $n, $r;
+distinct;
+reduce $diversity = count($r) groupby $p, $n;
+sort $diversity desc;
+limit 3;
+fetch { ""actor"": $n, ""diversity"": $diversity };"
+synthetic-2,movies,682,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the first 3 movies with the longest role lists in 'ACTED_IN' relationships?,"MATCH (m:Movie)<-[r:ACTED_IN]-(:Person)
+RETURN m.title, size(r.roles) AS role_count
+ORDER BY role_count DESC
+LIMIT 3","match
+$m isa movie;
+$rel isa acted_in (actor: $p, film: $m);
+$rel has roles $r;
+reduce $role_count = count($r) groupby $m, $rel;
+sort $role_count desc;
+limit 3;
+fetch {
+  ""title"": $m.title,
+  ""role_count"": $role_count
+};"
+synthetic-2,movies,712,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 5 movies by number of roles in the 'ACTED_IN' relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-()
+WITH m, size(r.roles) AS numRoles
+ORDER BY numRoles DESC
+LIMIT 5
+RETURN m.title AS movieTitle, numRoles","match
+$m isa movie;
+$rel isa acted_in (film: $m);
+$rel has roles $r;
+reduce $numRoles = count($r) groupby $m;
+sort $numRoles desc;
+limit 5;
+fetch {
+  ""movieTitle"": $m.title,
+  ""numRoles"": $numRoles
+};"
+synthetic-2,movies,714,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Show the first 3 movies with the most complex role lists in the 'ACTED_IN' relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(:Person)
+WITH m, size(r.roles) AS role_count
+ORDER BY role_count DESC
+LIMIT 3
+RETURN m.title AS movie_title, role_count","match
+$m isa movie;
+$rel isa acted_in (actor: $p, film: $m);
+$rel has roles $r;
+reduce $role_count = count($r) groupby $m, $rel;
+sort $role_count desc;
+limit 3;
+fetch {
+  ""movie_title"": $m.title,
+  ""role_count"": $role_count
+};"
+synthetic-2,movies,736,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List all movies with exactly 5 roles in the 'ACTED_IN' relationship.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WHERE size(r.roles) = 5
+RETURN m.title","match
+$m isa movie, has title $t;
+$p isa person;
+$r isa acted_in (actor: $p, film: $m);
+$r has roles $role;
+reduce $count = count($role) groupby $r, $m, $t;
+match $count == 5;
+fetch { ""title"": $t };"
+synthetic-2,neoflix,81,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Name the top 5 genres by the average votes of the movies in them.,"MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
+WHERE m.vote_count > 0
+WITH g.name AS genre, avg(m.average_vote) AS avg_vote
+RETURN genre, avg_vote
+ORDER BY avg_vote DESC
+LIMIT 5","match
+$m isa movie, has vote_count $vc, has average_vote $av;
+$vc > 0;
+in_genre (media: $m, genre: $g);
+reduce $avg_vote = mean($av) groupby $g;
+sort $avg_vote desc;
+limit 5;
+fetch { ""genre"": $g.genre_name, ""avg_vote"": $avg_vote };"
+synthetic-2,neoflix,438,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 movies have the most diverse cast in terms of gender?,"MATCH (m:Movie)<-[:CAST_FOR]-(p:Person)
+WITH m, COLLECT(DISTINCT p.gender) AS genders
+RETURN m.title AS movie, SIZE(genders) AS gender_diversity
+ORDER BY gender_diversity DESC
+LIMIT 3","match
+$m isa movie;
+cast_for (actor: $p, film: $m);
+$p isa person, has gender $g;
+select $m, $g;
+distinct;
+reduce $count = count groupby $m;
+sort $count desc;
+limit 3;
+fetch {
+  ""movie"": $m.title,
+  ""gender_diversity"": $count
+};"
+synthetic-2,neoflix,815,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the first 3 genres of movies with the highest average vote count.,"MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
+WITH g, avg(m.vote_count) AS avg_vote_count
+RETURN g.name AS genre, avg_vote_count
+ORDER BY avg_vote_count DESC
+LIMIT 3","match
+$m isa movie, has vote_count $vc;
+in_genre (media: $m, genre: $g);
+$g has genre_name $gn;
+reduce $avg_vote_count = mean($vc) groupby $g;
+sort $avg_vote_count desc;
+limit 3;
+fetch {
+  ""genre"": $g.genre_name,
+  ""avg_vote_count"": $avg_vote_count
+};"
+synthetic-2,northwind,36,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What is the average discount given on orders during '1996-07-04 00:00:00.000'?,"MATCH (o:Order)-[r:ORDERS]->(p:Product)
+WHERE o.orderDate = '1996-07-04 00:00:00.000'
+RETURN avg(toFloat(r.discount)) AS averageDiscount","match
+$o isa order, has order_date ""1996-07-04 00:00:00.000"";
+$rel isa orders (order: $o, product: $p);
+$rel has discount $d;
+reduce $avg_discount = mean($d);"
+synthetic-2,northwind,88,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 5 most ordered products by quantity from orders shipped to France?,"MATCH (o:Order)-[r:ORDERS]->(p:Product)
+WHERE o.shipCountry = 'France'
+RETURN p.productName, SUM(r.quantity) AS totalQuantity
+ORDER BY totalQuantity DESC
+LIMIT 5","match
+$o isa order, has ship_country ""France"";
+$rel isa orders (order: $o, product: $p);
+$rel has quantity $q;
+reduce $total = sum($q) groupby $p;
+sort $total desc;
+limit 5;
+fetch {
+  ""productName"": $p.product_name,
+  ""totalQuantity"": $total
+};"
+synthetic-2,northwind,131,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which products have been ordered more than 100 times?,"MATCH (:Order)-[o:ORDERS]->(p:Product)
+WHERE o.quantity > 100
+RETURN p.productName, SUM(o.quantity) AS totalOrdered
+ORDER BY totalOrdered DESC","match
+$p isa product;
+$o isa orders (order: $ord, product: $p);
+reduce $count = count($o) groupby $p;
+match $count > 100;
+fetch { ""productName"": $p.product_name };"
+synthetic-2,northwind,196,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 5 products with the highest average discount in orders.,"MATCH (p:Product)<-[:ORDERS]-(o:Order)
+WITH p, o.discount AS discount
+WHERE discount IS NOT NULL
+RETURN p.productName AS productName, AVG(toFloat(discount)) AS avgDiscount
+ORDER BY avgDiscount DESC
+LIMIT 5","match
+$p isa product;
+$rel isa orders (order: $o, product: $p);
+$rel has discount $d;
+reduce $avg_discount = mean($d) groupby $p;
+sort $avg_discount desc;
+limit 5;
+fetch {
+  ""productName"": $p.product_name,
+  ""avgDiscount"": $avg_discount
+};"
+synthetic-2,northwind,217,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which suppliers provide products to more than one category?,"MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)-[:PART_OF]->(c:Category)
+WITH s, collect(DISTINCT c.categoryID) AS categories
+WHERE size(categories) > 1
+RETURN s.companyName AS Supplier, categories","match
+$s isa supplier;
+$p isa product;
+$c isa category;
+supplies (supplier: $s, product: $p);
+part_of (product: $p, category: $c);
+select $s, $c;
+distinct;
+reduce $cat_count = count($c) groupby $s;
+match $cat_count > 1;
+fetch { ""Supplier"": $s.company_name };"
+synthetic-2,northwind,235,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 products have the highest average discount applied in their orders?,"MATCH (p:Product)<-[:ORDERS]-(o:Order)
+WITH p, o.discount AS discount
+WHERE discount IS NOT NULL
+RETURN p.productName AS productName, AVG(toFloat(discount)) AS avgDiscount
+ORDER BY avgDiscount DESC
+LIMIT 3","match
+$p isa product;
+$rel isa orders (product: $p), has discount $d;
+reduce $avg_discount = mean($d) groupby $p;
+sort $avg_discount desc;
+limit 3;
+fetch {
+  ""productName"": $p.product_name,
+  ""avgDiscount"": $avg_discount
+};"
+synthetic-2,northwind,238,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 5 suppliers based on the number of cities they supply to.,"MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)<-[:ORDERS]-(o:Order)
+WITH s, COLLECT(DISTINCT o.shipCity) AS cities
+RETURN s.companyName AS supplier, SIZE(cities) AS cityCount
+ORDER BY cityCount DESC
+LIMIT 5","match
+$s isa supplier, has company_name $name;
+supplies (supplier: $s, product: $p);
+orders (product: $p, order: $o);
+$o has ship_city $city;
+select $s, $name, $city;
+distinct;
+reduce $city_count = count groupby $s, $name;
+sort $city_count desc;
+limit 5;
+fetch { ""supplier"": $name, ""cityCount"": $city_count };"
+synthetic-2,northwind,377,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 suppliers supply products to more than one category?,"MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)-[:PART_OF]->(c:Category)
+WITH s, collect(DISTINCT c.categoryID) AS categories
+WHERE size(categories) > 1
+RETURN s.companyName AS Supplier, size(categories) AS NumberOfCategories
+ORDER BY NumberOfCategories DESC
+LIMIT 3","match
+$s isa supplier;
+$p isa product;
+$c isa category;
+supplies (supplier: $s, product: $p);
+part_of (product: $p, category: $c);
+select $s, $c;
+distinct;
+reduce $cat_count = count groupby $s;
+match $cat_count > 1;
+sort $cat_count desc;
+limit 3;
+fetch { ""Supplier"": $s.company_name, ""NumberOfCategories"": $cat_count };"
+synthetic-2,northwind,385,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 customers have ordered the most diverse range of product categories?,"MATCH (c:Customer)-[:PURCHASED]->(o:Order)-[:ORDERS]->(p:Product)-[:PART_OF]->(cat:Category)
+WITH c, collect(DISTINCT cat.categoryID) AS categories
+RETURN c.companyName, size(categories) AS categoryCount
+ORDER BY categoryCount DESC
+LIMIT 3","match
+$c isa customer;
+purchased (customer: $c, order: $o);
+orders (order: $o, product: $p);
+part_of (product: $p, category: $cat);
+select $c, $cat;
+distinct;
+reduce $category_count = count groupby $c;
+sort $category_count desc;
+limit 3;
+fetch { ""companyName"": $c.company_name, ""categoryCount"": $category_count };"
+synthetic-2,northwind,404,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What is the average discount given across all orders?,"MATCH (:Order)-[o:ORDERS]->(:Product)
+RETURN avg(toFloat(o.discount)) AS averageDiscount","match
+$rel isa orders (order: $o, product: $p);
+$rel has discount $d;
+reduce $avg = mean($d);"
+synthetic-2,northwind,489,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which suppliers supply to more than one category?,"MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)-[:PART_OF]->(c:Category)
+WITH s, collect(DISTINCT c.categoryID) AS categories
+WHERE size(categories) > 1
+RETURN s.companyName AS Supplier, categories","match
+$s isa supplier, has company_name $name;
+$p isa product;
+$c isa category, has category_id $cid;
+supplies (supplier: $s, product: $p);
+part_of (product: $p, category: $c);
+select $s, $name, $c;
+distinct;
+reduce $cat_count = count groupby $s, $name;
+match $cat_count > 1;
+fetch { ""Supplier"": $name };"
+synthetic-2,northwind,497,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 products have the highest average discount in orders?,"MATCH (p:Product)<-[:ORDERS]-(o:Order)
+WITH p, o.discount AS discount
+WHERE discount IS NOT NULL
+RETURN p.productName AS productName, AVG(toFloat(discount)) AS avgDiscount
+ORDER BY avgDiscount DESC
+LIMIT 3","match
+$p isa product;
+$rel isa orders (product: $p), has discount $d;
+reduce $avg = mean($d) groupby $p;
+sort $avg desc;
+limit 3;
+fetch { ""productName"": $p.product_name };"
+synthetic-2,northwind,546,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 suppliers have the most diverse range of product categories?,"MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)-[:PART_OF]->(c:Category)
+WITH s, collect(DISTINCT c.categoryID) AS categories
+RETURN s.companyName, size(categories) AS categoryCount
+ORDER BY categoryCount DESC
+LIMIT 3","match
+$s isa supplier, has company_name $name;
+$p isa product;
+$c isa category;
+supplies (supplier: $s, product: $p);
+part_of (product: $p, category: $c);
+select $s, $c, $name;
+distinct;
+reduce $count = count groupby $s, $name;
+sort $count desc;
+limit 3;
+fetch { ""companyName"": $name, ""categoryCount"": $count };"
+synthetic-2,northwind,576,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 suppliers provide products to the most number of unique cities?,"MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)<-[:ORDERS]-(o:Order)
+WITH s, o.shipCity AS city
+WHERE city IS NOT NULL
+WITH s, collect(DISTINCT city) AS uniqueCities
+RETURN s.companyName AS supplier, size(uniqueCities) AS cityCount
+ORDER BY cityCount DESC
+LIMIT 3","match
+$s isa supplier, has company_name $cn;
+supplies (supplier: $s, product: $p);
+orders (product: $p, order: $o);
+$o has ship_city $city;
+select $s, $cn, $city;
+distinct;
+reduce $city_count = count groupby $s, $cn;
+sort $city_count desc;
+limit 3;
+fetch { ""supplier"": $cn, ""cityCount"": $city_count };"
+synthetic-2,northwind,588,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 customers have ordered products from the most categories?,"MATCH (c:Customer)-[:PURCHASED]->(o:Order)-[:ORDERS]->(p:Product)-[:PART_OF]->(cat:Category)
+WITH c, collect(DISTINCT cat.categoryID) AS categories
+RETURN c.customerID, c.companyName, size(categories) AS categoryCount
+ORDER BY categoryCount DESC
+LIMIT 3","match
+$c isa customer;
+$o isa order;
+$cat isa category;
+$p isa product;
+purchased (customer: $c, order: $o);
+orders (order: $o, product: $p);
+part_of (product: $p, category: $cat);
+select $c, $cat;
+distinct;
+reduce $category_count = count groupby $c;
+sort $category_count desc;
+limit 3;
+fetch {
+  ""customer_id"": $c.customer_id,
+  ""company_name"": $c.company_name,
+  ""category_count"": $category_count
+};"
+synthetic-2,northwind,619,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 products have the most discounts applied in orders?,"MATCH (:Order)-[o:ORDERS]->(p:Product)
+WITH p.productName AS productName, SUM(toFloat(o.discount)) AS totalDiscount
+ORDER BY totalDiscount DESC
+LIMIT 3
+RETURN productName, totalDiscount","match
+$p isa product;
+$rel isa orders (product: $p);
+$rel has discount $d;
+reduce $totalDiscount = sum($d) groupby $p;
+sort $totalDiscount desc;
+limit 3;
+fetch {
+  ""productName"": $p.product_name,
+  ""totalDiscount"": $totalDiscount
+};"
+synthetic-2,northwind,685,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which suppliers supply products to more than one category?,"MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)-[:PART_OF]->(c:Category)
+WITH s, collect(DISTINCT c.categoryID) AS categories
+WHERE size(categories) > 1
+RETURN s.companyName AS Supplier, size(categories) AS NumberOfCategories","match
+$s isa supplier;
+$p isa product;
+$c isa category;
+supplies (supplier: $s, product: $p);
+part_of (product: $p, category: $c);
+select $s, $c;
+distinct;
+reduce $count = count($c) groupby $s;
+match $count > 1;
+fetch { ""Supplier"": $s.company_name, ""NumberOfCategories"": $count };"
+synthetic-2,northwind,759,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 suppliers have the most diverse range of product categories supplied?,"MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)-[:PART_OF]->(c:Category)
+WITH s, collect(DISTINCT c.categoryID) AS categories
+RETURN s.companyName, size(categories) AS categoryCount
+ORDER BY categoryCount DESC
+LIMIT 3","match
+$s isa supplier;
+$p isa product;
+$c isa category;
+supplies (supplier: $s, product: $p);
+part_of (product: $p, category: $c);
+select $s, $c;
+distinct;
+reduce $category_count = count groupby $s;
+sort $category_count desc;
+limit 3;
+fetch { ""companyName"": $s.company_name, ""categoryCount"": $category_count };"
+synthetic-2,northwind,768,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Identify the 5 customers who have ordered the most distinct categories of products.,"MATCH (c:Customer)-[:PURCHASED]->(o:Order)-[:ORDERS]->(p:Product)-[:PART_OF]->(cat:Category)
+WITH c, cat.categoryID AS categoryID
+ORDER BY c.customerID, categoryID
+WITH c, collect(DISTINCT categoryID) AS categories
+RETURN c.customerID, c.companyName, size(categories) AS distinctCategories
+ORDER BY distinctCategories DESC
+LIMIT 5","match
+$c isa customer, has customer_id $cid, has company_name $cn;
+$o isa order;
+purchased (customer: $c, order: $o);
+orders (order: $o, product: $p);
+part_of (product: $p, category: $cat);
+$cat has category_id $catid;
+select $c, $cid, $cn, $catid;
+distinct;
+reduce $count = count groupby $c, $cid, $cn;
+sort $count desc;
+limit 5;
+fetch {
+  ""customerID"": $cid,
+  ""companyName"": $cn,
+  ""distinctCategories"": $count
+};"
+synthetic-2,northwind,775,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which suppliers provide products to more than one region?,"MATCH (s:Supplier)-[:SUPPLIES]->(p:Product)<-[:ORDERS]-(o:Order)
+WHERE o.shipRegion IS NOT NULL
+WITH s, COLLECT(DISTINCT o.shipRegion) AS regions
+WHERE SIZE(regions) > 1
+RETURN s.companyName AS Supplier, regions","match
+$s isa supplier, has company_name $name;
+supplies (supplier: $s, product: $p);
+orders (product: $p, order: $o);
+$o has ship_region $region;
+select $s, $name, $region;
+distinct;
+reduce $region_count = count groupby $s, $name;
+match $region_count > 1;
+fetch { ""Supplier"": $name };"
+synthetic-2,offshoreleaks,184,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the common addresses between two or more entities?,"MATCH (e1:Entity)-[:registered_address]->(a:Address)<-[:registered_address]-(e2:Entity)
+WHERE e1.node_id <> e2.node_id
+RETURN a.address AS common_address, collect(e1.name) AS entities","match
+$a isa postal_address, has address $addr;
+registered_address (registrant: $e, registered_addr: $a);
+reduce $count = count($e) groupby $a, $addr;
+match $count >= 2;
+fetch { ""common_address"": $addr, ""entity_count"": $count };"
+synthetic-2,recommendations,35,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 5 movies that have been rated by users from more than 5 different countries.,"MATCH (m:Movie)<-[:RATED]-(u:User)
+WITH m, collect(DISTINCT u.userId) AS users
+WHERE size(users) > 5
+RETURN m.title AS MovieTitle, size(users) AS NumberOfUsers
+ORDER BY NumberOfUsers DESC
+LIMIT 5","match
+$m isa movie;
+rated (user: $u, film: $m);
+$u isa user;
+located_in (resident: $u, country: $c);
+$c has name $cn;
+select $m, $cn;
+distinct;
+reduce $country_count = count groupby $m;
+match $country_count > 5;
+$m has title $t;
+sort $country_count desc;
+limit 5;
+fetch { ""MovieTitle"": $t, ""NumberOfCountries"": $country_count };"
+synthetic-2,recommendations,122,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which three actors have acted in movies in more than 3 different languages?,"MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
+WITH a, collect(DISTINCT m.languages) AS languages
+WHERE size(apoc.coll.flatten(languages)) > 3
+RETURN a.name AS actor, size(apoc.coll.flatten(languages)) AS language_count
+ORDER BY language_count DESC
+LIMIT 3","match
+$a isa person;
+acted_in (actor: $a, film: $m);
+$m has languages $l;
+select $a, $l;
+distinct;
+reduce $lang_count = count groupby $a;
+match $lang_count > 3;
+sort $lang_count desc;
+limit 3;
+fetch { ""actor"": $a.name, ""language_count"": $lang_count };"
+synthetic-2,recommendations,156,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 5 actors have acted in movies released in the most distinct years?,"MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
+WITH a, collect(DISTINCT m.year) AS years
+RETURN a.name AS actor, size(years) AS distinct_years
+ORDER BY distinct_years DESC
+LIMIT 5","match
+$a isa person;
+acted_in (actor: $a, film: $m);
+$m has year $y;
+select $a, $y;
+distinct;
+reduce $count = count($y) groupby $a;
+sort $count desc;
+limit 5;
+fetch {
+  ""actor"": $a.name,
+  ""distinct_years"": $count
+};"
+synthetic-2,recommendations,159,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 actors have the most diverse range of genres in the movies they've acted in?,"MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)-[:IN_GENRE]->(g:Genre)
+WITH a, collect(DISTINCT g.name) AS genres
+RETURN a.name, size(genres) AS genre_count
+ORDER BY genre_count DESC
+LIMIT 3","match
+$a isa person;
+$m isa movie;
+$g isa genre;
+acted_in (actor: $a, film: $m);
+in_genre (film: $m, genre: $g);
+select $a, $g;
+distinct;
+reduce $genre_count = count($g) groupby $a;
+sort $genre_count desc;
+limit 3;
+fetch {
+  ""name"": $a.name,
+  ""genre_count"": $genre_count
+};"
+synthetic-2,recommendations,166,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 5 directors have directed movies in more than three different countries?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WITH d, collect(DISTINCT m.countries) AS countries
+WHERE size(countries) > 3
+RETURN d.name AS Director, size(countries) AS CountryCount
+ORDER BY CountryCount DESC
+LIMIT 5","match
+$d isa person;
+directed (director: $d, film: $m);
+$m has countries $c;
+select $d, $c;
+distinct;
+reduce $count = count($c) groupby $d;
+match
+$count > 3;
+$d has name $dn;
+sort $count desc;
+limit 5;
+fetch {
+  ""Director"": $dn,
+  ""CountryCount"": $count
+};"
+synthetic-2,recommendations,285,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the first 5 movies that have been rated by users from more than 10 different countries.,"MATCH (m:Movie)<-[:RATED]-(u:User)
+WITH m, collect(distinct u) as users
+WHERE size(users) > 10
+RETURN m.title AS MovieTitle
+ORDER BY m.title
+LIMIT 5","match
+$m isa movie, has title $t;
+rated (film: $m, user: $u);
+located_in (resident: $u, country: $c);
+select $m, $t, $c;
+distinct;
+reduce $count = count($c) groupby $m, $t;
+match $count > 10;
+sort $t;
+limit 5;
+fetch { ""MovieTitle"": $t };"
+synthetic-2,recommendations,329,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which directors have directed movies in more than three different languages?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WITH d, collect(DISTINCT m.languages) AS languages
+WHERE size(apoc.coll.flatten(languages)) > 3
+RETURN d.name AS Director, size(apoc.coll.flatten(languages)) AS NumberOfLanguages","match
+  $d isa person;
+  directed (director: $d, film: $m);
+  $m has languages $l;
+select $d, $l;
+distinct;
+reduce $count = count groupby $d;
+match $count > 3;
+fetch { ""Director"": $d.name, ""NumberOfLanguages"": $count };"
+synthetic-2,recommendations,368,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which directors have directed movies in more than two languages?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WITH d, collect(DISTINCT m.languages) AS languages
+WHERE size(apoc.coll.flatten(languages)) > 2
+RETURN d.name AS Director, size(apoc.coll.flatten(languages)) AS NumberOfLanguages","match
+$d isa person;
+directed (director: $d, film: $m);
+$m has languages $l;
+select $d, $l;
+distinct;
+reduce $count = count($l) groupby $d;
+match $count > 2;
+fetch { ""Director"": $d.name, ""NumberOfLanguages"": $count };"
+synthetic-2,recommendations,383,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which actors have acted in movies from at least three different countries?,"MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
+WITH a, collect(DISTINCT m.countries) AS countries
+WHERE size(countries) >= 3
+RETURN a.name AS actorName","match
+$a isa person;
+acted_in (actor: $a, film: $m);
+$m has countries $c;
+select $a, $c;
+distinct;
+reduce $count = count($c) groupby $a;
+match $count >= 3;
+fetch { ""actorName"": $a.name };"
+synthetic-2,recommendations,391,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which directors have directed movies in more than three different languages?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WITH d, collect(DISTINCT m.languages) AS languages
+WHERE size(apoc.coll.flatten(languages)) > 3
+RETURN d.name AS Director, size(apoc.coll.flatten(languages)) AS NumberOfLanguages","match
+$d isa person;
+directed (director: $d, film: $m);
+$m has languages $l;
+select $d, $l;
+distinct;
+reduce $count = count groupby $d;
+match $count > 3;
+fetch { ""Director"": $d.name, ""NumberOfLanguages"": $count };"
+synthetic-2,recommendations,393,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 5 highest-rated movies by users from the USA?,"MATCH (u:User)-[r:RATED]->(m:Movie)
+WHERE u.name = ""USA""
+RETURN m.title AS MovieTitle, AVG(r.rating) AS AverageRating
+ORDER BY AverageRating DESC
+LIMIT 5","match
+$u isa user;
+$c isa country, has name ""USA"";
+located_in (resident: $u, country: $c);
+$rel isa rated (user: $u, film: $m);
+$rel has rating $rating;
+$m isa movie;
+reduce $avg = mean($rating) groupby $m;
+sort $avg desc;
+limit 5;
+fetch { ""MovieTitle"": $m.title, ""AverageRating"": $avg };"
+synthetic-2,recommendations,446,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 5 movies have the most diverse cast in terms of countries of origin?,"MATCH (a:Actor)-[:ACTED_IN]->(m:Movie)
+WITH m, COLLECT(DISTINCT a.bornIn) AS actorCountries
+RETURN m.title AS movieTitle, SIZE(actorCountries) AS diversity
+ORDER BY diversity DESC
+LIMIT 5","match
+$a isa person, has born_in $born_in;
+$m isa movie;
+acted_in (actor: $a, film: $m);
+select $m, $born_in;
+distinct;
+reduce $diversity = count groupby $m;
+sort $diversity desc;
+limit 5;
+fetch {
+  ""movieTitle"": $m.title,
+  ""diversity"": $diversity
+};"
+synthetic-2,recommendations,579,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 3 directors have the most distinct actors worked with across all movies directed?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)<-[:ACTED_IN]-(a:Actor)
+WITH d, a
+ORDER BY d.name, a.name
+WITH d, collect(DISTINCT a) AS actors
+RETURN d.name AS Director, size(actors) AS ActorCount
+ORDER BY ActorCount DESC
+LIMIT 3","match
+$d isa person;
+$a isa person;
+$m isa movie;
+directed (director: $d, film: $m);
+acted_in (actor: $a, film: $m);
+select $d, $a;
+distinct;
+reduce $count = count($a) groupby $d;
+sort $count desc;
+limit 3;
+fetch {
+  ""Director"": $d.name,
+  ""ActorCount"": $count
+};"
+synthetic-2,recommendations,584,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 5 directors have directed movies in more than 5 different languages?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WITH d, collect(DISTINCT m.languages) AS languages
+WHERE size(apoc.coll.flatten(languages)) > 5
+RETURN d.name AS Director, size(apoc.coll.flatten(languages)) AS NumberOfLanguages
+ORDER BY NumberOfLanguages DESC
+LIMIT 5","match
+$d isa person;
+directed (director: $d, film: $m);
+$m has languages $lang;
+select $d, $lang;
+distinct;
+reduce $count = count($lang) groupby $d;
+match $count > 5;
+sort $count desc;
+limit 5;
+fetch { ""Director"": $d.name, ""NumberOfLanguages"": $count };"
+synthetic-2,recommendations,614,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which director has the most diverse portfolio of movie genres directed?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)-[:IN_GENRE]->(g:Genre)
+WITH d, collect(DISTINCT g.name) AS genres
+RETURN d.name AS director, size(genres) AS genre_count
+ORDER BY genre_count DESC
+LIMIT 1","match
+$d isa person;
+directed (director: $d, film: $m);
+in_genre (film: $m, genre: $g);
+$d has name $dn;
+$g has name $gn;
+select $d, $dn, $gn;
+distinct;
+reduce $count = count($gn) groupby $d, $dn;
+sort $count desc;
+limit 1;
+fetch { ""director"": $dn, ""genre_count"": $count };"
+synthetic-2,recommendations,633,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which three directors have directed movies with the most diverse set of languages?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+UNWIND m.languages AS language
+WITH d, language
+ORDER BY d.name
+WITH d, COLLECT(DISTINCT language) AS languages
+RETURN d.name AS Director, SIZE(languages) AS LanguageCount
+ORDER BY LanguageCount DESC
+LIMIT 3","match
+$d isa person;
+directed (director: $d, film: $m);
+$m has languages $lang;
+select $d, $lang;
+distinct;
+reduce $count = count groupby $d;
+sort $count desc;
+limit 3;
+fetch { ""director"": $d.name, ""language_count"": $count };"
+synthetic-2,recommendations,718,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which 5 users have rated movies in the most diverse set of genres?,"MATCH (u:User)-[r:RATED]->(m:Movie)-[:IN_GENRE]->(g:Genre)
+WITH u, collect(DISTINCT g.name) AS genres
+RETURN u.name, size(genres) AS genre_count
+ORDER BY genre_count DESC
+LIMIT 5","match
+$u isa user, has name $uname;
+rated (user: $u, film: $m);
+in_genre (film: $m, genre: $g);
+select $u, $uname, $g;
+distinct;
+reduce $genre_count = count($g) groupby $u, $uname;
+sort $genre_count desc;
+limit 5;
+fetch {
+  ""name"": $uname,
+  ""genre_count"": $genre_count
+};"
+synthetic-2,recommendations,737,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 5 movies with the highest IMDb rating that have been directed by the same director?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WITH d, m
+ORDER BY m.imdbRating DESC
+WITH d, collect(m) AS movies
+WHERE size(movies) > 1
+UNWIND movies AS movie
+RETURN movie.title AS title, movie.imdbRating AS rating, d.name AS director
+ORDER BY rating DESC
+LIMIT 5","match
+$d isa person;
+directed (director: $d, film: $m);
+reduce $count = count($m) groupby $d;
+match $count > 1;
+directed (director: $d, film: $movie);
+$movie has imdb_rating $rating;
+$movie has title $title;
+$d has name $dname;
+sort $rating desc;
+limit 5;
+fetch {
+  ""title"": $title,
+  ""rating"": $rating,
+  ""director"": $dname
+};"
+synthetic-2,stackoverflow2,52,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Identify the 3 answers with the lowest scores provided to the most viewed questions.,"MATCH (q:Question)-[:ANSWERED]-(a:Answer)
+WITH q, a
+ORDER BY q.view_count DESC
+LIMIT 1
+WITH a
+ORDER BY a.score ASC
+LIMIT 3
+RETURN a.link AS answer_link, a.title AS answer_title, a.score AS answer_score","match
+$q isa question, has view_count $vc;
+answered (question: $q);
+reduce $max_vc = max($vc);
+match
+$q2 isa question, has view_count $vc2;
+$vc2 == $max_vc;
+answered (question: $q2, answer: $a);
+$a has answer_link $link, has title $title, has score $s;
+sort $s asc;
+limit 3;
+fetch { ""answer_link"": $link, ""answer_title"": $title, ""answer_score"": $s };"
+synthetic-2,stackoverflow2,183,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the 3 most recent comments on the question with the highest view count?,"MATCH (q:Question)
+WITH q
+ORDER BY q.view_count DESC
+LIMIT 1
+MATCH (c:Comment)-[:COMMENTED_ON]->(q)
+RETURN c
+ORDER BY c.uuid DESC
+LIMIT 3","match
+$q isa question, has view_count $vc;
+reduce $max_vc = max($vc);
+match
+$q2 isa question, has view_count $vc2;
+$vc2 == $max_vc;
+commented_on (comment: $c, question: $q2);
+$c has comment_uuid $uuid;
+sort $uuid desc;
+limit 3;
+fetch { ""comment"": $c };"
+synthetic-2,stackoverflow2,295,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 3 tags used in the most viewed questions?,"MATCH (q:Question)-[:TAGGED]->(t:Tag)
+WITH t, SUM(q.view_count) AS total_views
+ORDER BY total_views DESC
+LIMIT 3
+RETURN t.name AS tag, total_views","match
+$q isa question, has view_count $v;
+$t isa tag;
+tagged (question: $q, tag: $t);
+reduce $total_views = sum($v) groupby $t;
+sort $total_views desc;
+limit 3;
+fetch { ""tag"": $t.name, ""total_views"": $total_views };"
+synthetic-2,twitch,56,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What is the total view count of streams that are moderated by 'itsbigchase'?,"MATCH (u:User {name: 'itsbigchase'})-[:MODERATOR]->(s:Stream)
+RETURN sum(s.total_view_count) AS total_view_count","match
+$u isa user, has name ""itsbigchase"";
+moderation (moderating_user: $u, moderated_channel: $s);
+$s has total_view_count $v;
+reduce $total = sum($v);"
+synthetic-2,twitch,509,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 3 most viewed games by streams that have a team?,"MATCH (s:Stream)-[:PLAYS]->(g:Game)
+MATCH (s)-[:HAS_TEAM]->(:Team)
+RETURN g.name AS game, SUM(s.total_view_count) AS total_views
+ORDER BY total_views DESC
+LIMIT 3","match
+$s isa stream, has total_view_count $v;
+$g isa game;
+game_play (streaming_channel: $s, played_game: $g);
+team_membership (member_stream: $s, organization: $t);
+reduce $total_views = sum($v) groupby $g;
+sort $total_views desc;
+limit 3;
+fetch { ""game"": $g.name, ""total_views"": $total_views };"
+synthetic-2,twitter,19,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 3 tweets from 'Neo4j' that have been retweeted more than 100 times.,"MATCH (u:User {screen_name: 'neo4j'})-[:POSTS]->(t:Tweet)
+WHERE t.favorites > 100
+RETURN t.text, t.favorites
+ORDER BY t.favorites DESC
+LIMIT 3","match
+$u isa user, has screen_name ""neo4j"";
+posts (author: $u, content: $t);
+retweets (original_tweet: $t, retweeting_tweet: $rt);
+reduce $count = count($rt) groupby $t;
+match $count > 100;
+sort $count desc;
+limit 3;
+fetch { ""text"": $t.text, ""retweet_count"": $count };"
+synthetic-2,twitter,44,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which tweets by 'neo4j' have been retweeted more than 50 times?,"MATCH (u:User {screen_name: 'neo4j'})-[:POSTS]->(t:Tweet)
+WHERE t.favorites > 50
+RETURN t.text AS tweet_text, t.favorites AS retweet_count","match
+$u isa user, has screen_name ""neo4j"";
+posts (author: $u, content: $t);
+$ret isa retweets (original_tweet: $t);
+reduce $count = count($ret) groupby $t;
+match $count > 50;
+fetch { ""tweet_text"": $t.text, ""retweet_count"": $count };"
+synthetic-2,twitter,246,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),What are the top 3 tweets by number of retweets?,"MATCH (t:Tweet)
+RETURN t.text AS tweet_text, t.id AS tweet_id, t.favorites AS retweet_count
+ORDER BY t.favorites DESC
+LIMIT 3","match
+$t isa tweet;
+$ret isa retweets (original_tweet: $t);
+reduce $count = count($ret) groupby $t;
+sort $count desc;
+limit 3;
+fetch { ""tweet_text"": $t.text, ""tweet_id"": $t.tweet_id, ""retweet_count"": $count };"
+synthetic-2,twitter,279,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Which three tweets have the highest retweet counts?,"MATCH (t:Tweet)
+RETURN t.text, t.favorites
+ORDER BY t.favorites DESC
+LIMIT 3","match
+$t isa tweet;
+retweets (original_tweet: $t, retweeting_tweet: $rt);
+reduce $count = count($rt) groupby $t;
+sort $count desc;
+limit 3;
+fetch { ""text"": $t.text, ""retweet_count"": $count };"
+synthetic-2,twitter,282,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Find the first 3 tweets that have been retweeted more than 100 times.,"MATCH (t:Tweet)
+WHERE t.favorites > 100
+RETURN t
+ORDER BY t.created_at ASC
+LIMIT 3","match
+$t isa tweet;
+retweets (original_tweet: $t, retweeting_tweet: $rt);
+reduce $count = count($rt) groupby $t;
+match
+$count > 100;
+$t has created_at $ca;
+sort $ca asc;
+limit 3;
+fetch {
+  ""tweet"": $t.text,
+  ""created_at"": $ca,
+  ""retweet_count"": $count
+};"
+synthetic-2,twitter,366,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),Find the top 3 tweets with the most retweets made by 'neo4j'.,"MATCH (u:User {screen_name: 'neo4j'})-[:POSTS]->(t:Tweet)
+RETURN t
+ORDER BY t.retweets DESC
+LIMIT 3","match
+$u isa user, has screen_name ""neo4j"";
+posts (author: $u, content: $t);
+retweets (original_tweet: $t, retweeting_tweet: $rt);
+reduce $count = count($rt) groupby $u, $t;
+sort $count desc;
+limit 3;
+fetch { ""tweet"": $t.text, ""retweets"": $count };"
+synthetic-2,twitter,444,high,cypher_lacks_count_vs_typeql,TypeQL uses reduce...count but Cypher has no COUNT(),List the top 5 tweets that have been retweeted the most times.,"MATCH (t:Tweet)
+RETURN t.text AS tweet_text, t.id AS tweet_id, t.favorites AS retweet_count
+ORDER BY t.favorites DESC
+LIMIT 5","match
+$t isa tweet;
+retweets (original_tweet: $t, retweeting_tweet: $rt);
+reduce $count = count($rt) groupby $t;
+sort $count desc;
+limit 5;
+fetch { ""tweet_text"": $t.text, ""tweet_id"": $t.tweet_id, ""retweet_count"": $count };"

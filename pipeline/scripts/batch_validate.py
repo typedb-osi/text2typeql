@@ -9,7 +9,7 @@ import tempfile
 import os
 
 DB = "text2typeql_companies"
-TYPEDB = "/opt/typedb-all-linux-arm64-3.7.3/typedb"
+TYPEDB = "/opt/typedb-all-linux-arm64-3.8.0/typedb"
 CONSOLE_ARGS = ["console", "--address", "localhost:1729", "--username", "admin", "--password", "password", "--tls-disabled"]
 
 def validate_query(typeql: str) -> tuple[bool, str]:

@@ -39,7 +39,7 @@ define
   attribute order_date value string;
   attribute required_date value string;
   attribute shipped_date value string;
-  attribute freight value string;
+  attribute freight value double;
   attribute ship_name value string;
   attribute ship_address value string;
   attribute ship_city value string;

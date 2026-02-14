@@ -1,0 +1,294 @@
+source,database,original_index,confidence,check,detail,question,cypher,typeql
+synthetic-1,companies,84,high,cypher_invalid_rel_type,"Cypher references relationship type ""AUTHOR"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Which organizations have a CEO who has written an article?,"MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)<-[:AUTHOR]-(a:Article)
+RETURN o.name AS organization, ceo.name AS ceo, a.title AS article","match
+  $o isa organization;
+  $p isa person;
+  (organization: $o, ceo: $p) isa ceo_of;
+fetch { ""organization"": $o.name, ""ceo"": $p.name };"
+synthetic-1,companies,144,high,cypher_invalid_rel_type,"Cypher references relationship type ""MENTIONED_IN"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Which 3 organizations have been dissolved and are mentioned in articles with a sentiment score below 0.5?,"MATCH (o:Organization)-[:MENTIONED_IN]->(a:Article)
+WHERE o.isDissolved = true AND a.sentiment < 0.5
+RETURN o.name
+LIMIT 3","match
+  $o isa organization, has is_dissolved true;
+  $a isa article, has sentiment $s;
+  $s < 0.5;
+  mentions (mentioned: $o, article: $a);
+limit 3;
+fetch { ""name"": $o.name };"
+synthetic-1,companies,370,high,cypher_invalid_rel_type,"Cypher references relationship type ""HAS_AUTHORED"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Name the first 3 organizations that have a CEO who has authored a book on leadership.,"MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)
+WHERE EXISTS {
+  (ceo)-[:HAS_AUTHORED]->(:Book)-[:HAS_CATEGORY]->(:Category {name: 'Leadership'})
+}
+RETURN o.name
+LIMIT 3","match
+  $o isa organization;
+  $ceo isa person;
+  (organization: $o, ceo: $ceo) isa ceo_of;
+  $ic isa industry_category; (organization: $o, category: $ic) isa in_category;
+limit 3;
+fetch { ""name"": $o.name };"
+synthetic-1,companies,371,high,cypher_invalid_rel_type,"Cypher references relationship type ""HAS_AUTHORED"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Name the first 3 organizations that have a CEO who has authored a book on leadership.,"MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)
+WHERE EXISTS {
+  (ceo)-[:HAS_AUTHORED]->(:Book)-[:HAS_CATEGORY]->(:Category {name: 'Leadership'})
+}
+RETURN o.name
+LIMIT 3","match
+  $o isa organization;
+  $ceo isa person;
+  (organization: $o, ceo: $ceo) isa ceo_of;
+  $ic isa industry_category; (organization: $o, category: $ic) isa in_category;
+limit 3;
+fetch { ""name"": $o.name };"
+synthetic-1,companies,372,high,cypher_invalid_rel_type,"Cypher references relationship type ""HAS_AUTHORED"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Name the first 3 organizations that have a CEO who has authored a book on leadership.,"MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)
+WHERE EXISTS {
+  (ceo)-[:HAS_AUTHORED]->(:Book)-[:HAS_CATEGORY]->(:Category {name: 'Leadership'})
+}
+RETURN o.name
+LIMIT 3","match
+  $o isa organization;
+  $ceo isa person;
+  (organization: $o, ceo: $ceo) isa ceo_of;
+  $ic isa industry_category; (organization: $o, category: $ic) isa in_category;
+limit 3;
+fetch { ""name"": $o.name };"
+synthetic-1,companies,436,high,cypher_invalid_rel_type,"Cypher references relationship type ""AUTHOR"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Which organizations have a CEO who has written an article?,"MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)<-[:AUTHOR]-(a:Article) RETURN o.name AS organization, ceo.name AS ceo, a.title AS article","match $o isa organization; $ceo isa person; $a isa article; (organization: $o, ceo: $ceo) isa ceo_of; fetch { ""organization"": $o.name, ""ceo"": $ceo.name, ""article"": $a.title };"
+synthetic-1,companies,581,high,cypher_invalid_rel_type,"Cypher references relationship type ""HAS_NATIONALITY"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Name the first 3 organizations that have a CEO and a board member with different nationalities.,"MATCH ... (ceo)-[:HAS_NATIONALITY]->(ceoCountry:Country), (board)-[:HAS_NATIONALITY]->(boardCountry:Country) WHERE ceoCountry <> boardCountry","match $o isa organization; $ceo isa person; $board isa person; $ceoCountry isa country; $boardCountry isa country; (organization: $o, ceo: $ceo) isa ceo_of; (organization: $o, member: $board) isa board_member_of; limit 3; fetch { ""organization"": $o.name, ""ceo"": $ceo.name, ""ceoCountry"": $ceoCountry.country_name };"
+synthetic-1,companies,698,high,cypher_invalid_rel_type,"Cypher references relationship type ""MENTIONED_IN"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Which 3 organizations have changed their CEOs in the last year?,"MATCH (o:Organization)-[:HAS_CEO]->(p:Person)
+WHERE p.name IS NOT NULL
+WITH o
+ORDER BY o.name
+LIMIT 3
+MATCH (o)-[:MENTIONED_IN]->(a:Article)
+WHERE a.date >= datetime() - duration('P1Y') 
+RETURN DISTINCT o.name AS organization, a.title AS article_title","match
+  $o isa organization;
+  $p isa person;
+  (organization: $o, ceo: $p) isa ceo_of;
+  $a isa article;
+  $p has name $p_name;
+  $o has name $o_name;
+sort $o_name asc;
+limit 3;
+fetch { ""organization"": $o.name, ""article_title"": $a.title };"
+synthetic-1,companies,792,high,cypher_invalid_rel_type,"Cypher references relationship type ""CAPITAL_OF"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])","Which organizations have more than 10,000 employees and are located in a city that is not the capital of a country?","MATCH (o:Organization)-[:IN_CITY]->(c:City)-[:IN_COUNTRY]->(country:Country) WHERE o.nbrEmployees > 10000 AND NOT EXISTS {(c)<-[:CAPITAL_OF]-(country)} RETURN o.name AS organization, c.name AS city, country.name AS country","match $o isa organization; $c isa city; $country isa country; (organization: $o, city: $c) isa located_in; $o has nbr_employees $o_nbr_employees; $o_nbr_employees > 10000; (child: $c, parent: $country) isa location-contains; fetch { ""organization"": $o.name, ""city"": $c.city_name, ""country"": $country.country_name };"
+synthetic-1,companies,823,high,cypher_invalid_rel_type,"Cypher references relationship type ""AUTHOR"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Which organizations have a CEO who has authored articles?,"MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)<-[:AUTHOR]-(a:Article) RETURN o.name AS organization, ceo.name AS ceo, a.title AS article","match $o isa organization; $ceo isa person; $a isa article; (organization: $o, ceo: $ceo) isa ceo_of; fetch { ""organization"": $o.name, ""ceo"": $ceo.name, ""article"": $a.title };"
+synthetic-1,companies,878,high,cypher_invalid_rel_type,"Cypher references relationship type ""AUTHORED"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",List the first 5 organizations that have a CEO who has authored an article.,"MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)<-[:AUTHORED]-(a:Article)
+RETURN o.name AS organization, ceo.name AS ceo, a.title AS article
+LIMIT 5","match
+  $o isa organization;
+  $ceo isa person;
+  $a isa article;
+  (organization: $o, ceo: $ceo) isa ceo_of;
+limit 5;
+fetch { ""organization"": $o.name, ""ceo"": $ceo.name, ""article"": $a.title };"
+synthetic-1,companies,909,high,cypher_invalid_rel_type,"Cypher references relationship type ""AUTHORED"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Which organizations have a board member who has authored an article?,"MATCH (o:Organization)-[:HAS_BOARD_MEMBER]->(p:Person)<-[:AUTHORED]-(a:Article)
+RETURN DISTINCT o.name AS organization, p.name AS board_member, a.title AS article_title","match
+  $o isa organization;
+  $p isa person;
+  $a isa article;
+  (organization: $o, member: $p) isa board_member_of;
+fetch { ""organization"": $o.name, ""board_member"": $p.name, ""article_title"": $a.title };"
+synthetic-1,companies,916,high,cypher_invalid_rel_type,"Cypher references relationship type ""AUTHOR"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Identify the top 3 organizations with a CEO who has authored an article.,"MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)<-[:AUTHOR]-(a:Article)
+RETURN o.name AS organization, ceo.name AS ceo, count(a) AS articleCount
+ORDER BY articleCount DESC
+LIMIT 3","match
+  $o isa organization;
+  $p isa person, has name $ceo_name;
+  ceo_of (organization: $o, ceo: $p);
+  $a isa article, has author $author_name;
+  $ceo_name == $author_name;
+reduce $articleCount = count($a) groupby $o, $p;
+sort $articleCount desc;
+limit 3;
+fetch { ""organization"": $o.name, ""ceo"": $p.name, ""articleCount"": $articleCount };"
+synthetic-1,neoflix,529,high,cypher_invalid_rel_type,"Cypher references relationship type ""AWARDED_TO"" not in Neo4j schema (valid: ['CAST_FOR', 'CREW_FOR', 'FOR_PACKAGE', 'HAS_KEYWORD', 'IN_COLLECTION', 'IN_GENRE', 'ORIGINAL_LANGUAGE', 'PRODUCED_BY', 'PRODUCED_IN_COUNTRY', 'PROVIDES_ACCESS_TO', 'RATED', 'SPOKEN_IN_LANGUAGE'])",Which movies have a budget less than 1 million USD and have won an award?,"MATCH (m:Movie)
+WHERE m.budget < 1000000 AND exists{ (m)<-[:AWARDED_TO]-() }
+RETURN m","match
+  $m isa movie;
+  $m has budget $budget;
+  $budget < 1000000;
+  $k isa keyword, has keyword_name ""award won"";
+  has_keyword (media: $m, keyword: $k);
+fetch {
+  ""title"": $m.title
+};"
+synthetic-1,recommendations,400,high,cypher_invalid_rel_type,"Cypher references relationship type ""WON"" not in Neo4j schema (valid: ['ACTED_IN', 'DIRECTED', 'IN_GENRE', 'RATED'])",Which three directors have directed movies that have won any cinematic awards?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WHERE exists{ (m)-[:WON]->(:Award) }
+RETURN d.name AS director
+LIMIT 3","match
+$p isa person;
+directed (director: $p, film: $m);
+won (film: $m, award: $aw);
+select $p;
+distinct;
+limit 3;
+fetch { ""director"": $p.name };"
+synthetic-1,recommendations,401,high,cypher_invalid_rel_type,"Cypher references relationship type ""WON"" not in Neo4j schema (valid: ['ACTED_IN', 'DIRECTED', 'IN_GENRE', 'RATED'])",Which three directors have directed movies that have won any cinematic awards?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WHERE exists{ (m)-[:WON]->(:Award) }
+RETURN d.name AS director
+LIMIT 3","match
+$p isa person;
+directed (director: $p, film: $m);
+won (film: $m, award: $aw);
+select $p;
+distinct;
+limit 3;
+fetch { ""director"": $p.name };"
+synthetic-1,recommendations,488,high,cypher_invalid_rel_type,"Cypher references relationship type ""WON"" not in Neo4j schema (valid: ['ACTED_IN', 'DIRECTED', 'IN_GENRE', 'RATED'])",List all movies that have won an award and have been directed by a director born in the UK.,"MATCH (m:Movie)<-[:DIRECTED]-(d:Director {bornIn: 'UK'})
+WHERE exists{ (m)-[:WON]->(:Award) }
+RETURN m.title, d.name","match
+$p isa person, has born_in ""UK"";
+directed (director: $p, film: $m);
+won (film: $m, award: $aw);
+fetch { ""title"": $m.title, ""director"": $p.name };"
+synthetic-1,recommendations,489,high,cypher_invalid_rel_type,"Cypher references relationship type ""WON"" not in Neo4j schema (valid: ['ACTED_IN', 'DIRECTED', 'IN_GENRE', 'RATED'])",List all movies that have won an award and have been directed by a director born in the UK.,"MATCH (m:Movie)<-[:DIRECTED]-(d:Director {bornIn: 'UK'})
+WHERE exists{ (m)-[:WON]->(:Award) }
+RETURN m.title, d.name","match
+$p isa person, has born_in ""UK"";
+directed (director: $p, film: $m);
+won (film: $m, award: $aw);
+fetch { ""title"": $m.title, ""director"": $p.name };"
+synthetic-2,companies,49,high,cypher_invalid_rel_type,"Cypher references relationship type ""HAS_AUTHORED"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Which organizations have a CEO who has authored articles?,"MATCH (org:Organization)-[:HAS_CEO]->(ceo:Person)
+MATCH (ceo)-[:HAS_AUTHORED]->(article:Article)
+RETURN org.name AS OrganizationName, ceo.name AS CEOName, article.title AS ArticleTitle","match
+$org isa organization, has name $org_name;
+$ceo isa person, has name $ceo_name;
+ceo_of (organization: $org, ceo: $ceo);
+$article isa article, has title $article_title, has author $author;
+$ceo_name == $author;
+fetch {
+  ""OrganizationName"": $org_name,
+  ""CEOName"": $ceo_name,
+  ""ArticleTitle"": $article_title
+};"
+synthetic-2,companies,164,high,cypher_invalid_rel_type,"Cypher references relationship type ""HAS_AUTHORED"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Which organizations have a board member who has authored an article?,"MATCH (org:Organization)-[:HAS_BOARD_MEMBER]->(person:Person)
+MATCH (person)-[:HAS_AUTHORED]->(article:Article)
+RETURN DISTINCT org.name AS OrganizationName","match
+$org isa organization;
+$p isa person, has name $pname;
+board_member_of (organization: $org, member: $p);
+$a isa article, has author $auth;
+$pname == $auth;
+select $org;
+distinct;
+fetch {
+  ""OrganizationName"": $org.name
+};"
+synthetic-2,companies,175,high,cypher_invalid_rel_type,"Cypher references relationship type ""HAS_AUTHORED"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",List the first 5 organizations that have a CEO who has authored an article.,"MATCH (org:Organization)-[:HAS_CEO]->(ceo:Person)
+MATCH (ceo)-[:HAS_AUTHORED]->(article:Article)
+RETURN org.name AS OrganizationName, ceo.name AS CEOName, article.title AS ArticleTitle
+LIMIT 5","match
+$org isa organization;
+ceo_of (organization: $org, ceo: $ceo);
+$ceo has name $ceo_name;
+$article isa article, has author $author_name;
+$ceo_name == $author_name;
+$article has title $article_title;
+limit 5;
+fetch {
+  ""OrganizationName"": $org.name,
+  ""CEOName"": $ceo_name,
+  ""ArticleTitle"": $article_title
+};"
+synthetic-2,companies,249,high,cypher_invalid_rel_type,"Cypher references relationship type ""HAS_WRITTEN"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",What are the first 3 organizations with a CEO who has written an article?,"MATCH (org:Organization)-[:HAS_CEO]->(ceo:Person)
+MATCH (ceo)-[:HAS_WRITTEN]->(article:Article)
+RETURN org.name AS organization_name, ceo.name AS ceo_name, article.title AS article_title
+LIMIT 3","match
+$org isa organization;
+ceo_of (organization: $org, ceo: $ceo);
+$ceo has name $ceo_name;
+$article isa article, has author $a;
+$ceo_name == $a;
+limit 3;
+fetch {
+  ""organization_name"": $org.name,
+  ""ceo_name"": $ceo_name,
+  ""article_title"": $article.title
+};"
+synthetic-2,companies,560,high,cypher_invalid_rel_type,"Cypher references relationship type ""HAS_WRITTEN"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Which 3 organizations have CEOs who have written articles about their own organizations?,"MATCH (ceo:Person)-[:HAS_CEO]->(org:Organization)
+MATCH (ceo)-[:HAS_WRITTEN]->(article:Article)-[:MENTIONS]->(org)
+RETURN org.name AS organization, ceo.name AS ceo, article.title AS article_title
+LIMIT 3","match
+$ceo isa person, has name $ceo_name;
+$org isa organization, has name $org_name;
+ceo_of (ceo: $ceo, organization: $org);
+$article isa article, has author $author, has title $article_title;
+mentions (article: $article, mentioned: $org);
+let $name_val = $ceo_name;
+let $author_val = $author;
+$name_val == $author_val;
+limit 3;
+fetch {
+  ""organization"": $org_name,
+  ""ceo"": $ceo_name,
+  ""article_title"": $article_title
+};"
+synthetic-2,companies,613,high,cypher_invalid_rel_type,"Cypher references relationship type ""HAS_WRITTEN"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Which organizations have a CEO who has written an article?,"MATCH (org:Organization)-[:HAS_CEO]->(ceo:Person)
+MATCH (ceo)-[:HAS_WRITTEN]->(article:Article)
+RETURN org.name AS OrganizationName, ceo.name AS CEOName, article.title AS ArticleTitle","match
+$org isa organization, has name $org_name;
+$ceo isa person, has name $ceo_name;
+ceo_of (organization: $org, ceo: $ceo);
+$article isa article, has author $author, has title $article_title;
+$author == $ceo_name;
+fetch {
+  ""OrganizationName"": $org_name,
+  ""CEOName"": $ceo_name,
+  ""ArticleTitle"": $article_title
+};"
+synthetic-2,companies,671,high,cypher_invalid_rel_type,"Cypher references relationship type ""HAS_WRITTEN"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Which organizations have a CEO who has written an article?,"MATCH (org:Organization)-[:HAS_CEO]->(ceo:Person)
+MATCH (ceo)-[:HAS_WRITTEN]->(article:Article)
+RETURN org.name AS OrganizationName, ceo.name AS CEOName, article.title AS ArticleTitle","match
+$org isa organization;
+$ceo isa person, has name $ceo_name;
+ceo_of (organization: $org, ceo: $ceo);
+$article isa article, has author $author, has title $title;
+$ceo_name == $author;
+fetch {
+  ""OrganizationName"": $org.name,
+  ""CEOName"": $ceo_name,
+  ""ArticleTitle"": $title
+};"
+synthetic-2,companies,719,high,cypher_invalid_rel_type,"Cypher references relationship type ""HAS_AUTHORED"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Which organizations have a CEO who has authored more than three articles?,"MATCH (org:Organization)-[:HAS_CEO]->(ceo:Person)
+WITH org, ceo
+MATCH (ceo)-[:HAS_AUTHORED]->(article:Article)
+WITH org, ceo, COUNT(article) AS articleCount
+WHERE articleCount > 3
+RETURN org.name AS OrganizationName, ceo.name AS CEOName, articleCount","match
+$org isa organization, has name $org_name;
+ceo_of (organization: $org, ceo: $ceo);
+$ceo isa person, has name $ceo_name;
+$article isa article, has author $author;
+$author == $ceo_name;
+reduce $article_count = count($article) groupby $org, $ceo, $org_name, $ceo_name;
+match $article_count > 3;
+fetch {
+  ""OrganizationName"": $org_name,
+  ""CEOName"": $ceo_name,
+  ""articleCount"": $article_count
+};"
+synthetic-2,companies,955,high,cypher_invalid_rel_type,"Cypher references relationship type ""HAS_AUTHOR"" not in Neo4j schema (valid: ['HAS_BOARD_MEMBER', 'HAS_CATEGORY', 'HAS_CEO', 'HAS_CHILD', 'HAS_CHUNK', 'HAS_COMPETITOR', 'HAS_INVESTOR', 'HAS_PARENT', 'HAS_SUBSIDIARY', 'HAS_SUPPLIER', 'IN_CITY', 'IN_COUNTRY', 'MENTIONS'])",Which organizations have a CEO who has authored more than one article?,"MATCH (org:Organization)-[:HAS_CEO]->(ceo:Person)
+WITH org, ceo
+MATCH (ceo)<-[:HAS_AUTHOR]-(article:Article)
+WITH org, ceo, COUNT(article) AS articleCount
+WHERE articleCount > 1
+RETURN org.name AS organizationName, ceo.name AS ceoName, articleCount","match
+  $org isa organization;
+  $ceo isa person, has name $ceo_name;
+  ceo_of (organization: $org, ceo: $ceo);
+  $article isa article, has author $author_name;
+  $ceo_name == $author_name;
+reduce $article_count = count($article) groupby $org, $ceo_name;
+match $article_count > 1;
+$org has name $org_name;
+fetch { ""organizationName"": $org_name, ""ceoName"": $ceo_name, ""articleCount"": $article_count };"
+synthetic-2,northwind,300,high,cypher_invalid_rel_type,"Cypher references relationship type ""PROCESSED"" not in Neo4j schema (valid: ['ORDERS', 'PART_OF', 'PURCHASED', 'SUPPLIES'])",List the top 3 employees who processed the most orders.,"MATCH (e:Employee)-[:PROCESSED]->(o:Order)
+WITH e, count(o) as orderCount
+ORDER BY orderCount DESC
+LIMIT 3
+RETURN e.employeeID, e.name, orderCount","match
+$o isa order, has employee_id $eid;
+reduce $count = count($o) groupby $eid;
+sort $count desc;
+limit 3;
+fetch { ""employee_id"": $eid, ""order_count"": $count };"

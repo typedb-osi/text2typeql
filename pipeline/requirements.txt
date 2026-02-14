@@ -2,4 +2,3 @@ anthropic>=0.40.0
 typedb-driver>=3.0.0
 click>=8.1.0
 pandas>=2.0.0
-mcp>=1.0.0

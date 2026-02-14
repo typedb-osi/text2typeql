@@ -24,8 +24,8 @@ Pipeline to convert Neo4j text2cypher datasets to TypeQL format for training tex
 **Source**: https://github.com/neo4j-labs/text2cypher
 
 Two source datasets:
-- **synthetic-1**: `datasets/synthetic_opus_demodbs/` -- 7 databases, 4,776 valid queries (4,728 converted)
-- **synthetic-2**: `datasets/synthetic_gpt4o_demodbs/` -- 15 databases, 9,267 valid queries (7,240 converted, 174 failed, 1,853 pending)
+- **synthetic-1**: `datasets/synthetic_opus_demodbs/` -- 7 databases, 4,776 valid queries (4,733 converted, 43 failed)
+- **synthetic-2**: `datasets/synthetic_gpt4o_demodbs/` -- 15 databases, 9,267 valid queries (9,206 converted, 61 failed)
 
 ## Important: Sequential Processing
 
@@ -131,6 +131,12 @@ limit 5;
 ### Advanced Features
 
 ```typeql
+# String length (TypeDB 3.8+)
+let $len = len($name);
+
+# String concatenation (TypeDB 3.8+)
+let $display = $name + " (" + $city + ")";
+
 # Custom functions - reusable query logic
 with fun follower_count($user: user) -> integer:
   match follows (followed: $user);
@@ -155,6 +161,22 @@ $rel isa $t;
 
 # Relation role inference - omit roles to match all permutations
 $rel isa interacts ($c);  # Matches $c in ANY role (character1 or character2)
+
+# Recursive stream function - transitive closure (replaces [:REL*])
+with fun supply_chain($o: organization) -> { organization }:
+  match
+    {
+      supplies (supplier: $s, customer: $o);
+    } or {
+      let $mid in supply_chain($o);
+      supplies (supplier: $s, customer: $mid);
+    };
+  return { $s };
+with fun supply_chain_size($o: organization) -> integer:
+  match let $s in supply_chain($o);
+  select $s;
+  distinct;
+  return count;
 
 # Symmetric/bidirectional matching - omit roles for both players
 subsidiary_of ($o1, $o2);  # Matches ($o1 as parent, $o2 as child) OR ($o1 as child, $o2 as parent)
@@ -205,6 +227,11 @@ reduce $count = count($rel) groupby $comm;  # Works - $rel bound outside disjunc
 | `WITH x, count(y) WHERE c > N` | `reduce $c = count groupby $x; match $c > N;` |
 | `count(DISTINCT x) GROUP BY y` | `select $x, $y; distinct; reduce $c = count groupby $y;` |
 | `ORDER BY a / b` | `let $ratio = $a / $b; sort $ratio;` |
+| `size(n.prop)` (string) | `let $len = len($prop); $len > N;` |
+| `a.prop + ' text'` | `let $s = $prop + " text";` |
+| `(a)-[:REL*]->(b)` | Recursive stream function (see below) |
+| `collect(n.prop)` | Fetch subquery: `"key": [ match ...; fetch { ... }; ]` |
+| `timestamp()` (epoch int) | `max()` aggregate as proxy + integer arithmetic |
 
 ## Database Names
 
@@ -329,31 +356,31 @@ pipeline/docs/
 | Database | Total Queries | Converted | Failed |
 |----------|--------------|-----------|--------|
 | twitter | 493 | 491 | 2 |
-| twitch | 561 | 553 | 8 |
-| movies | 729 | 723 | 6 |
+| twitch | 561 | 554 | 7 |
+| movies | 729 | 726 | 3 |
 | neoflix | 915 | 910 | 5 |
 | recommendations | 753 | 741 | 12 |
-| companies | 933 | 929 | 4 |
+| companies | 933 | 930 | 3 |
 | gameofthrones | 392 | 381 | 11 |
-| **Total** | **4776** | **4728** | **48** |
+| **Total** | **4776** | **4733** | **43** |
 
-### synthetic-2 (gpt4o) -- 12/15 databases complete
+### synthetic-2 (gpt4o) -- fully converted
 
 | Database | Valid Queries | Converted | Failed |
 |----------|-------------|-----------|--------|
 | bluesky | 135 | 135 | 0 |
-| buzzoverflow | 592 | 578 | 14 |
-| companies | 966 | 941 | 25 |
-| fincen | 614 | 584 | 30 |
+| buzzoverflow | 592 | 585 | 7 |
+| companies | 966 | 966 | 0 |
+| fincen | 614 | 609 | 5 |
 | gameofthrones | 393 | 384 | 9 |
-| grandstack | 807 | 793 | 14 |
-| movies | 738 | 728 | 10 |
-| neoflix | 923 | 913 | 10 |
-| network | 625 | 613 | 12 |
-| northwind | 807 | 780 | 27 |
-| offshoreleaks | 507 | 493 | 14 |
-| stackoverflow2 | 307 | 298 | 9 |
-| recommendations | 775 | 0 | 0 |
-| twitch | 576 | 0 | 0 |
-| twitter | 502 | 0 | 0 |
-| **Total** | **9267** | **7240** | **174** |
+| grandstack | 807 | 805 | 2 |
+| movies | 738 | 737 | 1 |
+| neoflix | 923 | 916 | 7 |
+| network | 625 | 620 | 5 |
+| northwind | 807 | 807 | 0 |
+| offshoreleaks | 507 | 498 | 9 |
+| recommendations | 775 | 764 | 11 |
+| stackoverflow2 | 307 | 306 | 1 |
+| twitch | 576 | 572 | 4 |
+| twitter | 502 | 502 | 0 |
+| **Total** | **9267** | **9206** | **61** |

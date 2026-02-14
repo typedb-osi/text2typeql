@@ -21,7 +21,7 @@ def validate_typeql(typeql: str, index: int) -> tuple[bool, str]:
 
     # Run TypeDB console
     cmd = [
-        '/opt/typedb-all-linux-arm64-3.7.3/typedb', 'console',
+        '/opt/typedb-all-linux-arm64-3.8.0/typedb', 'console',
         '--address', 'localhost:1729',
         '--username', 'admin',
         '--password', 'password',

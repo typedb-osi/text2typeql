@@ -73,6 +73,18 @@ fetch {
   ""name"": $e.name,
   ""id"": $e.entity_id
 };"
+6,Find the top 5 originator banks with filings that have the shortest duration between begin and end dates.,"MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)
+WITH f, e, duration.between(f.begin, f.end) AS duration
+ORDER BY duration ASC
+LIMIT 5
+RETURN e.name AS originator_bank, duration","match
+$f isa filing, has period_begin $b, has period_end $e;
+originator (filing: $f, originating_entity: $ent);
+$ent has name $name;
+let $diff = $e - $b;
+sort $diff asc;
+limit 5;
+fetch { ""originator_bank"": $name, ""duration"": $diff };"
 7,Which 3 entities have filed the most transactions where the amount is greater than 1 million USD?,"MATCH (e:Entity)-[:FILED]->(f:Filing)
 WHERE f.amount > 1000000
 WITH e, COUNT(f) AS transaction_count
@@ -232,6 +244,24 @@ limit 5;
 fetch {
   ""filing"": $f
 };"
+18,What are the first 3 filings where the originator and beneficiary banks have the same country of origin?,"MATCH (f:Filing)
+WHERE f.originator_iso = f.beneficiary_iso
+RETURN f
+ORDER BY f.begin
+LIMIT 3","match
+$f isa filing, has originator_iso $oi, has beneficiary_iso $bi;
+$oi == $bi;
+$f has begin_date $bd;
+sort $bd;
+limit 3;
+fetch {
+  ""filing"": {
+    ""filing_id"": $f.filing_id,
+    ""originator_iso"": $f.originator_iso,
+    ""beneficiary_iso"": $f.beneficiary_iso,
+    ""begin_date"": $f.begin_date
+  }
+};"
 19,List the top 3 entities based on the number of relationships they have with countries.,"MATCH (e:Entity)-[:COUNTRY]->(c:Country)
 WITH e, count(c) as countryCount
 ORDER BY countryCount DESC
@@ -276,6 +306,16 @@ limit 5;
 fetch {
     ""filing"": { $f.* }
 };"
+23,What are the first 3 filings with the shortest duration between begin and end dates?,"MATCH (f:Filing)
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration
+LIMIT 3
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration AS Duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff asc;
+limit 3;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 24,List the top 5 countries by the number of entities based on the [:COUNTRY] relationship.,"MATCH (e:Entity)-[:COUNTRY]->(c:Country)
 WITH c.name AS country, COUNT(e) AS entity_count
 ORDER BY entity_count DESC
@@ -644,6 +684,16 @@ fetch {
     ""originator_bank_country"": $f.originator_bank_country,
     ""beneficiary_bank_country"": $f.beneficiary_bank_country
 };"
+48,What are the top 3 filings with the longest duration between begin and end dates?,"MATCH (f:Filing)
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration DESC
+LIMIT 3
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration AS Duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff desc;
+limit 3;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 49,Identify the top 5 filings by amount where the beneficiary bank's country is 'Singapore'.,"MATCH (f:Filing)
 WHERE f.beneficiary_bank_country = 'Singapore'
 RETURN f
@@ -688,6 +738,19 @@ fetch {
   ""entity_name"": $e.name,
   ""num_filings"": $count
 };"
+52,Which 3 filings have involved entities with the longest relationships based on begin and end dates?,"MATCH (f:Filing)-[:BENEFITS|:CONCERNS|:ORIGINATOR]->(e:Entity)
+WITH f, e, duration.between(f.begin, f.end) AS relationship_duration
+ORDER BY relationship_duration DESC
+LIMIT 3
+RETURN f.sar_id AS filing_id, f.begin AS begin_date, f.end AS end_date, relationship_duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+$rel isa $t (filing: $f, $ent);
+{ $t label benefits; } or { $t label concerns; } or { $t label originator; };
+$ent isa fincen_entity;
+let $diff = $e - $b;
+sort $diff desc;
+limit 3;
+fetch { ""filing_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 53,Which 3 entities have the most filings as originators and are located in 'China'?,"MATCH (e:Entity)-[:ORIGINATOR]->(f:Filing)
 WHERE e.country = 'CHN'
 WITH e, COUNT(f) AS num_filings
@@ -986,6 +1049,18 @@ reduce $count = count($e) groupby $c, $cn;
 sort $count desc;
 limit 3;
 fetch { ""country"": $cn, ""entityCount"": $count };"
+75,Which 3 entities have been the originator in the filings with the longest durations from beginning to end date?,"MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)
+WITH e, f, duration.inSeconds(f.begin, f.end) AS duration
+ORDER BY duration DESC
+LIMIT 3
+RETURN e.name AS entity_name, duration","match
+$f isa filing, has period_begin $b, has period_end $e;
+originator (filing: $f, originating_entity: $ent);
+$ent has name $name;
+let $diff = $e - $b;
+sort $diff desc;
+limit 3;
+fetch { ""entity_name"": $name, ""duration"": $diff };"
 76,Identify the top 5 filings by number that involve 'CIMB Bank Berhad' as the originator.,"MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)
 WHERE f.originator_bank = 'CIMB Bank Berhad'
 RETURN f
@@ -1129,6 +1204,19 @@ reduce $count = count($f) groupby $e;
 sort $count desc;
 limit 3;
 fetch { ""entity_name"": $e.name, ""transaction_count"": $count };"
+87,Find the top 5 filings with the shortest durations where the originator bank's country is 'Singapore'.,"MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)-[:COUNTRY]->(c:Country {name: 'Singapore'})
+WITH f, duration.inSeconds(datetime(f.begin), datetime(f.end)) AS duration
+ORDER BY duration ASC
+LIMIT 5
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration AS Duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+originator (filing: $f, originating_entity: $ent);
+entity_country (fincen_entity: $ent, country: $c);
+$c has name ""Singapore"";
+let $diff = $e - $b;
+sort $diff asc;
+limit 5;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 88,What are the first 3 filings with a beneficiary bank located in 'Angola' that involves the smallest amounts?,"MATCH (f:Filing)-[:BENEFITS]->(e:Entity)-[:COUNTRY]->(c:Country {name: 'Angola'})
 WHERE f.beneficiary_bank_country = 'Angola'
 RETURN f
@@ -1543,6 +1631,17 @@ reduce $filings_count = count($f) groupby $c;
 sort $filings_count desc;
 limit 5;
 fetch { ""country"": $c.name, ""filings_count"": $filings_count };"
+116,"Which 3 filings have the longest duration from 'begin' to 'end' where the amount is over 500,000?","MATCH (f:Filing)
+WHERE f.amount > 500000
+RETURN f.sar_id, f.begin, f.end, f.amount, duration.between(f.begin, f.end) AS duration
+ORDER BY duration DESC
+LIMIT 3","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid, has amount $a;
+$a > 500000;
+let $diff = $e - $b;
+sort $diff desc;
+limit 3;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""amount"": $a, ""duration"": $diff };"
 117,List the top 5 entities based on the number of [:CONCERNS] relationships they are involved in.,"MATCH (e:Entity)<-[:CONCERNS]-(f:Filing)
 RETURN e.name AS entity_name, COUNT(f) AS concerns_count
 ORDER BY concerns_count DESC
@@ -1935,6 +2034,16 @@ fetch {
   ""entity_name"": $e.name,
   ""filings_count"": $count
 };"
+145,What are the top 5 filings by duration (from 'begin' to 'end')?,"MATCH (f:Filing)
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration DESC
+LIMIT 5
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration AS Duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff desc;
+limit 5;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 146,Which 3 countries have beneficiary banks that have been involved in the highest number of filings?,"MATCH (f:Filing)-[:BENEFITS]->(e:Entity)-[:COUNTRY]->(c:Country)
 WITH c.name AS country, count(f) AS filings_count
 ORDER BY filings_count DESC
@@ -1978,6 +2087,16 @@ reduce $count = count($f) groupby $c;
 sort $count desc;
 limit 3;
 fetch { ""country"": $c.name, ""filings_count"": $count };"
+149,List the top 5 filings with the shortest duration between 'begin' and 'end'.,"MATCH (f:Filing)
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration ASC
+LIMIT 5
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration AS Duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff asc;
+limit 5;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 150,What are the names of the top 3 originator banks that have initiated filings with the most distinct beneficiary banks?,"MATCH (f:Filing)-[:ORIGINATOR]->(o:Entity), (f)-[:BENEFITS]->(b:Entity)
 WITH o.name AS originator_bank, COUNT(DISTINCT b.name) AS distinct_beneficiary_count
 ORDER BY distinct_beneficiary_count DESC
@@ -2193,6 +2312,16 @@ fetch {
   ""filing_id"": $f.filing_id,
   ""amount"": $a
 };"
+167,Find the top 5 Filings with the shortest duration between begin and end dates.,"MATCH (f:Filing)
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration ASC
+LIMIT 5
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration AS Duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff asc;
+limit 5;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 168,"Who are the beneficiaries in Filings that involved an amount over $2,000,000?","MATCH (f:Filing)-[:BENEFITS]->(e:Entity)
 WHERE f.amount > 2000000
 RETURN e.name AS beneficiary_name, f.amount AS amount","match
@@ -2295,6 +2424,18 @@ limit 3;
 fetch {
   ""filing_id"": $f.filing_id,
   ""period_end"": $pe
+};"
+177,What are the names of the Entities that have filed the Filings with a begin date in '2014'?,"MATCH (e:Entity)-[:FILED]->(f:Filing)
+WHERE f.begin_date_format STARTS WITH '2014'
+RETURN DISTINCT e.name AS EntityName","match
+$e isa fincen_entity;
+$f isa filing, has begin_date_format $bdf;
+$bdf like ""2014.*"";
+filed (filer: $e, filing: $f);
+select $e;
+distinct;
+fetch {
+  ""EntityName"": $e.name
 };"
 178,What are the top 3 filings by amount where the originator bank country is 'Singapore'?,"MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)-[:COUNTRY]->(c:Country {name: 'Singapore'})
 WHERE f.originator_bank_country = 'Singapore'
@@ -2417,6 +2558,16 @@ fetch {
   ""beneficiary_bank_country"": $f.beneficiary_bank_country,
   ""amount"": $a
 };"
+187,Display the top 5 longest Filings by duration between begin and end dates.,"MATCH (f:Filing)
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration DESC
+LIMIT 5
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration AS Duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff desc;
+limit 5;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 188,What are the names of the top 3 Entities by the total amount of Filings they have benefited from?,"MATCH (e:Entity)<-[:BENEFITS]-(f:Filing)
 WITH e, SUM(f.amount) AS totalAmount
 ORDER BY totalAmount DESC
@@ -2613,6 +2764,16 @@ fetch {
     ""period_end"": $pe
   }
 };"
+205,List the top 3 longest Filings in terms of duration from the begin to the end date.,"MATCH (f:Filing)
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration DESC
+LIMIT 3
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration AS Duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff desc;
+limit 3;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 206,Who are the beneficiaries in Filings that have an originator bank from 'Angola'?,"MATCH (f:Filing)-[:BENEFITS]->(e:Entity)
 WHERE f.originator_bank_country = 'Angola'
 RETURN e.name AS beneficiary","match
@@ -2827,6 +2988,19 @@ reduce $count = count($f) groupby $country;
 sort $count desc;
 limit 3;
 fetch { ""country"": $country };"
+222,List the top 5 filings with the shortest duration between begin and end in 2005.,"MATCH (f:Filing)
+WHERE f.begin >= datetime('2005-01-01T00:00:00Z') AND f.end <= datetime('2005-12-31T23:59:59Z')
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration ASC
+LIMIT 5
+RETURN f.sar_id AS SAR_ID, f.begin AS Begin_Date, f.end AS End_Date, duration AS Duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+$b >= 2005-01-01T00:00:00;
+$e <= 2005-12-31T23:59:59;
+let $diff = $e - $b;
+sort $diff asc;
+limit 5;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 223,List the top 5 countries by the number of entities they host.,"MATCH (e:Entity)-[:COUNTRY]->(c:Country)
 WITH c.name AS country, COUNT(e) AS entity_count
 ORDER BY entity_count DESC
@@ -2870,6 +3044,19 @@ reduce $count = count($e) groupby $c;
 sort $count desc;
 limit 5;
 fetch { ""country"": $c.name, ""entity_count"": $count };"
+226,Which three filings had the longest duration from begin to end in 2009?,"MATCH (f:Filing)
+WHERE f.begin >= datetime('2009-01-01T00:00:00Z') AND f.end <= datetime('2009-12-31T23:59:59Z')
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration DESC
+LIMIT 3
+RETURN f.sar_id, f.begin, f.end, duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+$b >= 2009-01-01T00:00:00;
+$e <= 2009-12-31T23:59:59;
+let $diff = $e - $b;
+sort $diff desc;
+limit 3;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 227,List the top 5 entities that have filed the most filings where the beneficiary bank is located in the United States.,"MATCH (f:Filing)-[:BENEFITS]->(e:Entity)
 WHERE f.beneficiary_bank_country = ""United States""
 WITH e, count(f) as filing_count
@@ -3067,6 +3254,16 @@ fetch {
   ""beneficiary_bank"": $e.name,
   ""total_amount"": $total
 };"
+242,Which 3 filings have the shortest duration from begin to end date?,"MATCH (f:Filing)
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration ASC
+LIMIT 3
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration AS Duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff asc;
+limit 3;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 243,What are the 3 most frequent beneficiary banks in transactions over $1 million?,"MATCH (f:Filing)-[:BENEFITS]->(e:Entity)
 WHERE f.amount > 1000000
 RETURN e.name AS beneficiary_bank, COUNT(f) AS transaction_count
@@ -4112,6 +4309,16 @@ fetch {
   ""filing_id"": $f.sar_id,
   ""concern_count"": $count
 };"
+319,Which 5 filings have the longest duration from begin to end date?,"MATCH (f:Filing)
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration DESC
+LIMIT 5
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff desc;
+limit 5;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 320,Which 5 filings have the highest amount transferred between 2015 and 2017?,"MATCH (f:Filing)
 WHERE f.begin >= datetime(""2015-01-01T00:00:00Z"") AND f.end <= datetime(""2017-12-31T23:59:59Z"")
 RETURN f
@@ -4628,6 +4835,19 @@ reduce $count = count($f) groupby $e, $n;
 sort $count desc;
 limit 5;
 fetch { ""entity_name"": $n, ""number_of_filings"": $count };"
+354,Which 3 filings have the longest duration from beginning to end date and involve an originator bank from 'USA'?,"MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)-[:COUNTRY]->(c:Country {code: 'USA'})
+WITH f, duration.inDays(f.begin, f.end) AS duration
+ORDER BY duration DESC
+LIMIT 3
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+originator (filing: $f, originating_entity: $ent);
+entity_country (fincen_entity: $ent, country: $c);
+$c has code ""USA"";
+let $diff = $e - $b;
+sort $diff desc;
+limit 3;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 355,List the top 3 countries by the number of entities that have filed more than 30 filings.,"MATCH (e:Entity)-[:FILED]->(f:Filing)
 WITH e, COUNT(f) AS filingsCount
 WHERE filingsCount > 30
@@ -5667,6 +5887,16 @@ limit 3;
 fetch {
   ""country_code"": $c.code
 };"
+427,List the 3 filings with the shortest duration from beginning to end.,"MATCH (f:Filing)
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration ASC
+LIMIT 3
+RETURN f.sar_id AS SAR_ID, f.begin AS Begin_Date, f.end AS End_Date, duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff asc;
+limit 3;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 428,What are the names of the top 5 entities that originated the most filings?,"MATCH (e:Entity)-[:ORIGINATOR]->(f:Filing)
 RETURN e.name AS entity_name, COUNT(f) AS filings_count
 ORDER BY filings_count DESC
@@ -6346,6 +6576,16 @@ reduce $count = count($e) groupby $f;
 sort $count desc;
 limit 5;
 fetch { ""filing_id"": $f.sar_id, ""originator_count"": $count };"
+477,Which 3 filings have the shortest duration from begin to end date?,"MATCH (f:Filing)
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration ASC
+LIMIT 3
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration AS Duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff asc;
+limit 3;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 478,List the first 3 countries that have the most filings where the originator bank's country is different from the beneficiary bank's country.,"MATCH (f:Filing)
 WHERE f.originator_bank_country <> f.beneficiary_bank_country
 WITH f.originator_bank_country AS origin_country, COUNT(f) AS filings_count
@@ -6615,6 +6855,31 @@ match $total > 1000000;
 sort $total desc;
 limit 3;
 fetch { ""country"": $cn, ""totalAmount"": $total };"
+495,List the first 3 filings where the beneficiary bank and the filer organization name are the same.,"MATCH (f:Filing)
+WHERE f.beneficiary_bank = f.filer_org_name
+RETURN f
+ORDER BY f.begin
+LIMIT 3","match
+$f isa filing, has beneficiary_bank $bb, has filer_org_name $fn, has begin_date $bd;
+$bb == $fn;
+sort $bd;
+limit 3;
+fetch { ""filing_id"": $f.filing_id, ""beneficiary_bank"": $f.beneficiary_bank, ""filer_org_name"": $f.filer_org_name, ""begin_date"": $f.begin_date };"
+496,Identify the top 3 filings where the originator and beneficiary banks are in the same country.,"MATCH (f:Filing)
+WHERE f.originator_bank_country = f.beneficiary_bank_country
+RETURN f
+ORDER BY f.amount DESC
+LIMIT 3","match
+$f isa filing, has originator_bank_country $obc, has beneficiary_bank_country $bbc, has amount $a;
+$obc == $bbc;
+sort $a desc;
+limit 3;
+fetch {
+  ""filing_id"": $f.filing_id,
+  ""amount"": $a,
+  ""originator_bank_country"": $obc,
+  ""beneficiary_bank_country"": $bbc
+};"
 497,Identify the top 3 entities that have been the originator in the most filings.,"MATCH (e:Entity)-[:ORIGINATOR]->(f:Filing)
 WITH e, COUNT(f) AS num_filings
 ORDER BY num_filings DESC
@@ -6788,6 +7053,16 @@ fetch {
   ""amount"": $f.amount,
   ""number"": $f.number
 };"
+508,Which 3 filings have the longest duration from begin to end date?,"MATCH (f:Filing)
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration DESC
+LIMIT 3
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration AS Duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff desc;
+limit 3;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 509,List the first 3 entities that have filed the most concerning filings.,"MATCH (e:Entity)-[:FILED]->(f:Filing)-[:CONCERNS]->(:Entity)
 WITH e, COUNT(f) AS concern_count
 ORDER BY concern_count DESC
@@ -7193,6 +7468,16 @@ fetch {
   ""OriginatorEntity"": $e.name,
   ""Amount"": $a
 };"
+542,Which filings have the longest duration from begin to end date?,"MATCH (f:Filing)
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration DESC
+RETURN f.sar_id AS filing_id, f.begin AS begin_date, f.end AS end_date, duration
+LIMIT 1","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff desc;
+limit 1;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 543,Which entities have been concerned by filings with an amount over 1500000?,"MATCH (f:Filing)-[:CONCERNS]->(e:Entity)
 WHERE f.amount > 1500000
 RETURN e.name AS concerned_entity, e.id AS entity_id","match
@@ -7450,6 +7735,16 @@ entity_country (fincen_entity: $e, country: $c);
 fetch {
   ""filing_id"": $f.filing_id
 };"
+566,What are the top 5 filings by the shortest duration from begin to end date?,"MATCH (f:Filing)
+WITH f, duration.inSeconds(f.begin, f.end) AS duration
+ORDER BY duration ASC
+LIMIT 5
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff asc;
+limit 5;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 567,What is the average number of filings per originator bank?,"MATCH (f:Filing)-[:ORIGINATOR]->(e:Entity)
 WITH e.name AS originator_bank, COUNT(f) AS filings_count
 RETURN originator_bank, AVG(filings_count) AS average_filings_per_originator","match
@@ -7580,6 +7875,16 @@ fetch {
   ""entity_name"": $e.name,
   ""filing_count"": $count
 };"
+577,What are the top 5 filings with the shortest duration between begin and end dates?,"MATCH (f:Filing)
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration ASC
+LIMIT 5
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration AS Duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff asc;
+limit 5;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 578,Which countries have entities that are both originators and beneficiaries in filings with an amount over 1000000?,"MATCH (originator:Entity)-[:FILED]->(f:Filing)-[:ORIGINATOR]->(originator)
 MATCH (beneficiary:Entity)-[:FILED]->(f)-[:BENEFITS]->(beneficiary)
 WHERE f.amount > 1000000
@@ -7990,6 +8295,28 @@ filed (filer: $e, filing: $f);
 reduce $num_filings = count($f) groupby $e;
 match $num_filings > 30;
 fetch { ""entity_name"": $e.name, ""num_filings"": $num_filings };"
+611,Which filings have the shortest duration from begin to end date involving a beneficiary bank from 'United Kingdom'?,"MATCH (f:Filing)
+WHERE f.beneficiary_bank_country = 'United Kingdom'
+WITH f, duration.between(f.begin, f.end) AS duration
+ORDER BY duration ASC
+LIMIT 1
+RETURN f","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid, has beneficiary_bank_country $bbc;
+$bbc == ""United Kingdom"";
+let $diff = $e - $b;
+sort $diff asc;
+limit 1;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e };"
+612,What are the top 5 filings by the longest duration from begin to end date?,"MATCH (f:Filing)
+WITH f, duration.inDays(datetime(f.begin), datetime(f.end)) AS duration
+ORDER BY duration DESC
+LIMIT 5
+RETURN f.sar_id AS SAR_ID, f.begin AS BeginDate, f.end AS EndDate, duration","match
+$f isa filing, has period_begin $b, has period_end $e, has sar_id $sid;
+let $diff = $e - $b;
+sort $diff desc;
+limit 5;
+fetch { ""sar_id"": $sid, ""begin"": $b, ""end"": $e, ""duration"": $diff };"
 613,Which country has the least number of entities that are beneficiaries?,"MATCH (c:Country)<-[:COUNTRY]-(e:Entity)<-[:BENEFITS]-(f:Filing)
 WITH c, COUNT(e) AS entityCount
 RETURN c.name AS country, entityCount
@@ -8003,58 +8330,3 @@ reduce $entity_count = count($e) groupby $c, $country_name;
 sort $entity_count asc;
 limit 1;
 fetch { ""country"": $country_name, ""entityCount"": $entity_count };"
-177,What are the names of the Entities that have filed the Filings with a begin date in '2014'?,"MATCH (e:Entity)-[:FILED]->(f:Filing)
-WHERE f.begin_date_format STARTS WITH '2014'
-RETURN DISTINCT e.name AS EntityName","match
-$e isa fincen_entity;
-$f isa filing, has begin_date_format $bdf;
-$bdf like ""2014.*"";
-filed (filer: $e, filing: $f);
-select $e;
-distinct;
-fetch {
-  ""EntityName"": $e.name
-};"
-18,What are the first 3 filings where the originator and beneficiary banks have the same country of origin?,"MATCH (f:Filing)
-WHERE f.originator_iso = f.beneficiary_iso
-RETURN f
-ORDER BY f.begin
-LIMIT 3","match
-$f isa filing, has originator_iso $oi, has beneficiary_iso $bi;
-$oi == $bi;
-$f has begin_date $bd;
-sort $bd;
-limit 3;
-fetch {
-  ""filing"": {
-    ""filing_id"": $f.filing_id,
-    ""originator_iso"": $f.originator_iso,
-    ""beneficiary_iso"": $f.beneficiary_iso,
-    ""begin_date"": $f.begin_date
-  }
-};"
-495,List the first 3 filings where the beneficiary bank and the filer organization name are the same.,"MATCH (f:Filing)
-WHERE f.beneficiary_bank = f.filer_org_name
-RETURN f
-ORDER BY f.begin
-LIMIT 3","match
-$f isa filing, has beneficiary_bank $bb, has filer_org_name $fn, has begin_date $bd;
-$bb == $fn;
-sort $bd;
-limit 3;
-fetch { ""filing_id"": $f.filing_id, ""beneficiary_bank"": $f.beneficiary_bank, ""filer_org_name"": $f.filer_org_name, ""begin_date"": $f.begin_date };"
-496,Identify the top 3 filings where the originator and beneficiary banks are in the same country.,"MATCH (f:Filing)
-WHERE f.originator_bank_country = f.beneficiary_bank_country
-RETURN f
-ORDER BY f.amount DESC
-LIMIT 3","match
-$f isa filing, has originator_bank_country $obc, has beneficiary_bank_country $bbc, has amount $a;
-$obc == $bbc;
-sort $a desc;
-limit 3;
-fetch {
-  ""filing_id"": $f.filing_id,
-  ""amount"": $a,
-  ""originator_bank_country"": $obc,
-  ""beneficiary_bank_country"": $bbc
-};"

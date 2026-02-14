@@ -83,8 +83,10 @@ $rel isa $t ($c);
 { $t label interacts; } or { $t label interacts1; };
 ```
 
+**Newly supported** (TypeDB 3.8+): `size(string)` → `let $len = len($str);`, string concatenation → `let $s = $a + " " + $b;`
+
 **Unsupported features** (→ route to failed.csv immediately, do not retry):
-`size()`, `collect()`, `array[N]`, date arithmetic, `split()`, `left()`
+`collect()`, `array[N]`, `split()`, `left()`, `substring()`
 
 For complex patterns, read `pipeline/docs/typeql_reference.md`.
 

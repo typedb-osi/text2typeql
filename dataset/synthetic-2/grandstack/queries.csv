@@ -312,6 +312,34 @@ fetch {
   ""BusinessName"": $b.name,
   ""CategoryName"": $cat_name
 };"
+26,Which user has reviewed the most categories of businesses and what are those categories?,"MATCH (u:User)-[:WROTE]->(r:Review)-[:REVIEWS]->(b:Business)-[:IN_CATEGORY]->(c:Category)
+WITH u, collect(DISTINCT c.name) AS categories
+RETURN u.name AS user, categories, size(categories) AS categoryCount
+ORDER BY categoryCount DESC
+LIMIT 1","with fun category_count($u: user) -> integer:
+  match
+    wrote (author: $u, review: $r);
+    reviews (review: $r, reviewed_business: $b);
+    in_category (business: $b, category: $c);
+  select $c;
+  distinct;
+  return count;
+match
+$u isa user;
+let $count = category_count($u);
+reduce $max_count = max($count);
+match
+$u isa user;
+let $count = category_count($u);
+$count == $max_count;
+wrote (author: $u, review: $r);
+reviews (review: $r, reviewed_business: $b);
+in_category (business: $b, category: $c);
+fetch {
+  ""user"": $u.name,
+  ""category"": $c.name,
+  ""categoryCount"": $count
+};"
 27,List the businesses in 'San Mateo' that have received reviews with exactly 4 stars.,"MATCH (b:Business)-[:REVIEWS]-(r:Review)
 WHERE b.city = 'San Mateo' AND r.stars = 4.0
 RETURN b.name","match
@@ -434,6 +462,31 @@ RETURN u.name AS userName, r.text AS reviewText","match
 fetch {
   ""userName"": $u.name,
   ""reviewText"": $r.text
+};"
+36,Which business in 'San Mateo' has the highest average review star rating and what are its reviews?,"MATCH (b:Business {city: 'San Mateo'})<-[:REVIEWS]-(r:Review)
+WITH b, avg(r.stars) AS avgRating, collect(r) AS reviews
+ORDER BY avgRating DESC
+LIMIT 1
+RETURN b.name AS businessName, avgRating, reviews","with fun avg_stars($b: business) -> double:
+  match
+    reviews (review: $r, reviewed_business: $b);
+    $r has stars $s;
+  return mean($s);
+match
+$b isa business, has city ""San Mateo"";
+let $avg = avg_stars($b);
+reduce $max_avg = max($avg);
+match
+$b isa business, has city ""San Mateo"";
+let $avg = avg_stars($b);
+$avg == $max_avg;
+reviews (review: $r, reviewed_business: $b);
+fetch {
+  ""businessName"": $b.name,
+  ""avgRating"": $avg,
+  ""reviewText"": $r.text,
+  ""reviewStars"": $r.stars,
+  ""reviewDate"": $r.date
 };"
 37,Which businesses in Burlingame have received a 5-star review?,"MATCH (b:Business)-[:IN_CATEGORY]->(:Category),
       (r:Review)-[:REVIEWS]->(b),
@@ -2158,6 +2211,22 @@ fetch {
   ""BusinessName"": $bn,
   ""ReviewerName"": $un
 };"
+174,Find the top 3 longest reviews for businesses in 'Missoula' and the corresponding businesses names.,"MATCH (b:Business)-[:IN_CATEGORY]->(:Category), (r:Review)-[:REVIEWS]->(b)
+WHERE b.city = 'Missoula'
+WITH r, b
+ORDER BY size(r.text) DESC
+LIMIT 3
+RETURN r.text AS reviewText, b.name AS businessName","match
+$b isa business, has city ""Missoula"";
+$r isa review, has text $text;
+reviews (review: $r, reviewed_business: $b);
+let $len = len($text);
+sort $len desc;
+limit 3;
+fetch {
+  ""reviewText"": $text,
+  ""businessName"": $b.name
+};"
 175,List all businesses that have been reviewed by 'Bob' in 'CA' and the corresponding stars of those reviews.,"MATCH (u:User {name: 'Bob'})-[:WROTE]->(r:Review)-[:REVIEWS]->(b:Business {state: 'CA'})
 RETURN b.name AS businessName, r.stars AS reviewStars","match
 $u isa user, has name ""Bob"";
@@ -2206,6 +2275,29 @@ RETURN b.name AS businessName, c.name AS categoryName","match
 fetch {
   ""businessName"": $bn,
   ""categoryName"": $cn
+};"
+179,Which businesses in 'Missoula' have been reviewed by all listed users and what are the review texts?,"MATCH (b:Business {city: 'Missoula'})<-[:REVIEWS]-(r:Review)<-[:WROTE]-(u:User)
+WITH b, collect(u.userId) AS reviewers, collect(r.text) AS review_texts
+WHERE reviewers = ['u1', 'u2', 'u3', 'u4']
+RETURN b.name AS business_name, review_texts","with fun reviewed_by($b: business, $u: user) -> integer:
+  match
+    wrote (author: $u, review: $r);
+    reviews (review: $r, reviewed_business: $b);
+  return count;
+match
+$b isa business, has city ""Missoula"";
+$u1 isa user, has user_id ""u1"";
+$u2 isa user, has user_id ""u2"";
+$u3 isa user, has user_id ""u3"";
+$u4 isa user, has user_id ""u4"";
+let $c1 = reviewed_by($b, $u1); $c1 > 0;
+let $c2 = reviewed_by($b, $u2); $c2 > 0;
+let $c3 = reviewed_by($b, $u3); $c3 > 0;
+let $c4 = reviewed_by($b, $u4); $c4 > 0;
+reviews (review: $r, reviewed_business: $b);
+fetch {
+  ""business_name"": $b.name,
+  ""review_text"": $r.text
 };"
 180,List the names and categories of businesses on 'California Dr' that have received a 3-star review.,"MATCH (b:Business)-[:IN_CATEGORY]->(c:Category), (r:Review)-[:REVIEWS]->(b)
 WHERE b.address = '723 California Dr' AND r.stars = 3.0
@@ -2500,6 +2592,19 @@ fetch {
   ""BusinessName"": $bn,
   ""ReviewerName"": $un
 };"
+202,Show the top 3 business names in San Mateo along with their categories.,"MATCH (b:Business)-[:IN_CATEGORY]->(c:Category)
+WHERE b.city = 'San Mateo'
+RETURN b.name AS businessName, collect(c.name) AS categories
+ORDER BY b.name
+LIMIT 3","match
+$b isa business, has city ""San Mateo"", has name $bn;
+in_category (business: $b, category: $c);
+sort $bn asc;
+limit 3;
+fetch {
+  ""businessName"": $bn,
+  ""category"": $c.name
+};"
 203,List the names of the businesses that have a review with 5 stars.,"MATCH (b:Business)<-[:REVIEWS]-(r:Review)
 WHERE r.stars = 5.0
 RETURN b.name","match
@@ -2514,11 +2619,14 @@ OPTIONAL MATCH (b)<-[:REVIEWS]-(r:Review)
 WITH b, AVG(r.stars) AS avgRating
 ORDER BY avgRating DESC
 LIMIT 5
-RETURN b.name","match
+RETURN b.name","with fun avg_rating($biz: business) -> double:
+  match
+    reviews (reviewed_business: $biz, review: $r);
+    $r has stars $s;
+  return mean($s);
+match
 $b isa business, has city ""Missoula"", has name $n;
-reviews (reviewed_business: $b, review: $r);
-$r has stars $s;
-reduce $avg = mean($s) groupby $b, $n;
+let $avg = avg_rating($b);
 sort $avg desc;
 limit 5;
 fetch { ""name"": $n };"
@@ -2697,6 +2805,35 @@ fetch {
   ""businessName"": $b.name,
   ""reviewCount"": $reviewCount
 };"
+219,List the top 3 businesses with reviews from the latest three different users.,"MATCH (u:User)-[:WROTE]->(r:Review)-[:REVIEWS]->(b:Business)
+WITH u, r, b
+ORDER BY r.date DESC
+WITH u, r, b, COLLECT(DISTINCT u.userId) AS latestUsers
+WHERE SIZE(latestUsers) >= 3
+WITH u, r, b, latestUsers[0..3] AS topUsers
+WHERE u.userId IN topUsers
+RETURN b.name AS businessName, COUNT(r) AS reviewCount
+ORDER BY reviewCount DESC
+LIMIT 3","with fun latest_review_date($u: user) -> datetime:
+  match
+    wrote (author: $u, review: $r);
+    $r has date $d;
+  return max($d);
+match
+$u isa user;
+let $latest = latest_review_date($u);
+sort $latest desc;
+limit 3;
+match
+wrote (author: $u, review: $r);
+reviews (review: $r, reviewed_business: $b);
+reduce $review_count = count($r) groupby $b;
+sort $review_count desc;
+limit 3;
+fetch {
+  ""businessName"": $b.name,
+  ""reviewCount"": $review_count
+};"
 220,What are the top 3 businesses with reviews that have a star rating of exactly 4.5?,"MATCH (b:Business)<-[:REVIEWS]-(r:Review)
 WHERE r.stars = 4.5
 RETURN b.name, COUNT(r) AS reviewCount
@@ -2822,6 +2959,43 @@ fetch {
   ""review"": $r.text,
   ""stars"": $r.stars
 };"
+229,Find the top 3 businesses that have reviews from the earliest three different dates.,"MATCH (b:Business)<-[:REVIEWS]-(r:Review)
+WITH b, r
+ORDER BY r.date ASC
+WITH b, collect(r.date) AS reviewDates
+UNWIND reviewDates AS date
+WITH b, date
+ORDER BY date ASC
+WITH b, collect(date)[0..3] AS earliestDates
+WHERE size(earliestDates) = 3
+RETURN b.name AS businessName, earliestDates
+LIMIT 3","with fun distinct_date_count($b: business) -> integer:
+  match
+    reviews (review: $r, reviewed_business: $b);
+    $r has date $d;
+  select $d;
+  distinct;
+  return count;
+with fun earliest_review_date($b: business) -> datetime:
+  match
+    reviews (review: $r, reviewed_business: $b);
+    $r has date $d;
+  return min($d);
+match
+$b isa business;
+let $dc = distinct_date_count($b);
+$dc >= 3;
+let $earliest = earliest_review_date($b);
+sort $earliest asc;
+limit 3;
+match
+reviews (review: $r, reviewed_business: $b);
+$r has date $d;
+sort $d asc;
+fetch {
+  ""businessName"": $b.name,
+  ""reviewDate"": $d
+};"
 230,Find the top 3 reviews for businesses located at '313 N 1st St W'.,"MATCH (b:Business {address: '313 N 1st St W'})<-[:REVIEWS]-(r:Review)
 RETURN r.text, r.stars
 ORDER BY r.stars DESC
@@ -2942,6 +3116,26 @@ limit 3;
 fetch {
   ""name"": $n,
   ""review_count"": $count
+};"
+238,What are the first 3 businesses with reviews that have a text length greater than 50 characters?,"MATCH (b:Business)<-[:REVIEWS]-(r:Review)
+WHERE size(r.text) > 50
+RETURN b.name, b.address, b.city, b.state, b.businessId
+ORDER BY b.name
+LIMIT 3","match
+$b isa business;
+$r isa review, has text $t;
+reviews (reviewed_business: $b, review: $r);
+let $len = len($t);
+$len > 50;
+$b has name $name;
+sort $name;
+limit 3;
+fetch {
+  ""name"": $b.name,
+  ""address"": $b.address,
+  ""city"": $b.city,
+  ""state"": $b.state,
+  ""business_id"": $b.business_id
 };"
 239,Can you find the top 3 businesses that have been reviewed by 'Jenny' and 'Bob'?,"MATCH (u1:User {name: 'Jenny'})-[:WROTE]->(r1:Review)-[:REVIEWS]->(b:Business),
       (u2:User {name: 'Bob'})-[:WROTE]->(r2:Review)-[:REVIEWS]->(b)
@@ -4974,6 +5168,15 @@ limit 3;
 fetch {
   ""category"": $n
 };"
+384,What are the names of businesses with addresses in 'Burlingame' and have been reviewed?,"MATCH (b:Business)-[:IN_CATEGORY]->(:Category), (r:Review)-[:REVIEWS]->(b)
+WHERE b.city = 'Burlingame'
+RETURN DISTINCT b.name","match
+$b isa business, has city ""Burlingame"", has name $n;
+in_category (business: $b, category: $c);
+reviews (review: $r, reviewed_business: $b);
+select $n;
+distinct;
+fetch { ""name"": $n };"
 385,Show the first 3 reviews that mention 'IPA'.,"MATCH (r:Review)
 WHERE r.text CONTAINS 'IPA'
 RETURN r
@@ -5558,6 +5761,21 @@ fetch {
   ""state"": $s,
   ""businessId"": $bid
 };"
+430,What are the names of 3 businesses with reviews written in August 2015?,"MATCH (u:User)-[:WROTE]->(r:Review)-[:REVIEWS]->(b:Business)
+WHERE r.date >= date('2015-08-01') AND r.date < date('2015-09-01')
+RETURN DISTINCT b.name
+LIMIT 3","match
+$u isa user;
+$r isa review, has date $d;
+$b isa business, has name $n;
+wrote (author: $u, review: $r);
+reviews (review: $r, reviewed_business: $b);
+$d >= 2015-08-01T00:00:00;
+$d < 2015-09-01T00:00:00;
+select $n;
+distinct;
+limit 3;
+fetch { ""name"": $n };"
 431,Show the first 5 reviews with a star rating below 4.0.,"MATCH (r:Review)-[:REVIEWS]->(b:Business)
 WHERE r.stars < 4.0
 RETURN r.reviewId, r.text, r.stars, b.name
@@ -6420,6 +6638,19 @@ fetch {
   ""businessName"": $b.name,
   ""categoryName"": $c.name
 };"
+513,List all categories for 'Ducky's Car Wash' and its reviews.,"MATCH (b:Business {name: ""Ducky's Car Wash""})-[:IN_CATEGORY]->(c:Category)
+OPTIONAL MATCH (b)<-[:REVIEWS]-(r:Review)
+RETURN c.name AS category, collect(r) AS reviews","match
+$b isa business, has name ""Ducky's Car Wash"";
+in_category (business: $b, category: $c);
+try {
+  reviews (review: $r, reviewed_business: $b);
+};
+fetch {
+  ""category"": $c.name,
+  ""review_text"": $r.text,
+  ""review_stars"": $r.stars
+};"
 514,Which users have written reviews for businesses in the 'Library' category?,"MATCH (u:User)-[:WROTE]->(r:Review)-[:REVIEWS]->(b:Business)-[:IN_CATEGORY]->(c:Category {name: 'Library'})
 RETURN u.name AS userName","match
   $u isa user;
@@ -6628,6 +6859,23 @@ $c isa category;
 fetch {
   ""businessName"": $b.name,
   ""categoryName"": $c.name
+};"
+532,Which businesses in 'San Mateo' have been reviewed in 2017?,"MATCH (b:Business)-[:IN_CATEGORY]->(:Category), 
+      (r:Review)-[:REVIEWS]->(b),
+      (u:User)-[:WROTE]->(r)
+WHERE b.city = 'San Mateo' AND r.date >= date('2017-01-01') AND r.date <= date('2017-12-31')
+RETURN b.name AS BusinessName","match
+  $b isa business, has city ""San Mateo"", has name $n;
+  $c isa category;
+  in_category (business: $b, category: $c);
+  $r isa review, has date $d;
+  reviews (review: $r, reviewed_business: $b);
+  $u isa user;
+  wrote (author: $u, review: $r);
+  $d >= 2017-01-01T00:00:00;
+  $d <= 2017-12-31T23:59:59;
+fetch {
+  ""BusinessName"": $n
 };"
 533,List the names of all businesses located in 'Missoula'.,"MATCH (b:Business {city: 'Missoula'})
 RETURN b.name","match
@@ -7297,6 +7545,29 @@ reduce $reviewCount = count($r) groupby $category;
 sort $reviewCount desc;
 limit 1;
 fetch { ""category"": $category, ""reviewCount"": $reviewCount };"
+591,Show all businesses that have been reviewed in January of any year.,"MATCH (b:Business)<-[:REVIEWS]-(r:Review)
+WHERE r.date >= date('2015-01-01') AND r.date < date('2015-02-01')
+   OR r.date >= date('2016-01-01') AND r.date < date('2016-02-01')
+   OR r.date >= date('2017-01-01') AND r.date < date('2017-02-01')
+   OR r.date >= date('2018-01-01') AND r.date < date('2018-02-01')
+RETURN DISTINCT b.name","match
+  $b isa business;
+  $r isa review, has date $d;
+  reviews (review: $r, reviewed_business: $b);
+  {
+    $d >= 2015-01-01T00:00:00; $d < 2015-02-01T00:00:00;
+  } or {
+    $d >= 2016-01-01T00:00:00; $d < 2016-02-01T00:00:00;
+  } or {
+    $d >= 2017-01-01T00:00:00; $d < 2017-02-01T00:00:00;
+  } or {
+    $d >= 2018-01-01T00:00:00; $d < 2018-02-01T00:00:00;
+  };
+select $b;
+distinct;
+fetch {
+  ""name"": $b.name
+};"
 592,Which businesses have reviews with star ratings between 3 and 4?,"MATCH (b:Business)<-[:REVIEWS]-(r:Review)
 WHERE r.stars >= 3 AND r.stars <= 4
 RETURN DISTINCT b.name","match
@@ -8312,6 +8583,19 @@ fetch {
   ""userName"": $uname,
   ""businessName"": $bname
 };"
+684,Which businesses have reviews written in 2016?,"MATCH (b:Business)<-[:REVIEWS]-(r:Review)
+WHERE r.date >= date(2016-01-01) AND r.date < date(2017-01-01)
+RETURN DISTINCT b.name","match
+$b isa business;
+$r isa review, has date $d;
+reviews (reviewed_business: $b, review: $r);
+$d >= 2016-01-01T00:00:00;
+$d < 2017-01-01T00:00:00;
+select $b;
+distinct;
+fetch {
+  ""name"": $b.name
+};"
 685,List the businesses that have been reviewed by both Will and Jenny.,"MATCH (will:User {name: 'Will'})-[:WROTE]->(review1:Review)-[:REVIEWS]->(business:Business),
       (jenny:User {name: 'Jenny'})-[:WROTE]->(review2:Review)-[:REVIEWS]->(business)
 RETURN DISTINCT business.name AS BusinessName","match
@@ -8435,6 +8719,17 @@ fetch {
   ""reviewStars"": $stars,
   ""reviewDate"": $date,
   ""userName"": $uname
+};"
+693,Which businesses have reviews with a text length over 100 characters?,"MATCH (b:Business)<-[:REVIEWS]-(r:Review)
+WHERE size(r.text) > 100
+RETURN b.name AS businessName","match
+$b isa business;
+$r isa review, has text $t;
+reviews (reviewed_business: $b, review: $r);
+let $len = len($t);
+$len > 100;
+fetch {
+  ""businessName"": $b.name
 };"
 694,How many businesses have a review mentioning 'Wifi'?,"MATCH (b:Business)<-[:REVIEWS]-(r:Review)
 WHERE r.text CONTAINS 'Wifi'
@@ -9012,6 +9307,19 @@ reviews (review: $r, reviewed_business: $b);
 fetch {
   ""name"": $u.name
 };"
+745,Which business has the longest name and what is its location?,"MATCH (b:Business)
+WITH b, size(b.name) AS nameLength
+ORDER BY nameLength DESC
+LIMIT 1
+RETURN b.name AS businessName, b.location AS location","match
+$b isa business, has name $name, has location $loc;
+let $len = len($name);
+sort $len desc;
+limit 1;
+fetch {
+  ""businessName"": $name,
+  ""location"": $loc
+};"
 746,How many categories are there for businesses in 'Missoula'?,"MATCH (b:Business)-[:IN_CATEGORY]->(c:Category)
 WHERE b.city = 'Missoula'
 RETURN COUNT(DISTINCT c.name) AS numberOfCategories","match
@@ -9075,6 +9383,15 @@ $b isa business;
 select $b;
 distinct;
 reduce $count = count;"
+752,What are the cities of the businesses reviewed by 'Angie'?,"MATCH (u:User {name: 'Angie'})-[:WROTE]->(r:Review)-[:REVIEWS]->(b:Business)
+RETURN DISTINCT b.city AS city","match
+$u isa user, has name ""Angie"";
+wrote (author: $u, review: $r);
+reviews (review: $r, reviewed_business: $b);
+$b has city $c;
+select $c;
+distinct;
+fetch { ""city"": $c };"
 753,Find the top 5 businesses with the lowest average stars rating.,"MATCH (b:Business)<-[:REVIEWS]-(r:Review)
 WITH b, AVG(r.stars) AS avgRating
 ORDER BY avgRating ASC
@@ -9241,6 +9558,27 @@ $d < 2017-01-01T00:00:00;
 fetch {
   ""businessName"": $name,
   ""businessAddress"": $addr
+};"
+766,What are the businesses located at '200 W Pine St' and their reviews?,"MATCH (b:Business {address: '200 W Pine St'})-[:IN_CATEGORY]->(c:Category)
+OPTIONAL MATCH (b)<-[:REVIEWS]-(r:Review)<-[:WROTE]-(u:User)
+RETURN b.name AS businessName, b.address AS address, collect({
+    reviewText: r.text, 
+    reviewStars: r.stars, 
+    reviewDate: r.date, 
+    reviewerName: u.name
+}) AS reviews","match
+$b isa business, has address ""200 W Pine St"";
+try {
+  reviews (review: $r, reviewed_business: $b);
+  wrote (author: $u, review: $r);
+};
+fetch {
+  ""businessName"": $b.name,
+  ""address"": $b.address,
+  ""reviewText"": $r.text,
+  ""reviewStars"": $r.stars,
+  ""reviewDate"": $r.date,
+  ""reviewerName"": $u.name
 };"
 767,Which businesses in 'CA' have a 'Coffee' category and what are their review ratings?,"MATCH (b:Business)-[:IN_CATEGORY]->(c:Category {name: 'Coffee'})
 WHERE b.state = 'CA'
@@ -9686,89 +10024,3 @@ reviews (reviewed_business: $b, review: $r);
 select $b;
 distinct;
 reduce $count = count;"
-384,What are the names of businesses with addresses in 'Burlingame' and have been reviewed?,"MATCH (b:Business)-[:IN_CATEGORY]->(:Category), (r:Review)-[:REVIEWS]->(b)
-WHERE b.city = 'Burlingame'
-RETURN DISTINCT b.name","match
-$b isa business, has city ""Burlingame"", has name $n;
-in_category (business: $b, category: $c);
-reviews (review: $r, reviewed_business: $b);
-select $n;
-distinct;
-fetch { ""name"": $n };"
-430,What are the names of 3 businesses with reviews written in August 2015?,"MATCH (u:User)-[:WROTE]->(r:Review)-[:REVIEWS]->(b:Business)
-WHERE r.date >= date('2015-08-01') AND r.date < date('2015-09-01')
-RETURN DISTINCT b.name
-LIMIT 3","match
-$u isa user;
-$r isa review, has date $d;
-$b isa business, has name $n;
-wrote (author: $u, review: $r);
-reviews (review: $r, reviewed_business: $b);
-$d >= 2015-08-01T00:00:00;
-$d < 2015-09-01T00:00:00;
-select $n;
-distinct;
-limit 3;
-fetch { ""name"": $n };"
-532,Which businesses in 'San Mateo' have been reviewed in 2017?,"MATCH (b:Business)-[:IN_CATEGORY]->(:Category), 
-      (r:Review)-[:REVIEWS]->(b),
-      (u:User)-[:WROTE]->(r)
-WHERE b.city = 'San Mateo' AND r.date >= date('2017-01-01') AND r.date <= date('2017-12-31')
-RETURN b.name AS BusinessName","match
-  $b isa business, has city ""San Mateo"", has name $n;
-  $c isa category;
-  in_category (business: $b, category: $c);
-  $r isa review, has date $d;
-  reviews (review: $r, reviewed_business: $b);
-  $u isa user;
-  wrote (author: $u, review: $r);
-  $d >= 2017-01-01T00:00:00;
-  $d <= 2017-12-31T23:59:59;
-fetch {
-  ""BusinessName"": $n
-};"
-591,Show all businesses that have been reviewed in January of any year.,"MATCH (b:Business)<-[:REVIEWS]-(r:Review)
-WHERE r.date >= date('2015-01-01') AND r.date < date('2015-02-01')
-   OR r.date >= date('2016-01-01') AND r.date < date('2016-02-01')
-   OR r.date >= date('2017-01-01') AND r.date < date('2017-02-01')
-   OR r.date >= date('2018-01-01') AND r.date < date('2018-02-01')
-RETURN DISTINCT b.name","match
-  $b isa business;
-  $r isa review, has date $d;
-  reviews (review: $r, reviewed_business: $b);
-  {
-    $d >= 2015-01-01T00:00:00; $d < 2015-02-01T00:00:00;
-  } or {
-    $d >= 2016-01-01T00:00:00; $d < 2016-02-01T00:00:00;
-  } or {
-    $d >= 2017-01-01T00:00:00; $d < 2017-02-01T00:00:00;
-  } or {
-    $d >= 2018-01-01T00:00:00; $d < 2018-02-01T00:00:00;
-  };
-select $b;
-distinct;
-fetch {
-  ""name"": $b.name
-};"
-684,Which businesses have reviews written in 2016?,"MATCH (b:Business)<-[:REVIEWS]-(r:Review)
-WHERE r.date >= date(2016-01-01) AND r.date < date(2017-01-01)
-RETURN DISTINCT b.name","match
-$b isa business;
-$r isa review, has date $d;
-reviews (reviewed_business: $b, review: $r);
-$d >= 2016-01-01T00:00:00;
-$d < 2017-01-01T00:00:00;
-select $b;
-distinct;
-fetch {
-  ""name"": $b.name
-};"
-752,What are the cities of the businesses reviewed by 'Angie'?,"MATCH (u:User {name: 'Angie'})-[:WROTE]->(r:Review)-[:REVIEWS]->(b:Business)
-RETURN DISTINCT b.city AS city","match
-$u isa user, has name ""Angie"";
-wrote (author: $u, review: $r);
-reviews (review: $r, reviewed_business: $b);
-$b has city $c;
-select $c;
-distinct;
-fetch { ""city"": $c };"

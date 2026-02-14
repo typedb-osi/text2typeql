@@ -153,6 +153,17 @@ fetch {
   ""tagline"": $tl,
   ""released"": $r
 };"
+11,List the movies with exactly two roles in their ACTED_IN relationships.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WHERE size(r.roles) = 2
+RETURN m.title AS MovieTitle","match
+  $rel isa acted_in (actor: $p, film: $m);
+  $m has title $t;
+  $rel has roles $r;
+reduce $count = count($r) groupby $rel, $t;
+match $count == 2;
+fetch {
+  ""title"": $t
+};"
 12,What are the highest-rated reviews and which movies do they belong to?,"MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
 WITH m, r
 ORDER BY r.rating DESC
@@ -916,6 +927,15 @@ fetch {
   ""MovieTitle"": $m.title,
   ""DirectorName"": $name
 };"
+80,List all movie titles with exactly one word in the title.,"MATCH (m:Movie)
+WHERE size(split(m.title, "" "")) = 1
+RETURN m.title","match
+  $m isa movie;
+  $m has title $titlem;
+  not { $titlem like "".* .*""; };
+fetch {
+  ""title"": $titlem
+};"
 81,Find all movies where Joel Silver acted.,"MATCH (p:Person {name: ""Joel Silver""})-[:ACTED_IN]->(m:Movie)
 RETURN m.title","match
 $p isa person, has name ""Joel Silver"";
@@ -1463,6 +1483,15 @@ limit 3;
 fetch {
   ""name"": $follower.name
 };"
+127,List all people who have produced a movie and acted in another.,"MATCH (p:Person)-[:PRODUCED]->(m1:Movie)
+MATCH (p)-[:ACTED_IN]->(m2:Movie)
+WHERE m1 <> m2
+RETURN DISTINCT p.name","match
+$p isa person;
+produced (producer: $p, film: $m1);
+acted_in (actor: $p, film: $m2);
+not { $m1 is $m2; };
+fetch { ""name"": $p.name };"
 128,What are the top 5 most recent movies in the database?,"MATCH (m:Movie)
 RETURN m.title, m.released
 ORDER BY m.released DESC
@@ -2819,6 +2848,20 @@ fetch {
   ""reviewer2"": $n2,
   ""summary2"": $s2
 };"
+234,List the top 5 oldest actors and the movies they have acted in.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
+WITH p, m
+ORDER BY p.born ASC
+LIMIT 5
+RETURN p.name AS actor, p.born AS birth_year, collect(m.title) AS movies","match
+  $p isa person, has name $n, has born $b;
+  (actor: $p, film: $m) isa acted_in;
+  $m has title $t;
+sort $b asc;
+limit 5;
+fetch {
+  ""actor"": $n,
+  ""movie"": $t
+};"
 235,List the first 3 movies that Keanu Reeves has acted in with their release years.,"MATCH (p:Person {name: ""Keanu Reeves""})-[:ACTED_IN]->(m:Movie)
 RETURN m.title AS movie_title, m.released AS release_year
 ORDER BY m.released
@@ -3314,6 +3357,20 @@ let $min = min_born();
 $b == $min;
 acted_in (actor: $p, film: $m);
 fetch { ""MovieTitle"": $m.title };"
+274,What are the first 3 movies with the most diverse taglines?,"MATCH (m:Movie)
+WITH m, size(split(m.tagline, "" "")) AS tagline_word_count
+ORDER BY tagline_word_count DESC
+LIMIT 3
+RETURN m.title AS MovieTitle, m.tagline AS Tagline","match
+  $m isa movie;
+  $m has tagline $taglinem;
+  $m has title $titlem;
+sort $taglinem desc;
+limit 3;
+fetch {
+  ""title"": $titlem,
+  ""tagline"": $taglinem
+};"
 275,List the people who have directed and reviewed the same movie.,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)<-[:REVIEWED]-(p)
 RETURN p.name AS person_name, m.title AS movie_title","match
 $p isa person;
@@ -4165,6 +4222,24 @@ limit 3;
 fetch {
   ""title"": $m.title,
   ""released"": $r
+};"
+339,"Who are the top five actors with the most diverse range of roles, having acted in at least five different movies?","MATCH (p:Person)-[r:ACTED_IN]->(m:Movie)
+WITH p, COUNT(DISTINCT m) AS movieCount, COLLECT(DISTINCT r.roles) AS rolesList
+WHERE movieCount >= 5
+WITH p, movieCount, REDUCE(s = [], roles IN rolesList | s + roles) AS allRoles
+WITH p, movieCount, SIZE(apoc.coll.toSet(allRoles)) AS uniqueRolesCount
+RETURN p.name AS actor, uniqueRolesCount
+ORDER BY uniqueRolesCount DESC
+LIMIT 5","match
+  $p isa person, has name $n;
+  $ai isa acted_in (actor: $p, film: $m), has roles $r;
+reduce $num_movies = count($m), $num_roles = count($r) groupby $p, $n;
+match $num_movies >= 5;
+sort $num_roles desc;
+limit 5;
+fetch {
+  ""actor"": $n,
+  ""number_of_distinct_roles"": $num_roles
 };"
 340,List the movies where Joel Silver has a production role.,"MATCH (p:Person {name: ""Joel Silver""})-[:PRODUCED]->(m:Movie)
 RETURN m.title AS MovieTitle","match
@@ -5500,6 +5575,24 @@ limit 3;
 fetch {
   ""title"": $m.title,
   ""rating"": $rat
+};"
+452,List the top 5 movies by the number of roles and their respective actors.,"MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
+WITH m, count(r.roles) AS roleCount, collect(p.name) AS actors
+ORDER BY roleCount DESC
+LIMIT 5
+RETURN m.title AS movieTitle, roleCount, actors","with fun role_count($m: movie) -> integer:
+  match
+    $ai isa acted_in (film: $m);
+    $ai has roles $r;
+  return count;
+match
+  $m isa movie, has title $t;
+  let $count = role_count($m);
+sort $count desc;
+limit 5;
+fetch {
+  ""movie"": $t,
+  ""numRoles"": $count
 };"
 453,List the first 3 movies with roles that include 'Captain' and their actors.,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
 WHERE 'Captain' IN m.roles
@@ -7414,6 +7507,22 @@ fetch {
   ""Director"": $dn,
   ""distinctTaglines"": $count
 };"
+604,List 3 movies that have been followed by the most persons.,"MATCH (p:Person)-[:FOLLOWS]->(m:Movie)
+WITH m, COUNT(p) AS followers
+ORDER BY followers DESC
+LIMIT 3
+RETURN m.title AS MovieTitle, followers AS NumberOfFollowers","match
+  $m isa movie;
+  $p isa person;
+  (reviewer: $p, film: $m) isa reviewed;
+  $m has title $titlem;
+reduce $reviewers = count($p) groupby $titlem;
+sort $reviewers desc;
+limit 3;
+fetch {
+  ""movie"": $titlem,
+  ""reviewers"": $reviewers
+};"
 605,Name 3 persons who have acted in movies released in consecutive years.,"MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
 WITH p, collect(m.released) AS releaseYears
 WHERE size(releaseYears) > 1
@@ -7494,6 +7603,18 @@ limit 3;
 fetch {
   ""name"": $p.name,
   ""totalRoles"": $totalRoles
+};"
+611,What are the 3 newest relationships formed in the graph (any type)?,"MATCH (a)-[r]->(b)
+RETURN a, r, b
+ORDER BY r.created_at DESC
+LIMIT 3","match
+  (actor: $p, film: $m) isa acted_in;
+  $p has name $n;
+  $m has title $t;
+limit 3;
+fetch {
+  ""actor"": $n,
+  ""movie"": $t
 };"
 612,Which 3 persons follow the most directors?,"MATCH (follower:Person)-[:FOLLOWS]->(director:Person)-[:DIRECTED]->(:Movie)
 WITH follower, COUNT(director) AS directorCount
@@ -8168,6 +8289,15 @@ reduce $count = count($f) groupby $p;
 sort $count desc;
 limit 3;
 fetch { ""personName"": $p.name, ""followCount"": $count };"
+672,What are the distinct roles played by Laurence Fishburne across all movies?,"MATCH (p:Person {name: ""Laurence Fishburne""})-[:ACTED_IN]->(m:Movie)
+UNWIND m.roles AS role
+RETURN DISTINCT role","match
+$p isa person, has name ""Laurence Fishburne"";
+$rel isa acted_in (actor: $p, film: $m);
+$rel has roles $role;
+select $role;
+distinct;
+fetch { ""role"": $role };"
 673,List the people who have produced more than three movies.,"MATCH (p:Person)-[:PRODUCED]->(m:Movie)
 WITH p, count(m) as producedMovies
 WHERE producedMovies > 3
@@ -8514,6 +8644,20 @@ $t like "".*limits.*"";
 produced (producer: $p, film: $m);
 fetch {
   ""Producer"": $p.name
+};"
+703,List all the movies where the roles list contains more than 4 characters.,"MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
+WHERE size(p.roles) > 4
+RETURN m.title","with fun role_count($m: movie) -> integer:
+  match
+    $ai isa acted_in (film: $m);
+    $ai has roles $r;
+  return count;
+match
+  $m isa movie, has title $t;
+  let $count = role_count($m);
+  $count > 4;
+fetch {
+  ""movie"": $t
 };"
 704,Which persons have only directed movies and never acted in any?,"MATCH (p:Person)-[:DIRECTED]->(m:Movie)
 WHERE NOT (p)-[:ACTED_IN]->(:Movie)
@@ -8934,21 +9078,3 @@ fetch {
   ""producer"": $p.name,
   ""movie_count"": $count
 };"
-127,List all people who have produced a movie and acted in another.,"MATCH (p:Person)-[:PRODUCED]->(m1:Movie)
-MATCH (p)-[:ACTED_IN]->(m2:Movie)
-WHERE m1 <> m2
-RETURN DISTINCT p.name","match
-$p isa person;
-produced (producer: $p, film: $m1);
-acted_in (actor: $p, film: $m2);
-not { $m1 is $m2; };
-fetch { ""name"": $p.name };"
-672,What are the distinct roles played by Laurence Fishburne across all movies?,"MATCH (p:Person {name: ""Laurence Fishburne""})-[:ACTED_IN]->(m:Movie)
-UNWIND m.roles AS role
-RETURN DISTINCT role","match
-$p isa person, has name ""Laurence Fishburne"";
-$rel isa acted_in (actor: $p, film: $m);
-$rel has roles $role;
-select $role;
-distinct;
-fetch { ""role"": $role };"

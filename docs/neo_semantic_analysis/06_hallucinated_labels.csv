@@ -1,0 +1,131 @@
+source,database,original_index,confidence,check,detail,question,cypher,typeql
+synthetic-1,companies,370,high,cypher_invalid_label,"Cypher references label ""Category"" not in Neo4j schema (valid: ['Article', 'Chunk', 'City', 'Country', 'Fewshot', 'IndustryCategory', 'Organization', 'Person'])",Name the first 3 organizations that have a CEO who has authored a book on leadership.,"MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)
+WHERE EXISTS {
+  (ceo)-[:HAS_AUTHORED]->(:Book)-[:HAS_CATEGORY]->(:Category {name: 'Leadership'})
+}
+RETURN o.name
+LIMIT 3","match
+  $o isa organization;
+  $ceo isa person;
+  (organization: $o, ceo: $ceo) isa ceo_of;
+  $ic isa industry_category; (organization: $o, category: $ic) isa in_category;
+limit 3;
+fetch { ""name"": $o.name };"
+synthetic-1,companies,370,high,cypher_invalid_label,"Cypher references label ""Book"" not in Neo4j schema (valid: ['Article', 'Chunk', 'City', 'Country', 'Fewshot', 'IndustryCategory', 'Organization', 'Person'])",Name the first 3 organizations that have a CEO who has authored a book on leadership.,"MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)
+WHERE EXISTS {
+  (ceo)-[:HAS_AUTHORED]->(:Book)-[:HAS_CATEGORY]->(:Category {name: 'Leadership'})
+}
+RETURN o.name
+LIMIT 3","match
+  $o isa organization;
+  $ceo isa person;
+  (organization: $o, ceo: $ceo) isa ceo_of;
+  $ic isa industry_category; (organization: $o, category: $ic) isa in_category;
+limit 3;
+fetch { ""name"": $o.name };"
+synthetic-1,companies,371,high,cypher_invalid_label,"Cypher references label ""Category"" not in Neo4j schema (valid: ['Article', 'Chunk', 'City', 'Country', 'Fewshot', 'IndustryCategory', 'Organization', 'Person'])",Name the first 3 organizations that have a CEO who has authored a book on leadership.,"MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)
+WHERE EXISTS {
+  (ceo)-[:HAS_AUTHORED]->(:Book)-[:HAS_CATEGORY]->(:Category {name: 'Leadership'})
+}
+RETURN o.name
+LIMIT 3","match
+  $o isa organization;
+  $ceo isa person;
+  (organization: $o, ceo: $ceo) isa ceo_of;
+  $ic isa industry_category; (organization: $o, category: $ic) isa in_category;
+limit 3;
+fetch { ""name"": $o.name };"
+synthetic-1,companies,371,high,cypher_invalid_label,"Cypher references label ""Book"" not in Neo4j schema (valid: ['Article', 'Chunk', 'City', 'Country', 'Fewshot', 'IndustryCategory', 'Organization', 'Person'])",Name the first 3 organizations that have a CEO who has authored a book on leadership.,"MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)
+WHERE EXISTS {
+  (ceo)-[:HAS_AUTHORED]->(:Book)-[:HAS_CATEGORY]->(:Category {name: 'Leadership'})
+}
+RETURN o.name
+LIMIT 3","match
+  $o isa organization;
+  $ceo isa person;
+  (organization: $o, ceo: $ceo) isa ceo_of;
+  $ic isa industry_category; (organization: $o, category: $ic) isa in_category;
+limit 3;
+fetch { ""name"": $o.name };"
+synthetic-1,companies,372,high,cypher_invalid_label,"Cypher references label ""Category"" not in Neo4j schema (valid: ['Article', 'Chunk', 'City', 'Country', 'Fewshot', 'IndustryCategory', 'Organization', 'Person'])",Name the first 3 organizations that have a CEO who has authored a book on leadership.,"MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)
+WHERE EXISTS {
+  (ceo)-[:HAS_AUTHORED]->(:Book)-[:HAS_CATEGORY]->(:Category {name: 'Leadership'})
+}
+RETURN o.name
+LIMIT 3","match
+  $o isa organization;
+  $ceo isa person;
+  (organization: $o, ceo: $ceo) isa ceo_of;
+  $ic isa industry_category; (organization: $o, category: $ic) isa in_category;
+limit 3;
+fetch { ""name"": $o.name };"
+synthetic-1,companies,372,high,cypher_invalid_label,"Cypher references label ""Book"" not in Neo4j schema (valid: ['Article', 'Chunk', 'City', 'Country', 'Fewshot', 'IndustryCategory', 'Organization', 'Person'])",Name the first 3 organizations that have a CEO who has authored a book on leadership.,"MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)
+WHERE EXISTS {
+  (ceo)-[:HAS_AUTHORED]->(:Book)-[:HAS_CATEGORY]->(:Category {name: 'Leadership'})
+}
+RETURN o.name
+LIMIT 3","match
+  $o isa organization;
+  $ceo isa person;
+  (organization: $o, ceo: $ceo) isa ceo_of;
+  $ic isa industry_category; (organization: $o, category: $ic) isa in_category;
+limit 3;
+fetch { ""name"": $o.name };"
+synthetic-1,recommendations,400,high,cypher_invalid_label,"Cypher references label ""Award"" not in Neo4j schema (valid: ['Actor', 'Director', 'Genre', 'Movie', 'Person', 'User'])",Which three directors have directed movies that have won any cinematic awards?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WHERE exists{ (m)-[:WON]->(:Award) }
+RETURN d.name AS director
+LIMIT 3","match
+$p isa person;
+directed (director: $p, film: $m);
+won (film: $m, award: $aw);
+select $p;
+distinct;
+limit 3;
+fetch { ""director"": $p.name };"
+synthetic-1,recommendations,401,high,cypher_invalid_label,"Cypher references label ""Award"" not in Neo4j schema (valid: ['Actor', 'Director', 'Genre', 'Movie', 'Person', 'User'])",Which three directors have directed movies that have won any cinematic awards?,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WHERE exists{ (m)-[:WON]->(:Award) }
+RETURN d.name AS director
+LIMIT 3","match
+$p isa person;
+directed (director: $p, film: $m);
+won (film: $m, award: $aw);
+select $p;
+distinct;
+limit 3;
+fetch { ""director"": $p.name };"
+synthetic-1,recommendations,488,high,cypher_invalid_label,"Cypher references label ""Award"" not in Neo4j schema (valid: ['Actor', 'Director', 'Genre', 'Movie', 'Person', 'User'])",List all movies that have won an award and have been directed by a director born in the UK.,"MATCH (m:Movie)<-[:DIRECTED]-(d:Director {bornIn: 'UK'})
+WHERE exists{ (m)-[:WON]->(:Award) }
+RETURN m.title, d.name","match
+$p isa person, has born_in ""UK"";
+directed (director: $p, film: $m);
+won (film: $m, award: $aw);
+fetch { ""title"": $m.title, ""director"": $p.name };"
+synthetic-1,recommendations,489,high,cypher_invalid_label,"Cypher references label ""Award"" not in Neo4j schema (valid: ['Actor', 'Director', 'Genre', 'Movie', 'Person', 'User'])",List all movies that have won an award and have been directed by a director born in the UK.,"MATCH (m:Movie)<-[:DIRECTED]-(d:Director {bornIn: 'UK'})
+WHERE exists{ (m)-[:WON]->(:Award) }
+RETURN m.title, d.name","match
+$p isa person, has born_in ""UK"";
+directed (director: $p, film: $m);
+won (film: $m, award: $aw);
+fetch { ""title"": $m.title, ""director"": $p.name };"
+synthetic-2,movies,36,high,cypher_invalid_label,"Cypher references label ""REVIEWED"" not in Neo4j schema (valid: ['Movie', 'Person'])",Which top 5 movies released between 1980 and 1990 have been reviewed with a summary mentioning 'compelling'?,"MATCH (m:Movie)-[:REVIEWED]->(r:REVIEWED)
+WHERE m.released >= 1980 AND m.released <= 1990 AND r.summary CONTAINS 'compelling'
+RETURN m.title, m.released, COUNT(r) AS review_count
+ORDER BY review_count DESC
+LIMIT 5","match
+$m isa movie, has released $rel, has title $t;
+$rel >= 1980; $rel <= 1990;
+$rev isa reviewed (film: $m), has summary $s;
+$s like "".*compelling.*"";
+reduce $count = count($rev) groupby $m, $t, $rel;
+sort $count desc;
+limit 5;"
+synthetic-2,northwind,300,high,cypher_invalid_label,"Cypher references label ""Employee"" not in Neo4j schema (valid: ['Category', 'Customer', 'Order', 'Product', 'Supplier'])",List the top 3 employees who processed the most orders.,"MATCH (e:Employee)-[:PROCESSED]->(o:Order)
+WITH e, count(o) as orderCount
+ORDER BY orderCount DESC
+LIMIT 3
+RETURN e.employeeID, e.name, orderCount","match
+$o isa order, has employee_id $eid;
+reduce $count = count($o) groupby $eid;
+sort $count desc;
+limit 3;
+fetch { ""employee_id"": $eid, ""order_count"": $count };"

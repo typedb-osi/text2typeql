@@ -162,6 +162,47 @@ try { $p has nickname $n; };
 | Can't use relation var | Bind: `$rel isa type (role: $x);` |
 | Variable scoping | Don't define vars inside `or {}` blocks if needed outside |
 
+## Newly Supported (TypeDB 3.8+)
+
+- `size(string)` → `let $len = len($str);` (string length)
+- String concatenation → `let $s = $a + " " + $b;`
+- Datetime subtraction → `let $diff = $end_dt - $begin_dt;` (two datetime vars → duration, sortable)
+- Inline date arithmetic → `$r >= 2022-01-01T00:00:00 - P365D;` (date literal minus duration in filters)
+- Note: `let $x = $datetime_var - P365D;` does NOT work (datetime var minus duration literal)
+
+## Recursive Stream Functions (Transitive Closure)
+
+Variable-length paths (`[:REL*]`) can be converted using recursive stream functions:
+```typeql
+# Replaces Cypher [:PREVIOUS*] (transitive closure)
+with fun all_previous($v: version) -> { version }:
+  match
+    {
+      previous (newer_version: $v, older_version: $prev);
+    } or {
+      let $mid in all_previous($v);
+      previous (newer_version: $mid, older_version: $prev);
+    };
+  return { $prev };
+
+# Use: let $prev in all_previous($start_version);
+
+# To include starting node in results, add identity base case:
+with fun all_reachable($sw: software) -> { software }:
+  match
+    { $dep is $sw; } or
+    { depends_on (dependent: $sw, dependency: $dep); $dep isa software; } or
+    { let $mid in all_reachable($sw); depends_on (dependent: $mid, dependency: $dep); $dep isa software; };
+  return { $dep };
+
+# Count distinct results with a wrapper function:
+with fun chain_size($o: organization) -> integer:
+  match let $s in supply_chain($o);
+  select $s;
+  distinct;
+  return count;
+```
+
 ## Unsupported (→ failed.csv)
 
-`size()`, `collect()`, `array[N]`, date arithmetic, `split()`, `left()`
+`collect()`, `array[N]`, `split()`, `left()`, `substring()`, date component extraction (year/month/day-of-week), epoch timestamp conversion

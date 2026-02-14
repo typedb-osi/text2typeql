@@ -7,52 +7,38 @@
 Businesses, reviews, users, categories.
 
 ## Current Status
-- `queries.csv`: 793 converted queries
-- 14 failed queries
+- `queries.csv`: 805 converted queries
+- 2 failed queries
 
-Total: 793 + 14 = 807 / 807 ✓
+Total: 805 + 2 = 807 / 807 ✓
 
-## Failed Queries
+## Failed Queries (2 total)
 
-### Query 26
-**Error:** Unsupported: collect() and size() have no TypeQL equivalent. Query requires collecting distinct category names into a list and computing its size.
-
-### Query 36
-**Error:** Cypher uses collect(r) to aggregate review objects into a list. TypeQL has no collect() equivalent. Additionally, returning both an aggregation (avg stars) and individual review details requires re-matching after reduce, which is not supported.
-
-### Query 174
-**Error:** Unsupported feature: size() string length function has no TypeQL equivalent. Cannot sort by string length.
-
-### Query 179
-**Error:** Cypher uses collect() to gather user IDs into a list and compare against a fixed array. collect() is not supported in TypeQL 3.0.
-
-### Query 202
-**Error:** Cypher uses collect() to aggregate categories into a list per business. collect() is unsupported in TypeQL.
-
-### Query 219
-**Error:** Unsupported features: COLLECT(), SIZE(), and array slicing [0..3] have no TypeQL equivalents
-
-### Query 229
-**Error:** Unsupported features: collect(), array slicing [0..3], and size() are not available in TypeQL 3.0. The query requires collecting dates into a list, slicing the first 3, and checking the list size.
-
-### Query 238
-**Error:** Unsupported: size() string length function has no TypeQL equivalent
+Both failures involve Neo4j's spatial `POINT` type with sub-property access (`.latitude`). TypeQL does not yet support structured/composite value types. This will be unblocked when **structs** are implemented in TypeQL, allowing typed composite attributes with named fields.
 
 ### Query 356
-**Error:** Neo4j Point type property access (location.latitude) not supported. Schema stores location as string; no numeric latitude attribute available for comparison.
+**Reason:** Neo4j Point type — `location.latitude` sub-property access not supported in TypeQL. Requires struct types to model Point with latitude/longitude fields.
+```cypher
+MATCH (b:Business)
+WHERE b.location.latitude > 46.87
+RETURN b.name
+```
 
 ### Query 460
-**Error:** Cypher uses Neo4j spatial POINT type with .latitude sub-property access. TypeQL schema stores location as string; no way to extract latitude from a string attribute (no split, substring, or point type support).
+**Reason:** Neo4j Point type — `location.latitude` sub-property access not supported in TypeQL. Requires struct types to model Point with latitude/longitude fields.
+```cypher
+MATCH (b:Business)
+WHERE b.location.latitude > 37
+RETURN b.name AS businessName, b.location AS location
+```
 
-### Query 513
-**Error:** Unsupported feature: collect() aggregation is not available in TypeQL
+## Resolved Queries
 
-### Query 693
-**Error:** Cypher uses size() for string length which is unsupported in TypeQL
+### Queries 26, 36, 179, 219, 229 (resolved)
+Previously failed due to `collect()` + computation (`size()`, `WHERE =`, array slicing). Converted using custom functions: `category_count()` for distinct count, `avg_stars()` for mean aggregation, `reviewed_by()` for per-user existence checks, `latest_review_date()` for chained reduce, and `distinct_date_count()` for date filtering.
 
-### Query 745
-**Error:** Unsupported feature: size() string length function has no TypeQL equivalent
+### Queries 202, 513, 766 (resolved)
+Previously failed due to `collect()` for display grouping. Converted as flat rows — each (entity, detail) pair is a separate result row instead of a grouped list.
 
-### Query 766
-**Error:** Cypher uses collect() with object literal to aggregate review properties into a list of maps, which is unsupported in TypeQL
-
+### Queries 174, 238, 693, 745 (resolved)
+Previously failed due to `size()` string length. Converted using `len()` (TypeDB 3.8+).

@@ -122,6 +122,7 @@ define
     owns last_edit_timestamp,
     owns icij_id,
     owns note,
+    owns status,
     plays officer_of:officer,
     plays registered_address:registrant,
     plays similar:similar_source,

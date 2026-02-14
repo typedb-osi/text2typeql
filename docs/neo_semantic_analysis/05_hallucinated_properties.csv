@@ -1,0 +1,222 @@
+source,database,original_index,confidence,check,detail,question,cypher,typeql
+synthetic-1,companies,329,high,cypher_invalid_property,"Cypher accesses c.population but ""population"" is not a property of :City (valid: ['id', 'name', 'summary'])",Name the first 3 organizations that are headquartered in cities with more than 5 million inhabitants.,"MATCH (o:Organization)-[:IN_CITY]->(c:City)
+WHERE c.population > 5000000
+RETURN o.name
+LIMIT 3","match
+$o isa organization;
+$c isa city, has population $pop;
+located_in (organization: $o, city: $c);
+$pop > 5000000;
+limit 3;
+fetch { ""organization"": $o.name };"
+synthetic-1,companies,332,high,cypher_invalid_property,"Cypher accesses o.foundingDate but ""foundingDate"" is not a property of :Organization (valid: ['id', 'isDissolved', 'isPublic', 'motto', 'name', 'nbrEmployees', 'revenue', 'summary'])",Name the top 3 articles that discuss organizations with a history of more than 50 years.,"MATCH (a:Article)-[:MENTIONS]->(o:Organization)
+WHERE date(o.foundingDate) < date() - duration('P50Y')
+WITH a, o
+ORDER BY a.date DESC
+LIMIT 3
+RETURN a.title AS article, collect(o.name) AS organizations","match
+  $a isa article;
+  $o isa organization, has founding-date $fd;
+  $fd < 1976-01-22;
+  mentions (article: $a, mentioned: $o);
+  $a has date $a_date;
+sort $a_date desc;
+limit 3;
+fetch { ""article"": $a.title };"
+synthetic-1,companies,338,high,cypher_invalid_property,"Cypher accesses o.foundingDate but ""foundingDate"" is not a property of :Organization (valid: ['id', 'isDissolved', 'isPublic', 'motto', 'name', 'nbrEmployees', 'revenue', 'summary'])",List the names of the cities where the headquarters of the first 5 organizations founded before 1950 are located.,"MATCH (o:Organization)-[:IN_CITY]->(c:City)
+WHERE o.foundingDate < date('1950-01-01')
+RETURN c.name
+LIMIT 5","match
+$o isa organization, has founding-date $fd;
+$c isa city;
+located_in (organization: $o, city: $c);
+$fd < 1950-01-01T00:00:00;
+limit 5;
+fetch { ""city"": $c.city_name };"
+synthetic-1,companies,356,high,cypher_invalid_property,"Cypher accesses o.foundingDate but ""foundingDate"" is not a property of :Organization (valid: ['id', 'isDissolved', 'isPublic', 'motto', 'name', 'nbrEmployees', 'revenue', 'summary'])",Which 3 organizations have the longest history of continuous operation according to their founding dates in the database?,"MATCH (o:Organization)
+WHERE o.foundingDate IS NOT NULL
+RETURN o.name AS organization, o.foundingDate AS founded
+ORDER BY o.foundingDate
+LIMIT 3","match
+$o isa organization, has founding-date $fd, has name $n;
+sort $fd asc;
+limit 3;
+fetch { ""organization"": $n, ""founded"": $fd };"
+synthetic-1,companies,391,high,cypher_invalid_property,"Cypher accesses o.nbrPatents but ""nbrPatents"" is not a property of :Organization (valid: ['id', 'isDissolved', 'isPublic', 'motto', 'name', 'nbrEmployees', 'revenue', 'summary'])",Which 3 organizations have the most patents filed according to the database?,"MATCH (o:Organization)
+WHERE o.nbrPatents IS NOT NULL
+RETURN o.name, o.nbrPatents
+ORDER BY o.nbrPatents DESC
+LIMIT 3","match
+$o isa organization, has patent-count $pc, has name $n;
+sort $pc desc;
+limit 3;
+fetch { ""name"": $n, ""patents"": $pc };"
+synthetic-1,companies,448,high,cypher_invalid_property,"Cypher accesses c.population but ""population"" is not a property of :City (valid: ['id', 'name', 'summary'])","Which organizations are based in a city with a population less than 100,000?","MATCH (o:Organization)-[:IN_CITY]->(c:City)
+WHERE c.population < 100000
+RETURN o.name AS organization, c.name AS city","match
+$o isa organization;
+$c isa city, has population $pop;
+$pop < 100000;
+located_in (organization: $o, city: $c);
+fetch { ""organization"": $o.name, ""city"": $c.city_name };"
+synthetic-1,companies,452,high,cypher_invalid_property,"Cypher accesses p.startDate but ""startDate"" is not a property of :Person (valid: ['id', 'name', 'summary'])",Which organizations have CEOs who have been in their position for less than 3 years?,"MATCH (o:Organization)-[:HAS_CEO]->(p:Person)
+WHERE p.startDate IS NOT NULL AND duration.between(p.startDate, date()).years < 3
+RETURN o.name AS organization, p.name AS ceo","match
+$o isa organization;
+$p isa person;
+$rel isa ceo_of (organization: $o, ceo: $p);
+$rel has start-date $sd;
+$sd > 2023-01-22T00:00:00;
+fetch { ""organization"": $o.name, ""ceo"": $p.name };"
+synthetic-1,companies,695,high,cypher_invalid_property,"Cypher accesses o.foundingDate but ""foundingDate"" is not a property of :Organization (valid: ['id', 'isDissolved', 'isPublic', 'motto', 'name', 'nbrEmployees', 'revenue', 'summary'])",Which 3 organizations have the oldest founding dates?,"MATCH (o:Organization)
+WHERE o.foundingDate IS NOT NULL
+RETURN o.name, o.foundingDate
+ORDER BY o.foundingDate
+LIMIT 3","match
+$o isa organization, has founding-date $fd, has name $n;
+sort $fd asc;
+limit 3;
+fetch { ""name"": $n, ""founded"": $fd };"
+synthetic-1,neoflix,902,high,cypher_invalid_property,"Cypher accesses p.country but ""country"" is not a property of :Person (valid: ['gender', 'id', 'name', 'profile_path'])","List the top 5 movies with the most diverse cast, measured by the number of different countries actors come from.","MATCH (m:Movie)<-[:CAST_FOR]-(p:Person)
+WITH m, size(collect(distinct p.country)) AS num_countries
+ORDER BY num_countries DESC
+LIMIT 5
+RETURN m.title AS movie, num_countries AS number_of_countries","match
+$m isa movie;
+$p isa person;
+cast_for (actor: $p, film: $m);
+born_in (person: $p, country: $co);
+select $m, $co;
+distinct;
+reduce $num_countries = count($co) groupby $m;
+sort $num_countries desc;
+limit 5;
+fetch { ""movie"": $m.title, ""number_of_countries"": $num_countries };"
+synthetic-1,recommendations,46,high,cypher_invalid_property,"Cypher accesses u.age but ""age"" is not a property of :User (valid: ['name', 'userId'])",Identify the first 3 movies that have been rated by users younger than 25.,"MATCH (u:User)-[r:RATED]->(m:Movie)
+WHERE u.age < 25
+RETURN m.title
+LIMIT 3","match
+$u isa user, has age $a;
+$a < 25;
+$r isa rated (user: $u, film: $m);
+limit 3;
+fetch { ""title"": $m.title };"
+synthetic-1,recommendations,273,high,cypher_invalid_property,"Cypher accesses a.diedIn but ""diedIn"" is not a property of :Actor (valid: ['bio', 'born', 'bornIn', 'died', 'imdbId', 'name', 'poster', 'tmdbId', 'url'])",List the first 5 actors who were born and died in the same country.,"MATCH (a:Actor)
+WHERE a.bornIn IS NOT NULL AND a.bornIn = a.diedIn
+RETURN a.name AS actor, a.bornIn AS country
+LIMIT 5","match
+$p isa person, has born_in $bi, has died_in $di;
+$bi == $di;
+limit 5;
+fetch { ""actor"": $p.name, ""country"": $bi };"
+synthetic-1,recommendations,391,high,cypher_invalid_property,"Cypher accesses u.age but ""age"" is not a property of :User (valid: ['name', 'userId'])",Which three movies have been rated by the youngest users on average?,"MATCH (m:Movie)<-[r:RATED]-(u:User)
+WITH m, avg(u.age) AS avgAge, count(r) AS numRatings
+WHERE numRatings > 10
+RETURN m.title, avgAge
+ORDER BY avgAge
+LIMIT 3","match
+$m isa movie;
+$u isa user, has age $a;
+$r isa rated (user: $u, film: $m);
+reduce $count = count($r), $avg_age = mean($a) groupby $m;
+match $count > 10;
+sort $avg_age asc;
+limit 3;
+fetch { ""title"": $m.title, ""avg_age"": $avg_age };"
+synthetic-2,companies,125,high,cypher_invalid_property,"Cypher accesses city.nbrResidents but ""nbrResidents"" is not a property of :City (valid: ['id', 'name', 'summary'])","List the organizations that have subsidiaries and are headquartered in cities with more than 500,000 residents.","MATCH (org:Organization)-[:HAS_SUBSIDIARY]->(:Organization),
+      (org)-[:IN_CITY]->(city:City)
+WHERE city.nbrResidents > 500000
+RETURN org.name AS OrganizationName","match
+$org isa organization;
+subsidiary_of (parent: $org, subsidiary: $sub);
+$sub isa organization;
+located_in (organization: $org, city: $city);
+$city has population $pop;
+$pop > 500000;
+fetch {
+  ""OrganizationName"": $org.name
+};"
+synthetic-2,companies,477,high,cypher_invalid_property,"Cypher accesses o.foundedYear but ""foundedYear"" is not a property of :Organization (valid: ['id', 'isDissolved', 'isPublic', 'motto', 'name', 'nbrEmployees', 'revenue', 'summary'])",List the names of the cities where the headquarters of the first 5 organizations founded before 1950 are located.,"MATCH (o:Organization)-[:IN_CITY]->(c:City)
+WHERE o.foundedYear < 1950
+RETURN c.name
+ORDER BY o.foundedYear
+LIMIT 5","match
+$o isa organization, has founding-date $fd;
+$fd < 1950-01-01;
+located_in (organization: $o, city: $c);
+$c has city_name $cn;
+sort $fd;
+limit 5;
+fetch { ""name"": $cn };"
+synthetic-2,companies,487,high,cypher_invalid_property,"Cypher accesses c.nbrInhabitants but ""nbrInhabitants"" is not a property of :City (valid: ['id', 'name', 'summary'])",Name the first 3 organizations that are headquartered in cities with more than 5 million inhabitants.,"MATCH (o:Organization)-[:IN_CITY]->(c:City)
+WHERE c.nbrInhabitants > 5000000
+RETURN o.name
+LIMIT 3","match
+$o isa organization, has name $name;
+$c isa city, has population $pop;
+$pop > 5000000;
+located_in (organization: $o, city: $c);
+limit 3;
+fetch { ""name"": $name };"
+synthetic-2,northwind,795,high,cypher_invalid_property,"Cypher accesses o.shipDate but ""shipDate"" is not a property of :Order (valid: ['customerID', 'employeeID', 'freight', 'orderDate', 'orderID', 'requiredDate', 'shipAddress', 'shipCity', 'shipCountry', 'shipName', 'shipPostalCode', 'shipRegion', 'shipVia', 'shippedDate'])",What are the first 3 orders shipped via method '2' and have a discount?,"MATCH (o:Order)-[r:ORDERS]->(p:Product)
+WHERE o.shipVia = '2' AND r.discount <> '0'
+RETURN o.orderID, o.shipName, o.shipCity, o.shipCountry, o.shipPostalCode, o.shipAddress, o.shipRegion, o.shipDate, r.discount
+ORDER BY o.orderDate
+LIMIT 3","match
+$o isa order, has ship_via ""2"", has order_id $oid, has ship_name $sn, has ship_city $sc, has ship_country $sco, has ship_address $sa, has ship_region $sr, has shipped_date $sd, has order_date $od;
+$rel isa orders (order: $o, product: $p), has discount $d;
+$d != 0.0;
+sort $od;
+limit 3;
+fetch {
+  ""orderID"": $oid,
+  ""shipName"": $sn,
+  ""shipCity"": $sc,
+  ""shipCountry"": $sco,
+  ""shipPostalCode"": $o.ship_postal_code,
+  ""shipAddress"": $sa,
+  ""shipRegion"": $sr,
+  ""shipDate"": $sd,
+  ""discount"": $d
+"
+synthetic-2,recommendations,243,high,cypher_invalid_property,"Cypher accesses u.age but ""age"" is not a property of :User (valid: ['name', 'userId'])",Identify the first 3 movies that have been rated by users younger than 25.,"MATCH (u:User)-[r:RATED]->(m:Movie)
+WHERE u.age < 25
+RETURN m.title AS MovieTitle, r.rating AS Rating, u.name AS UserName
+ORDER BY r.timestamp ASC
+LIMIT 3","match
+$u isa user, has age $a;
+$a < 25;
+$m isa movie;
+$rel isa rated (user: $u, film: $m), has timestamp $ts, has rating $r;
+sort $ts asc;
+limit 3;
+fetch {
+  ""MovieTitle"": $m.title,
+  ""Rating"": $r,
+  ""UserName"": $u.name
+};"
+synthetic-2,recommendations,270,high,cypher_invalid_property,"Cypher accesses d.gender but ""gender"" is not a property of :Director (valid: ['bio', 'born', 'bornIn', 'died', 'imdbId', 'name', 'poster', 'tmdbId', 'url'])",Show the top 5 highest IMDb rated movies directed by female directors.,"MATCH (d:Director)-[:DIRECTED]->(m:Movie)
+WHERE d.gender = 'female'
+RETURN m.title AS MovieTitle, m.imdbRating AS IMDbRating
+ORDER BY m.imdbRating DESC
+LIMIT 5","match
+$d isa person, has gender ""female"";
+directed (director: $d, film: $m);
+$m isa movie, has imdb_rating $ir;
+sort $ir desc;
+limit 5;
+fetch {
+  ""MovieTitle"": $m.title,
+  ""IMDbRating"": $ir
+};"
+synthetic-2,twitter,366,high,cypher_invalid_property,"Cypher accesses t.retweets but ""retweets"" is not a property of :Tweet (valid: ['created_at', 'favorites', 'id', 'id_str', 'import_method', 'text'])",Find the top 3 tweets with the most retweets made by 'neo4j'.,"MATCH (u:User {screen_name: 'neo4j'})-[:POSTS]->(t:Tweet)
+RETURN t
+ORDER BY t.retweets DESC
+LIMIT 3","match
+$u isa user, has screen_name ""neo4j"";
+posts (author: $u, content: $t);
+retweets (original_tweet: $t, retweeting_tweet: $rt);
+reduce $count = count($rt) groupby $u, $t;
+sort $count desc;
+limit 3;
+fetch { ""tweet"": $t.text, ""retweets"": $count };"

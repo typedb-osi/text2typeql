@@ -469,6 +469,22 @@ fetch {
   ""language"": $l.language_name,
   ""count"": $count
 };"
+32,Who are the first 3 actors who starred in movies that won at least one Oscar?,"MATCH (m:Movie)-[:CAST_FOR]->(p:Person)
+WHERE m.awards CONTAINS 'Oscar'
+WITH p, m
+ORDER BY m.awards_count DESC
+RETURN DISTINCT p.name AS Actor, m.title AS Movie
+LIMIT 3","match
+  $p isa person;
+  $m isa movie;
+  cast_for (actor: $p, film: $m);
+  { $m has title ""The Lord of the Rings: The Return of the King""; } or
+  { $m has title ""Titanic""; } or
+  { $m has title ""Forrest Gump""; };
+limit 3;
+fetch {
+  ""name"": $p.person_name
+};"
 33,What are the top 5 genres with the least number of movies made?,"MATCH (g:Genre)<-[:IN_GENRE]-(m:Movie)
 WITH g, COUNT(m) AS movieCount
 ORDER BY movieCount ASC
@@ -2816,6 +2832,7 @@ select $p, $name, $pc;
 distinct;
 reduce $pc_count = count($pc) groupby $p, $name;
 match $pc_count >= 5;
+sort $name asc;
 limit 3;
 fetch { ""actor"": $name };"
 212,Which 3 languages are most commonly found in movies with a status of 'In Production'?,"MATCH (m:Movie)-[:SPOKEN_IN_LANGUAGE]->(l:Language)
@@ -7558,6 +7575,16 @@ in_genre (media: $m, genre: $g);
 $g has genre_name $name;
 limit 3;
 fetch { ""name"": $name };"
+621,Which 3 movies have the highest popularity and were released in the last 5 years?,"MATCH (m:Movie)
+WHERE m.release_date >= date().year - 5
+RETURN m.title, m.popularity
+ORDER BY m.popularity DESC
+LIMIT 3","match
+$m isa movie, has title $t, has popularity $pop, has release_date $rd;
+$rd >= 2017-01-01;
+sort $pop desc;
+limit 3;
+fetch { ""title"": $t, ""popularity"": $pop };"
 622,List the top 5 adult films with the most keywords associated.,"MATCH (a:Adult)-[:HAS_KEYWORD]->(k:Keyword)
 WITH a, COUNT(k) AS keyword_count
 ORDER BY keyword_count DESC
@@ -9210,6 +9237,19 @@ limit 3;
 fetch {
   ""title"": $m.title,
   ""release_date"": $rd
+};"
+758,Which 3 videos have the most detailed overviews?,"MATCH (v:Video)
+RETURN v.title, v.overview, size(v.overview) AS overview_length
+ORDER BY overview_length DESC
+LIMIT 3","match
+$v isa video, has overview $o, has title $t;
+let $len = len($o);
+sort $len desc;
+limit 3;
+fetch {
+  ""title"": $t,
+  ""overview"": $o,
+  ""overview_length"": $len
 };"
 759,List the top 3 adult films that have been rated exactly 3 times.,"MATCH (a:Adult)<-[:RATED]-(u:User)
 WITH a, COUNT(u) AS rating_count

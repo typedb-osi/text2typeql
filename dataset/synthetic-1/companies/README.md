@@ -5,15 +5,15 @@
 **Total queries in original dataset: 933**
 
 ## Current Status
-- `queries.csv`: 929 successfully converted and validated queries
-- 4 queries that cannot be converted (documented below in Failed Queries)
+- `queries.csv`: 930 successfully converted and validated queries
+- 3 queries that cannot be converted (documented below in Failed Queries)
 
-Total: 929 + 4 = 933 ✓
+Total: 930 + 3 = 933 ✓
 
 ## Schema Notes
 - The `mentions` relation uses a generic `mentioned` role (not `organization`) so both organizations and cities can be mentioned in articles.
 
-## Failed Queries (4 total)
+## Failed Queries (3 total)
 
 ### Query 341
 **Reason:** TypeQL lacks `left()` string manipulation and `date().year` — cannot extract birth year from `person_id` to compute age.
@@ -21,16 +21,6 @@ Total: 929 + 4 = 933 ✓
 MATCH (o:Organization)-[:HAS_CEO]->(ceo:Person)
 WHERE date().year - toInteger(left(ceo.id, 4)) < 40
 RETURN o.name
-```
-
-### Query 708
-**Reason:** No string length function (`size()` equivalent) — cannot order by summary length.
-```cypher
-MATCH (o:Organization)
-WHERE o.summary IS NOT NULL
-RETURN o.name AS organization, o.summary AS summary
-ORDER BY size(o.summary) DESC
-LIMIT 3
 ```
 
 ### Query 783

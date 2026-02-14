@@ -5,12 +5,12 @@
 **Total queries in original dataset: 729**
 
 ## Current Status
-- `queries.csv`: 723 successfully converted and validated queries
-- 6 queries that cannot be converted (documented below in Failed Queries)
+- `queries.csv`: 726 successfully converted and validated queries
+- 3 queries that cannot be converted (documented below in Failed Queries)
 
-Total: 723 + 6 = 729 ✓
+Total: 726 + 3 = 729 ✓
 
-## Failed Queries (6 total)
+## Failed Queries (3 total)
 
 ### Query 267
 **Reason:** TypeQL lacks `size()` for arrays — cannot count roles per individual ACTED_IN relationship. Unlike the 9 role-count queries converted using a `role_count(movie)` function, this needs per-relationship `size(r.roles) = 3`.
@@ -18,33 +18,6 @@ Total: 723 + 6 = 729 ✓
 MATCH (m:Movie)<-[r:ACTED_IN]-(p:Person)
 WHERE size(r.roles) = 3
 RETURN m.title
-```
-
-### Query 379
-**Reason:** No string length function — cannot filter by `size(tagline) > 30`.
-```cypher
-MATCH (m:Movie)
-WHERE m.tagline IS NOT NULL AND size(m.tagline) > 30
-RETURN m.title, m.tagline
-```
-
-### Query 408
-**Reason:** No string length function — cannot sort by `size(p.name)`.
-```cypher
-MATCH (p:Person)-[:ACTED_IN]->(:Movie)
-RETURN p.name AS name
-ORDER BY size(p.name) DESC
-LIMIT 1
-```
-
-### Query 459
-**Reason:** No string length function — cannot sort by `size(tagline)`.
-```cypher
-MATCH (m:Movie)
-WHERE m.tagline IS NOT NULL
-RETURN m.title, m.tagline
-ORDER BY size(m.tagline) DESC
-LIMIT 3
 ```
 
 ### Query 484

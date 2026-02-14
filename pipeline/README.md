@@ -47,7 +47,6 @@ python pipeline/main.py convert-schema movies --source synthetic-2
 ```
 pipeline/
   main.py                 # CLI entry point (--source option on all commands)
-  mcp_server.py           # MCP server for tool integration
   requirements.txt        # Python dependencies
   src/                    # Pipeline source code
     config.py             # Path, source, and connection configuration
@@ -83,46 +82,47 @@ pipeline/
 | Database | Valid | Failed | Total |
 |----------|-------|--------|-------|
 | twitter | 491 | 2 | 493 |
-| twitch | 553 | 8 | 561 |
-| movies | 723 | 6 | 729 |
+| twitch | 554 | 7 | 561 |
+| movies | 726 | 3 | 729 |
 | neoflix | 910 | 5 | 915 |
 | recommendations | 741 | 12 | 753 |
-| companies | 929 | 4 | 933 |
+| companies | 930 | 3 | 933 |
 | gameofthrones | 381 | 11 | 392 |
-| **Total** | **4,728** | **48** | **4,776** |
+| **Total** | **4,733** | **43** | **4,776** |
 
-### synthetic-2 (gpt4o) -- 12/15 databases fully converted
+### synthetic-2 (gpt4o) -- All 15 databases fully converted
 
 | Database | Total | Converted | Failed | Status |
 |----------|-------|-----------|--------|--------|
 | bluesky | 135 | 135 | 0 | ✓ complete |
-| buzzoverflow | 592 | 578 | 14 | ✓ complete |
-| companies | 966 | 941 | 25 | ✓ complete |
-| fincen | 614 | 584 | 30 | ✓ complete |
+| buzzoverflow | 592 | 585 | 7 | ✓ complete |
+| companies | 966 | 966 | 0 | ✓ complete |
+| fincen | 614 | 609 | 5 | ✓ complete |
 | gameofthrones | 393 | 384 | 9 | ✓ complete |
-| grandstack | 807 | 793 | 14 | ✓ complete |
-| movies | 738 | 728 | 10 | ✓ complete |
-| neoflix | 923 | 913 | 10 | ✓ complete |
-| network | 625 | 613 | 12 | ✓ complete |
-| northwind | 807 | 780 | 27 | ✓ complete |
-| offshoreleaks | 507 | 493 | 14 | ✓ complete |
-| stackoverflow2 | 307 | 298 | 9 | ✓ complete |
-| recommendations | 775 | -- | -- | pending |
-| twitch | 576 | -- | -- | pending |
-| twitter | 502 | -- | -- | pending |
-| **Total** | **9,267** | **7,240** | **174** | **80%** |
+| grandstack | 807 | 805 | 2 | ✓ complete |
+| movies | 738 | 737 | 1 | ✓ complete |
+| neoflix | 923 | 916 | 7 | ✓ complete |
+| network | 625 | 620 | 5 | ✓ complete |
+| northwind | 807 | 807 | 0 | ✓ complete |
+| offshoreleaks | 507 | 498 | 9 | ✓ complete |
+| recommendations | 775 | 764 | 11 | ✓ complete |
+| stackoverflow2 | 307 | 306 | 1 | ✓ complete |
+| twitch | 576 | 572 | 4 | ✓ complete |
+| twitter | 502 | 502 | 0 | ✓ complete |
+| **Total** | **9,267** | **9,206** | **61** | **100%** |
 
-### Failed Query Categories
+### Failed Query Categories (61 remaining in synthetic-2)
 
 | Category | Count | Description |
 |----------|-------|-------------|
-| `size()` function | ~15 | String/list length not supported |
-| `collect()` aggregation | ~5 | No list collection equivalent |
-| Array operations | ~8 | Array indexing, iteration |
-| String functions | ~5 | `split()`, `left()`, regex not supported |
-| Date/duration arithmetic | ~5 | Duration calculations, epoch conversion |
-| Schema mismatches | ~5 | Cypher assumes features not in schema |
-| Other | ~5 | `UNWIND`, complex patterns |
+| String functions | ~25 | `split()`, `substring()`, regex, word counting |
+| Date component extraction | ~15 | Year, month, day-of-week from datetime |
+| Schema mismatches | ~10 | Cypher references non-existent properties or wrong relation targets |
+| Epoch timestamp conversion | ~5 | `datetime({epochSeconds: ...})` (integer arithmetic resolved some) |
+| Dynamic string comparison | ~3 | `CONTAINS` between two variables (like requires literal) |
+| Other | ~3 | Complex patterns, modulo, levenshtein |
+
+Previously resolved categories: `collect()` → fetch subqueries, variable-length paths → recursive stream functions, `size()` → `len()`, type casting → schema fixes, `timestamp()` → max aggregate + integer arithmetic.
 
 ## Key Scripts
 
@@ -165,10 +165,18 @@ python3 pipeline/scripts/merge_dataset.py
 ## Known Limitations / Future Work
 
 Some Cypher patterns have no TypeQL equivalent:
-- `size(property)` -- No string/list length function
+- `split()`, `substring()` -- No string splitting or slicing
 - `array[-1]` -- No array index access
-- `collect()` -- No list aggregation
-- Date/duration arithmetic
+- Date component extraction (year, month, day-of-week)
+- `datetime({epochSeconds: N})` -- Epoch-to-datetime conversion (integer arithmetic works for relative comparisons)
+- Dynamic `CONTAINS` between two variables -- `like` requires a literal pattern
+
+Resolved in recent passes:
+- `collect()` → **fetch subqueries** (`"key": [ match ...; fetch { ... }; ]`)
+- `[:REL*]` → **recursive stream functions** (`with fun f($x: type) -> { type }:`)
+- `size()` on strings → `len()` (TypeDB 3.8+)
+- `timestamp()` → `max()` aggregate as proxy + integer arithmetic
+- Datetime arithmetic → `$a - $b` for duration between datetimes (TypeDB 3.8+)
 
 ### Schema Naming Convention
 
